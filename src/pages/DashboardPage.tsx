@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { formatRupiah, getMonthName, waTagihanLink } from "@/lib/helpers";
+import { useRoomTypesAndRooms, useTenants, useTransactions, useExpenses, usePrefetchRoutes } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import NotificationBell from "@/components/NotificationBell";
@@ -42,33 +42,39 @@ interface UnpaidTenant {
 const now = new Date();
 const bulanIni = now.getMonth() + 1;
 const tahunIni = now.getFullYear();
+const bulanLalu = bulanIni === 1 ? 12 : bulanIni - 1;
+const tahunLalu = bulanIni === 1 ? tahunIni - 1 : tahunIni;
 
 export default function DashboardPage() {
   const { activeProperty } = useProperty();
   const demo = useDemo();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [showTagihan, setShowTagihan] = useState(false);
-  const [unpaidTenants, setUnpaidTenants] = useState<UnpaidTenant[]>([]);
   const navigate = useNavigate();
+  const [showTagihan, setShowTagihan] = useState(false);
 
-  useEffect(() => {
+  // Prefetch other routes
+  const prefetch = usePrefetchRoutes();
+  useEffect(() => { prefetch(); }, [activeProperty]);
+
+  // React Query hooks
+  const { data: roomData, isLoading: roomsLoading } = useRoomTypesAndRooms();
+  const { data: tenantData, isLoading: tenantsLoading } = useTenants();
+  const { data: txData, isLoading: txLoading } = useTransactions();
+  const { data: expData, isLoading: expLoading } = useExpenses(bulanIni, tahunIni);
+
+  const loading = !demo.isDemo && (roomsLoading || tenantsLoading || txLoading || expLoading);
+
+  const { stats, unpaidTenants } = useMemo(() => {
     if (demo.isDemo) {
       const activeTenants = demo.tenants.filter(t => t.status === "aktif");
       const terisi = demo.rooms.filter(r => r.status === "terisi").length;
       const kosong = demo.rooms.filter(r => r.status === "kosong").length;
       const txBulanIni = demo.transactions.filter(t => t.periode_bulan === bulanIni && t.periode_tahun === tahunIni);
-      const txBulanLalu = demo.transactions.filter(t => {
-        const bl = bulanIni === 1 ? 12 : bulanIni - 1;
-        const tl = bulanIni === 1 ? tahunIni - 1 : tahunIni;
-        return t.periode_bulan === bl && t.periode_tahun === tl;
-      });
+      const txBulanLalu = demo.transactions.filter(t => t.periode_bulan === bulanLalu && t.periode_tahun === tahunLalu);
       const expBulanIni = demo.expenses;
       const pemasukan = txBulanIni.reduce((s, t) => s + t.jumlah_dibayar, 0);
       const pengeluaran = expBulanIni.reduce((s, e) => s + e.jumlah, 0);
       const pemasukanLalu = txBulanLalu.reduce((s, t) => s + t.jumlah_dibayar, 0);
 
-      // Build unpaid tenants list
       const unpaid: UnpaidTenant[] = txBulanIni
         .filter(tx => tx.status !== "lunas")
         .map(tx => {
@@ -82,97 +88,70 @@ export default function DashboardPage() {
             periodLabel: `${getMonthName(tx.periode_bulan)} ${tx.periode_tahun}`,
           };
         });
-      setUnpaidTenants(unpaid);
 
-      setStats({
-        totalPenyewa: activeTenants.length,
-        kamarTerisi: terisi,
-        kamarKosong: kosong,
-        tagihanBelumLunas: txBulanIni.filter(t => t.status !== "lunas").length,
-        pemasukanBulanIni: pemasukan,
-        pengeluaranBulanIni: pengeluaran,
-        pemasukanBulanLalu: pemasukanLalu,
-        pengeluaranBulanLalu: pengeluaran * 0.9,
-        totalTxBulanIni: txBulanIni.length,
-        lunasBulanIni: txBulanIni.filter(t => t.status === "lunas").length,
-      });
-      setLoading(false);
-      return;
+      return {
+        stats: {
+          totalPenyewa: activeTenants.length,
+          kamarTerisi: terisi,
+          kamarKosong: kosong,
+          tagihanBelumLunas: txBulanIni.filter(t => t.status !== "lunas").length,
+          pemasukanBulanIni: pemasukan,
+          pengeluaranBulanIni: pengeluaran,
+          pemasukanBulanLalu: pemasukanLalu,
+          pengeluaranBulanLalu: pengeluaran * 0.9,
+          totalTxBulanIni: txBulanIni.length,
+          lunasBulanIni: txBulanIni.filter(t => t.status === "lunas").length,
+        } as DashboardStats,
+        unpaidTenants: unpaid,
+      };
     }
 
-    if (!activeProperty) return;
-    const pid = activeProperty.id;
-    setLoading(true);
+    if (!roomData || !tenantData || !txData || !expData) return { stats: null, unpaidTenants: [] as UnpaidTenant[] };
 
-    const fetchStats = async () => {
-      const { data: roomTypes } = await supabase.from("room_types").select("id").eq("property_id", pid) as any;
-      const rtIds = (roomTypes || []).map((rt: any) => rt.id);
-      let allRooms: any[] = [];
-      if (rtIds.length > 0) {
-        const { data } = await supabase.from("rooms").select("id, status, nomor").in("room_type_id", rtIds) as any;
-        allRooms = data || [];
-      }
+    const allRooms = roomData.rooms;
+    const tenants = tenantData;
+    const txThisMonth = txData.filter((t: any) => t.periode_bulan === bulanIni && t.periode_tahun === tahunIni);
+    const txLastMonth = txData.filter((t: any) => t.periode_bulan === bulanLalu && t.periode_tahun === tahunLalu);
+    const expenses = expData;
 
-      const [tenants, txThisMonth, txLastMonth, expenses] = await Promise.all([
-        supabase.from("tenants").select("id, nama, no_hp, status, room_id").eq("property_id", pid) as any,
-        supabase.from("transactions").select("*").eq("property_id", pid).eq("periode_bulan", bulanIni).eq("periode_tahun", tahunIni) as any,
-        supabase.from("transactions").select("jumlah_dibayar").eq("property_id", pid)
-          .eq("periode_bulan", bulanIni === 1 ? 12 : bulanIni - 1)
-          .eq("periode_tahun", bulanIni === 1 ? tahunIni - 1 : tahunIni) as any,
-        supabase.from("expenses").select("jumlah").eq("property_id", pid)
-          .gte("tanggal", `${tahunIni}-${String(bulanIni).padStart(2, "0")}-01`)
-          .lt("tanggal", `${bulanIni === 12 ? tahunIni + 1 : tahunIni}-${String(bulanIni === 12 ? 1 : bulanIni + 1).padStart(2, "0")}-01`) as any,
-      ]);
+    const pemasukan = txThisMonth.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
+    const pengeluaran = expenses.reduce((s: number, e: any) => s + (e.jumlah || 0), 0);
 
-      const tenantData = (tenants.data || []) as any[];
-      const txData = (txThisMonth.data || []) as any[];
-      const txLastData = (txLastMonth.data || []) as any[];
-      const expData = (expenses.data || []) as any[];
+    const unpaid: UnpaidTenant[] = txThisMonth
+      .filter((tx: any) => tx.status !== "lunas")
+      .map((tx: any) => {
+        const tenant = tenants.find((t: any) => t.id === tx.tenant_id);
+        const room = tenant?.room_id ? allRooms.find((r: any) => r.id === tenant.room_id) : null;
+        return {
+          nama: tenant?.nama || "-",
+          no_hp: tenant?.no_hp || null,
+          kamar: room?.nomor || "-",
+          sisa: tx.total_tagihan - tx.jumlah_dibayar,
+          periodLabel: `${getMonthName(tx.periode_bulan)} ${tx.periode_tahun}`,
+        };
+      });
 
-      const pemasukan = txData.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
-      const pengeluaran = expData.reduce((s: number, e: any) => s + (e.jumlah || 0), 0);
-
-      // Build unpaid tenants
-      const unpaid: UnpaidTenant[] = txData
-        .filter((tx: any) => tx.status !== "lunas")
-        .map((tx: any) => {
-          const tenant = tenantData.find((t: any) => t.id === tx.tenant_id);
-          const room = tenant?.room_id ? allRooms.find((r: any) => r.id === tenant.room_id) : null;
-          return {
-            nama: tenant?.nama || "-",
-            no_hp: tenant?.no_hp || null,
-            kamar: room?.nomor || "-",
-            sisa: tx.total_tagihan - tx.jumlah_dibayar,
-            periodLabel: `${getMonthName(tx.periode_bulan)} ${tx.periode_tahun}`,
-          };
-        });
-      setUnpaidTenants(unpaid);
-
-      setStats({
-        totalPenyewa: tenantData.filter((t: any) => t.status === "aktif").length,
+    return {
+      stats: {
+        totalPenyewa: tenants.filter((t: any) => t.status === "aktif").length,
         kamarTerisi: allRooms.filter((r: any) => r.status === "terisi").length,
         kamarKosong: allRooms.filter((r: any) => r.status === "kosong").length,
-        tagihanBelumLunas: txData.filter((t: any) => t.status !== "lunas").length,
+        tagihanBelumLunas: txThisMonth.filter((t: any) => t.status !== "lunas").length,
         pemasukanBulanIni: pemasukan,
         pengeluaranBulanIni: pengeluaran,
-        pemasukanBulanLalu: txLastData.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0),
+        pemasukanBulanLalu: txLastMonth.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0),
         pengeluaranBulanLalu: 0,
-        totalTxBulanIni: txData.length,
-        lunasBulanIni: txData.filter((t: any) => t.status === "lunas").length,
-      });
-      setLoading(false);
+        totalTxBulanIni: txThisMonth.length,
+        lunasBulanIni: txThisMonth.filter((t: any) => t.status === "lunas").length,
+      } as DashboardStats,
+      unpaidTenants: unpaid,
     };
-    fetchStats();
-  }, [activeProperty, demo.isDemo]);
-
-  const handleKirimTagihan = () => {
-    setShowTagihan(true);
-  };
+  }, [demo.isDemo, roomData, tenantData, txData, expData]);
 
   const quickActions = [
     { icon: UserPlus, label: "Tambah Penyewa", action: () => navigate("/penyewa"), color: "bg-primary/10 text-primary" },
     { icon: CreditCard, label: "Pembayaran", action: () => navigate("/pembayaran"), color: "bg-[hsl(142,71%,45%)]/10 text-[hsl(142,71%,45%)]" },
-    { icon: Send, label: "Kirim Tagihan", action: handleKirimTagihan, color: "bg-accent/10 text-accent" },
+    { icon: Send, label: "Kirim Tagihan", action: () => setShowTagihan(true), color: "bg-accent/10 text-accent" },
     { icon: Receipt, label: "Pengeluaran", action: () => navigate("/keuangan"), color: "bg-destructive/10 text-destructive" },
     { icon: LayoutGrid, label: "Daftar Kamar", action: () => navigate("/kamar"), color: "bg-[hsl(262,52%,47%)]/10 text-[hsl(262,52%,47%)]" },
     { icon: FileText, label: "Laporan", action: () => navigate("/keuangan"), color: "bg-[hsl(199,89%,48%)]/10 text-[hsl(199,89%,48%)]" },
@@ -216,6 +195,7 @@ export default function DashboardPage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.15 }}
               className="gradient-primary rounded-xl p-5 text-primary-foreground shadow-lg"
             >
               <p className="text-sm opacity-80">Laba Bulan Ini</p>
@@ -238,7 +218,7 @@ export default function DashboardPage() {
                   key={stat.label}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: i * 0.03, duration: 0.15 }}
                   className="bg-card rounded-xl p-4 border border-border shadow-sm"
                 >
                   <stat.icon size={20} className={stat.color} />
@@ -253,7 +233,7 @@ export default function DashboardPage() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
+                transition={{ delay: 0.1, duration: 0.15 }}
                 className="bg-card rounded-xl border border-border p-4 shadow-sm"
               >
                 <p className="text-sm font-semibold text-foreground mb-3">Pembayaran Bulan Ini</p>

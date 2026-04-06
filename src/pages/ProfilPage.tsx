@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
+import { useProfile, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import BottomSheet from "@/components/BottomSheet";
@@ -22,8 +23,10 @@ export default function ProfilPage() {
   const { user, signOut } = useAuth();
   const { properties, activeProperty, setActiveProperty, refetch: refetchProperties } = useProperty();
   const demo = useDemo();
+  const invalidate = useInvalidate();
 
-  const [profileData, setProfileData] = useState<{ nama: string | null; no_hp: string | null }>({ nama: null, no_hp: null });
+  const { data: profileData } = useProfile(user?.id);
+
   const [showEdit, setShowEdit] = useState(false);
   const [showEditProperty, setShowEditProperty] = useState(false);
   const [editNama, setEditNama] = useState("");
@@ -33,20 +36,8 @@ export default function ProfilPage() {
   const [editPropertyId, setEditPropertyId] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (demo.isDemo || !user) return;
-    const fetchProfile = async () => {
-      const { data } = await supabase.from("profiles").select("nama, no_hp").eq("id", user.id).single() as any;
-      if (data) setProfileData(data);
-    };
-    fetchProfile();
-  }, [user, demo.isDemo]);
-
   const handleLogout = () => {
-    if (demo.isDemo) {
-      demo.setIsDemo(false);
-      return;
-    }
+    if (demo.isDemo) { demo.setIsDemo(false); return; }
     signOut();
   };
 
@@ -59,7 +50,7 @@ export default function ProfilPage() {
     if (error) toast.error(error.message);
     else {
       toast.success("Profil diperbarui!");
-      setProfileData({ nama: editNama, no_hp: editHp || null });
+      invalidate.profile();
       setShowEdit(false);
     }
     setSaving(false);
@@ -81,16 +72,15 @@ export default function ProfilPage() {
 
   const displayProperties = demo.isDemo ? [demo.property] : properties;
   const displayActive = demo.isDemo ? demo.property : activeProperty;
-  const displayName = demo.isDemo ? "Demo User" : (profileData.nama || user?.user_metadata?.nama || user?.email?.split("@")[0] || "Pengguna");
+  const displayName = demo.isDemo ? "Demo User" : (profileData?.nama || user?.user_metadata?.nama || user?.email?.split("@")[0] || "Pengguna");
   const displayEmail = demo.isDemo ? "demo@kospintar.id" : (user?.email || "-");
-  const displayHp = demo.isDemo ? "-" : (profileData.no_hp || user?.user_metadata?.no_hp || "-");
+  const displayHp = demo.isDemo ? "-" : (profileData?.no_hp || user?.user_metadata?.no_hp || "-");
 
   return (
     <AppShell>
       <PageHeader title="Profil" />
       <div className="px-4 space-y-4">
-        {/* User Info */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
               <User size={24} className="text-primary-foreground" />
@@ -101,19 +91,12 @@ export default function ProfilPage() {
               {displayHp !== "-" && <p className="text-xs text-muted-foreground">{displayHp}</p>}
             </div>
             {!demo.isDemo && (
-              <button
-                onClick={() => {
-                  setEditNama(profileData.nama || user?.user_metadata?.nama || "");
-                  setEditHp(profileData.no_hp || user?.user_metadata?.no_hp || "");
-                  setShowEdit(true);
-                }}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted"
-              >
+              <button onClick={() => { setEditNama(profileData?.nama || user?.user_metadata?.nama || ""); setEditHp(profileData?.no_hp || user?.user_metadata?.no_hp || ""); setShowEdit(true); }}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted">
                 <Pencil size={16} className="text-muted-foreground" />
               </button>
             )}
           </div>
-
           {demo.isDemo && (
             <div className="bg-secondary rounded-lg p-3 flex items-start gap-2">
               <Info size={16} className="text-primary mt-0.5 shrink-0" />
@@ -122,10 +105,8 @@ export default function ProfilPage() {
           )}
         </motion.div>
 
-        {/* Subscription Status */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          className="bg-card rounded-xl border border-border p-4 shadow-sm"
-        >
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03, duration: 0.15 }}
+          className="bg-card rounded-xl border border-border p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center">
               <Crown size={20} className="text-accent" />
@@ -141,15 +122,13 @@ export default function ProfilPage() {
           </div>
         </motion.div>
 
-        {/* Properties */}
         <div>
           <h2 className="text-sm font-semibold text-foreground mb-3">Properti</h2>
           <div className="space-y-2">
             {displayProperties.map(p => (
               <div key={p.id} className="relative">
                 <button onClick={() => !demo.isDemo && setActiveProperty(p as any)}
-                  className={`w-full text-left p-3 rounded-xl border transition-colors shadow-sm ${displayActive?.id === p.id ? "border-primary bg-secondary" : "border-border bg-card"}`}
-                >
+                  className={`w-full text-left p-3 rounded-xl border transition-colors shadow-sm ${displayActive?.id === p.id ? "border-primary bg-secondary" : "border-border bg-card"}`}>
                   <div className="flex items-center gap-2">
                     <Building2 size={18} className={displayActive?.id === p.id ? "text-primary" : "text-muted-foreground"} />
                     <div className="flex-1 min-w-0">
@@ -157,17 +136,8 @@ export default function ProfilPage() {
                       {p.alamat && <p className="text-xs text-muted-foreground">{p.alamat}</p>}
                     </div>
                     {!demo.isDemo && (
-                      <div
-                        role="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditPropertyId(p.id);
-                          setEditKosName(p.nama_kos);
-                          setEditKosAlamat(p.alamat || "");
-                          setShowEditProperty(true);
-                        }}
-                        className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted"
-                      >
+                      <div role="button" onClick={(e) => { e.stopPropagation(); setEditPropertyId(p.id); setEditKosName(p.nama_kos); setEditKosAlamat(p.alamat || ""); setShowEditProperty(true); }}
+                        className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted">
                         <Pencil size={14} className="text-muted-foreground" />
                       </div>
                     )}
@@ -178,7 +148,6 @@ export default function ProfilPage() {
           </div>
         </div>
 
-        {/* Logout */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="outline" className="w-full text-destructive border-destructive/30">
@@ -189,42 +158,25 @@ export default function ProfilPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Konfirmasi Keluar</AlertDialogTitle>
               <AlertDialogDescription>
-                {demo.isDemo
-                  ? "Anda akan keluar dari mode demo. Lanjutkan?"
-                  : "Anda akan keluar dari akun. Lanjutkan?"
-                }
+                {demo.isDemo ? "Anda akan keluar dari mode demo. Lanjutkan?" : "Anda akan keluar dari akun. Lanjutkan?"}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Batal</AlertDialogCancel>
-              <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Keluar
-              </AlertDialogAction>
+              <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Keluar</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* App Version */}
         <p className="text-center text-[10px] text-muted-foreground pb-4">KosPintar v1.0.0</p>
       </div>
 
-      {/* Edit Profile */}
       <BottomSheet open={showEdit} onClose={() => setShowEdit(false)} title="Edit Profil">
         <form onSubmit={handleSaveProfile} className="bottom-sheet-form">
           <div className="bottom-sheet-body">
-            <div className="space-y-2">
-              <Label>Nama Lengkap</Label>
-              <Input value={editNama} onChange={e => setEditNama(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input value={user?.email || ""} disabled className="bg-muted" />
-              <p className="text-[10px] text-muted-foreground">Email tidak dapat diubah</p>
-            </div>
-            <div className="space-y-2">
-              <Label>No. HP</Label>
-              <Input value={editHp} onChange={e => setEditHp(e.target.value)} placeholder="08123456789" />
-            </div>
+            <div className="space-y-2"><Label>Nama Lengkap</Label><Input value={editNama} onChange={e => setEditNama(e.target.value)} required /></div>
+            <div className="space-y-2"><Label>Email</Label><Input value={user?.email || ""} disabled className="bg-muted" /><p className="text-[10px] text-muted-foreground">Email tidak dapat diubah</p></div>
+            <div className="space-y-2"><Label>No. HP</Label><Input value={editHp} onChange={e => setEditHp(e.target.value)} placeholder="08123456789" /></div>
           </div>
           <div className="bottom-sheet-footer">
             <Button type="submit" className="w-full" disabled={saving}>
@@ -234,23 +186,14 @@ export default function ProfilPage() {
         </form>
       </BottomSheet>
 
-      {/* Edit Property */}
       <BottomSheet open={showEditProperty} onClose={() => setShowEditProperty(false)} title="Edit Properti">
         <form onSubmit={handleSaveProperty} className="bottom-sheet-form">
           <div className="bottom-sheet-body">
-            <div className="space-y-2">
-              <Label>Nama Kos</Label>
-              <div className="relative">
-                <Building2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input value={editKosName} onChange={e => setEditKosName(e.target.value)} className="pl-9" required />
-              </div>
+            <div className="space-y-2"><Label>Nama Kos</Label>
+              <div className="relative"><Building2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input value={editKosName} onChange={e => setEditKosName(e.target.value)} className="pl-9" required /></div>
             </div>
-            <div className="space-y-2">
-              <Label>Alamat</Label>
-              <div className="relative">
-                <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input value={editKosAlamat} onChange={e => setEditKosAlamat(e.target.value)} className="pl-9" placeholder="Jl. Contoh No. 123" />
-              </div>
+            <div className="space-y-2"><Label>Alamat</Label>
+              <div className="relative"><MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input value={editKosAlamat} onChange={e => setEditKosAlamat(e.target.value)} className="pl-9" placeholder="Jl. Contoh No. 123" /></div>
             </div>
           </div>
           <div className="bottom-sheet-footer">
