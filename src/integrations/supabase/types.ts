@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      broadcasts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          message: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          message: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          message?: string
+        }
+        Relationships: []
+      }
       deposits: {
         Row: {
           catatan_potongan: string | null
@@ -275,6 +314,33 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          started_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          started_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          started_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           created_at: string
@@ -397,6 +463,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_user_stats: {
+        Args: never
+        Returns: {
+          property_count: number
+          room_count: number
+          user_id: string
+        }[]
+      }
+      admin_get_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          nama: string
+          no_hp: string
+        }[]
+      }
       get_active_outlets: {
         Args: never
         Returns: {
@@ -404,6 +488,7 @@ export type Database = {
           nama_outlet: string
         }[]
       }
+      is_admin: { Args: never; Returns: boolean }
       verify_cashier_pin: {
         Args: { p_outlet_id: string; p_pin: string }
         Returns: Json
