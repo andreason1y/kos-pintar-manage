@@ -55,6 +55,7 @@ export default function PembayaranPage() {
   const [editJumlah, setEditJumlah] = useState("");
   const [editMetode, setEditMetode] = useState("tunai");
   const [editStatus, setEditStatus] = useState("belum_bayar");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const propertyName = demo.isDemo ? demo.property.nama_kos : activeProperty?.nama_kos || "";
 
