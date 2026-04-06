@@ -202,6 +202,8 @@ const COMPARISON = [
   { feature: "Tanpa biaya tersembunyi", kp: true, sk: false },
 ];
 
+const COMPETITOR_LABEL = "Aplikasi Lain";
+
 /* ─── FAQ ─── */
 const FAQS = [
   { q: "Apakah data saya aman?", a: "Ya, data disimpan di server terenkripsi dan hanya bisa diakses oleh Anda." },
