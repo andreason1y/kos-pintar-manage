@@ -19,10 +19,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { navigate("/"); return; }
+    if (!user) { navigate("/beranda"); return; }
     const check = async () => {
       const { data } = await supabase.rpc("is_admin") as any;
-      if (!data) { navigate("/"); return; }
+      if (!data) { navigate("/beranda"); return; }
       setIsAdmin(true);
     };
     check();
@@ -41,7 +41,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <div className="mx-auto max-w-4xl">
         {/* Header */}
         <div className="flex items-center gap-3 px-4 py-4 border-b border-border bg-card sticky top-0 z-20">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/beranda")}>
             <ArrowLeft size={20} />
           </Button>
           <h1 className="text-lg font-bold text-foreground">Admin Panel</h1>

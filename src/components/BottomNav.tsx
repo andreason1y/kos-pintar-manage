@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const tabs = [
-  { path: "/", label: "Beranda", icon: Home },
+  { path: "/beranda", label: "Beranda", icon: Home },
   { path: "/kamar", label: "Kamar", icon: DoorOpen },
   { path: "/penyewa", label: "Penyewa", icon: Users },
   { path: "/keuangan", label: "Keuangan", icon: Wallet },
