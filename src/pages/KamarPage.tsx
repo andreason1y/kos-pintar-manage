@@ -19,7 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Plus, ChevronDown, UserPlus, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-const FASILITAS_OPTIONS = ["AC", "TV", "Lemari", "Kamar Mandi Dalam", "WiFi", "Air Panas", "Parkir Motor"];
+const FASILITAS_OPTIONS = ["AC", "TV", "Lemari", "Kamar Mandi Dalam", "WiFi", "Air Panas", "Parkir Motor", "Kasur", "Meja & Kursi", "Dapur Bersama", "Mesin Cuci", "Kulkas", "CCTV", "Parkir Mobil", "Kamar Mandi Luar"];
 
 interface RoomType {
   id: string;
