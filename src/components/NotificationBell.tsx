@@ -1,27 +1,40 @@
-import { useState, useMemo } from "react";
-import { Bell, AlertTriangle, Clock } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Bell, AlertTriangle, Clock, MessageCircle } from "lucide-react";
 import { useDemo } from "@/lib/demo-context";
+import { useProperty } from "@/lib/property-context";
+import { supabase } from "@/integrations/supabase/client";
+import { formatRupiah } from "@/lib/helpers";
 import BottomSheet from "./BottomSheet";
+import { Button } from "./ui/button";
+
+interface Notification {
+  id: string;
+  type: "expiring" | "overdue" | "reminder";
+  title: string;
+  subtitle: string;
+  waLink?: string | null;
+}
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const demo = useDemo();
+  const { activeProperty } = useProperty();
+  const [reminders, setReminders] = useState<Notification[]>([]);
 
   const now = new Date();
   const bulanIni = now.getMonth() + 1;
   const tahunIni = now.getFullYear();
 
-  const notifications = useMemo(() => {
+  // Demo notifications
+  const demoNotifications = useMemo(() => {
     if (!demo.isDemo) return [];
+    const items: Notification[] = [];
 
-    const items: { id: string; type: "expiring" | "overdue"; title: string; subtitle: string }[] = [];
-
-    // Expiring contracts (≤7 days)
     demo.tenants.filter(t => t.status === "aktif" && t.tanggal_keluar).forEach(t => {
       const days = Math.ceil((new Date(t.tanggal_keluar!).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       if (days >= 0 && days <= 7) {
         items.push({
-          id: t.id,
+          id: `exp-${t.id}`,
           type: "expiring",
           title: t.nama,
           subtitle: days === 0 ? "Kontrak habis hari ini" : `Kontrak habis dalam ${days} hari`,
@@ -29,25 +42,92 @@ export default function NotificationBell() {
       }
     });
 
-    // Overdue payments
     demo.transactions
       .filter(t => t.periode_bulan === bulanIni && t.periode_tahun === tahunIni && t.status !== "lunas")
       .forEach(tx => {
         const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
         if (tenant) {
+          const sisa = tx.total_tagihan - tx.jumlah_dibayar;
+          const phone = tenant.no_hp ? tenant.no_hp.replace(/^0/, "62") : "";
           items.push({
-            id: tx.id,
+            id: `ov-${tx.id}`,
             type: "overdue",
             title: tenant.nama,
             subtitle: tx.status === "belum_bayar" ? "Belum bayar bulan ini" : "Pembayaran belum lunas",
+            waLink: phone ? `https://wa.me/${phone}?text=${encodeURIComponent(`Halo ${tenant.nama}, tagihan sewa bulan ini sebesar ${formatRupiah(sisa)}. Mohon segera dibayar. 🙏`)}` : null,
           });
         }
       });
 
+    // Demo reminder examples
+    const demoTenant = demo.tenants.find(t => t.status === "aktif");
+    if (demoTenant) {
+      const phone = demoTenant.no_hp ? demoTenant.no_hp.replace(/^0/, "62") : "";
+      items.push({
+        id: `rem-h3-${demoTenant.id}`,
+        type: "reminder",
+        title: demoTenant.nama,
+        subtitle: "Tagihan jatuh tempo 3 hari lagi",
+        waLink: phone ? `https://wa.me/${phone}?text=${encodeURIComponent(`Halo ${demoTenant.nama}, tagihan sewa jatuh tempo 3 hari lagi. Mohon segera dibayar.`)}` : null,
+      });
+    }
+
     return items;
   }, [demo]);
 
+  // Fetch real reminders from Supabase
+  useEffect(() => {
+    if (demo.isDemo || !activeProperty) return;
+
+    const fetchReminders = async () => {
+      const { data } = await supabase
+        .from("reminders")
+        .select("id, type, message, wa_link, is_read, tenant_id")
+        .eq("property_id", activeProperty.id)
+        .eq("periode_bulan", bulanIni)
+        .eq("periode_tahun", tahunIni)
+        .eq("is_read", false) as any;
+
+      if (data) {
+        // Get tenant names
+        const tids = [...new Set(data.map((r: any) => r.tenant_id))];
+        let tenantMap: Record<string, string> = {};
+        if (tids.length > 0) {
+          const { data: td } = await supabase.from("tenants").select("id, nama").in("id", tids) as any;
+          (td || []).forEach((t: any) => { tenantMap[t.id] = t.nama; });
+        }
+
+        const mapped: Notification[] = data.map((r: any) => ({
+          id: r.id,
+          type: "reminder" as const,
+          title: tenantMap[r.tenant_id] || "Penyewa",
+          subtitle: r.message,
+          waLink: r.wa_link,
+        }));
+        setReminders(mapped);
+      }
+    };
+    fetchReminders();
+  }, [activeProperty, demo.isDemo]);
+
+  const notifications = demo.isDemo ? demoNotifications : [
+    // Combine real reminders + real expiring/overdue (could add later)
+    ...reminders,
+  ];
+
   const count = notifications.length;
+
+  const iconForType = (type: string) => {
+    if (type === "expiring") return <Clock size={16} className="text-[hsl(38,92%,50%)]" />;
+    if (type === "reminder") return <MessageCircle size={16} className="text-primary" />;
+    return <AlertTriangle size={16} className="text-destructive" />;
+  };
+
+  const bgForType = (type: string) => {
+    if (type === "expiring") return "bg-[hsl(38,92%,50%)]/20";
+    if (type === "reminder") return "bg-primary/20";
+    return "bg-destructive/20";
+  };
 
   return (
     <>
@@ -67,18 +147,20 @@ export default function NotificationBell() {
           <div className="space-y-2">
             {notifications.map(n => (
               <div key={n.id} className="flex items-start gap-3 p-3 rounded-xl bg-muted/50">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                  n.type === "expiring" ? "bg-warning/20" : "bg-destructive/20"
-                }`}>
-                  {n.type === "expiring"
-                    ? <Clock size={16} className="text-warning" />
-                    : <AlertTriangle size={16} className="text-destructive" />
-                  }
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${bgForType(n.type)}`}>
+                  {iconForType(n.type)}
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{n.title}</p>
                   <p className="text-xs text-muted-foreground">{n.subtitle}</p>
                 </div>
+                {n.waLink && (
+                  <a href={n.waLink} target="_blank" rel="noreferrer" className="shrink-0">
+                    <Button size="sm" variant="outline" className="gap-1 text-xs h-7">
+                      <MessageCircle size={12} /> WA
+                    </Button>
+                  </a>
+                )}
               </div>
             ))}
           </div>
