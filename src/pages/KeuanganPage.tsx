@@ -48,11 +48,14 @@ export default function KeuanganPage() {
 
   const { data: txData, isLoading: txLoading } = useTransactions();
   const { data: expData, isLoading: expLoading } = useExpenses(bulan, tahun);
+  const bulanLalu = bulan === 1 ? 12 : bulan - 1;
+  const tahunLalu = bulan === 1 ? tahun - 1 : tahun;
+  const { data: expLastData, isLoading: expLastLoading } = useExpenses(bulanLalu, tahunLalu);
   const { data: depositData, isLoading: depLoading } = useDeposits();
   const { data: tenantData } = useTenants();
   const { data: roomData } = useRoomTypesAndRooms();
 
-  const loading = !demo.isDemo && (txLoading || expLoading || depLoading);
+  const loading = !demo.isDemo && (txLoading || expLoading || depLoading || expLastLoading);
 
   const computed = useMemo(() => {
     const bulanLalu = bulan === 1 ? 12 : bulan - 1;
