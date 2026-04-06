@@ -210,6 +210,12 @@ const FAQS = [
   { q: "Apakah bisa dicoba dulu?", a: "Ya, tersedia mode demo tanpa perlu daftar. Klik \"Coba Demo\" di halaman utama." },
 ];
 
+const TESTIMONIALS = [
+  { quote: "Sebelumnya saya catat tagihan penyewa di buku tulis, sering lupa dan kecolongan. Sekarang semua otomatis, reminder WA langsung ke penyewa.", name: "Pak Hendra", kos: "Kos Putra Mandiri, Bandung", color: "bg-primary" },
+  { quote: "Dibanding aplikasi lain yang saya coba, KosPintar jauh lebih simpel dan yang paling penting harganya flat. Punya 18 kamar tapi bayarnya sama aja.", name: "Bu Ratna", kos: "Kos Melati, Yogyakarta", color: "bg-accent" },
+  { quote: "Nota PDF langsung kirim ke WhatsApp penyewa, profesional banget. Penyewa jadi lebih tepat waktu bayarnya.", name: "Pak Doni", kos: "Kos Barokah, Surabaya", color: "bg-destructive" },
+];
+
 const SCREENSHOTS = [
   { label: "Beranda — Dashboard Kos", component: <DashboardPreview /> },
   { label: "Penyewa — Data Penghuni", component: <TenantListPreview /> },
