@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
-import { formatRupiah, getMonthName, generateNotaNumber } from "@/lib/helpers";
+import { formatRupiah, getMonthName, generateNotaNumber, waTagihanLink } from "@/lib/helpers";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import SkeletonCard from "@/components/SkeletonCard";
