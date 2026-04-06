@@ -168,6 +168,10 @@ export default function KeuanganPage() {
     setUnpaidList(unpaid);
     setTotalUnpaid(unpaid.reduce((s: number, u: any) => s + u.sisa, 0));
 
+    // Fetch total deposits held
+    const { data: depData } = await supabase.from("deposits").select("jumlah").eq("property_id", pid).eq("status", "ditahan") as any;
+    setTotalDeposit((depData || []).reduce((s: number, d: any) => s + (d.jumlah || 0), 0));
+
     const combined = [
       ...txData.filter((t: any) => t.jumlah_dibayar > 0).map((t: any) => ({ id: t.id, type: "income", amount: t.jumlah_dibayar, label: `Sewa ${getMonthName(t.periode_bulan)}`, date: t.tanggal_bayar || t.created_at })),
       ...expData.map((e: any) => ({ id: e.id, type: "expense", amount: e.jumlah, label: e.judul, date: e.tanggal, kategori: e.kategori, is_recurring: e.is_recurring })),
