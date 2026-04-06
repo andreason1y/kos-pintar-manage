@@ -92,6 +92,15 @@ export default function AuthPage() {
               {loading ? "Memproses..." : isLogin ? "Masuk" : "Daftar"}
             </Button>
           </form>
+
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+            <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">atau</span></div>
+          </div>
+
+          <Button variant="outline" className="w-full" onClick={() => setIsDemo(true)}>
+            <Play size={16} className="mr-2" /> Coba Mode Demo
+          </Button>
         </div>
       </motion.div>
     </div>
