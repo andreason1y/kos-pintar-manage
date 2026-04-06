@@ -12,6 +12,7 @@ import { Building2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AuthPage() {
+  const { setIsDemo } = useDemo();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
