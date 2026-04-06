@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
+import { useDemo } from "@/lib/demo-context";
 import { formatRupiah, getMonthName } from "@/lib/helpers";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
@@ -21,6 +22,7 @@ interface DashboardStats {
   pemasukanBulanIni: number;
   pengeluaranBulanIni: number;
   pemasukanBulanLalu: number;
+  pengeluaranBulanLalu: number;
 }
 
 const now = new Date();
@@ -29,19 +31,56 @@ const tahunIni = now.getFullYear();
 
 export default function DashboardPage() {
   const { activeProperty } = useProperty();
+  const demo = useDemo();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (demo.isDemo) {
+      const activeTenants = demo.tenants.filter(t => t.status === "aktif");
+      const terisi = demo.rooms.filter(r => r.status === "terisi").length;
+      const kosong = demo.rooms.filter(r => r.status === "kosong").length;
+      const txBulanIni = demo.transactions.filter(t => t.periode_bulan === bulanIni && t.periode_tahun === tahunIni);
+      const txBulanLalu = demo.transactions.filter(t => {
+        const bl = bulanIni === 1 ? 12 : bulanIni - 1;
+        const tl = bulanIni === 1 ? tahunIni - 1 : tahunIni;
+        return t.periode_bulan === bl && t.periode_tahun === tl;
+      });
+      const expBulanIni = demo.expenses;
+      const pemasukan = txBulanIni.reduce((s, t) => s + t.jumlah_dibayar, 0);
+      const pengeluaran = expBulanIni.reduce((s, e) => s + e.jumlah, 0);
+      const pemasukanLalu = txBulanLalu.reduce((s, t) => s + t.jumlah_dibayar, 0);
+
+      setStats({
+        totalPenyewa: activeTenants.length,
+        kamarTerisi: terisi,
+        kamarKosong: kosong,
+        tagihanBelumLunas: txBulanIni.filter(t => t.status !== "lunas").length,
+        pemasukanBulanIni: pemasukan,
+        pengeluaranBulanIni: pengeluaran,
+        pemasukanBulanLalu: pemasukanLalu,
+        pengeluaranBulanLalu: pengeluaran * 0.9,
+      });
+      setLoading(false);
+      return;
+    }
+
     if (!activeProperty) return;
     const pid = activeProperty.id;
     setLoading(true);
 
     const fetchStats = async () => {
-      const [tenants, rooms, txThisMonth, txLastMonth, expenses] = await Promise.all([
+      const { data: roomTypes } = await supabase.from("room_types").select("id").eq("property_id", pid) as any;
+      const rtIds = (roomTypes || []).map((rt: any) => rt.id);
+      let allRooms: any[] = [];
+      if (rtIds.length > 0) {
+        const { data } = await supabase.from("rooms").select("id, status").in("room_type_id", rtIds) as any;
+        allRooms = data || [];
+      }
+
+      const [tenants, txThisMonth, txLastMonth, expenses] = await Promise.all([
         supabase.from("tenants").select("id, status").eq("property_id", pid) as any,
-        Promise.resolve({ data: [] }),
         supabase.from("transactions").select("*").eq("property_id", pid).eq("periode_bulan", bulanIni).eq("periode_tahun", tahunIni) as any,
         supabase.from("transactions").select("jumlah_dibayar").eq("property_id", pid)
           .eq("periode_bulan", bulanIni === 1 ? 12 : bulanIni - 1)
@@ -50,15 +89,6 @@ export default function DashboardPage() {
           .gte("tanggal", `${tahunIni}-${String(bulanIni).padStart(2, "0")}-01`)
           .lt("tanggal", `${bulanIni === 12 ? tahunIni + 1 : tahunIni}-${String(bulanIni === 12 ? 1 : bulanIni + 1).padStart(2, "0")}-01`) as any,
       ]);
-
-      // Get all rooms for this property via room_types
-      const { data: roomTypes } = await supabase.from("room_types").select("id").eq("property_id", pid) as any;
-      const rtIds = (roomTypes || []).map((rt: any) => rt.id);
-      let allRooms: any[] = [];
-      if (rtIds.length > 0) {
-        const { data } = await supabase.from("rooms").select("id, status").in("room_type_id", rtIds) as any;
-        allRooms = data || [];
-      }
 
       const tenantData = (tenants.data || []) as any[];
       const txData = (txThisMonth.data || []) as any[];
@@ -76,11 +106,12 @@ export default function DashboardPage() {
         pemasukanBulanIni: pemasukan,
         pengeluaranBulanIni: pengeluaran,
         pemasukanBulanLalu: txLastData.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0),
+        pengeluaranBulanLalu: 0,
       });
       setLoading(false);
     };
     fetchStats();
-  }, [activeProperty]);
+  }, [activeProperty, demo.isDemo]);
 
   const quickActions = [
     { icon: UserPlus, label: "Tambah Penyewa", path: "/penyewa" },
@@ -92,13 +123,15 @@ export default function DashboardPage() {
   ];
 
   const laba = stats ? stats.pemasukanBulanIni - stats.pengeluaranBulanIni : 0;
-  const labaBulanLalu = stats ? stats.pemasukanBulanLalu - stats.pengeluaranBulanIni : 0;
+  const labaBulanLalu = stats ? stats.pemasukanBulanLalu - (stats.pengeluaranBulanLalu || 0) : 0;
   const labaDiff = laba - labaBulanLalu;
+
+  const propertyName = demo.isDemo ? demo.property.nama_kos : activeProperty?.nama_kos || "Dashboard";
 
   return (
     <AppShell>
       <PageHeader
-        title={activeProperty?.nama_kos || "Dashboard"}
+        title={propertyName}
         subtitle={`${getMonthName(bulanIni)} ${tahunIni}`}
       />
 

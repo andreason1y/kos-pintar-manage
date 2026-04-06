@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
+import { useDemo } from "@/lib/demo-context";
 import { formatRupiah, getMonthName, generateNotaNumber, waTagihanLink } from "@/lib/helpers";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
@@ -12,13 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreditCard, MessageCircle, Download } from "lucide-react";
+import { CreditCard, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 interface PendingPayment {
   id: string;
-  tenant_id: string;
   tenant_nama: string;
   tenant_hp: string | null;
   kamar: string;
@@ -32,84 +32,69 @@ interface PendingPayment {
 
 export default function PembayaranPage() {
   const { activeProperty } = useProperty();
+  const demo = useDemo();
   const [payments, setPayments] = useState<PendingPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPay, setShowPay] = useState<PendingPayment | null>(null);
-
-  // Pay form
   const [jumlahBayar, setJumlahBayar] = useState("");
   const [metode, setMetode] = useState("tunai");
   const [catatan, setCatatan] = useState("");
 
   const fetchData = async () => {
+    if (demo.isDemo) {
+      const pending = demo.transactions.filter(t => t.status !== "lunas").map(tx => {
+        const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
+        const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
+        return {
+          id: tx.id,
+          tenant_nama: tenant?.nama || "-",
+          tenant_hp: tenant?.no_hp || null,
+          kamar: room?.nomor || "-",
+          periode_bulan: tx.periode_bulan,
+          periode_tahun: tx.periode_tahun,
+          total_tagihan: tx.total_tagihan,
+          jumlah_dibayar: tx.jumlah_dibayar,
+          status: tx.status,
+          sisa: tx.total_tagihan - tx.jumlah_dibayar,
+        };
+      });
+      setPayments(pending);
+      setLoading(false);
+      return;
+    }
     if (!activeProperty) return;
     setLoading(true);
-    const { data: txData } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("property_id", activeProperty.id)
-      .neq("status", "lunas")
-      .order("created_at", { ascending: false }) as any;
-
+    const { data: txData } = await supabase.from("transactions").select("*").eq("property_id", activeProperty.id).neq("status", "lunas").order("created_at", { ascending: false }) as any;
     if (!txData || txData.length === 0) { setPayments([]); setLoading(false); return; }
-
     const tenantIds = [...new Set((txData as any[]).map(t => t.tenant_id))];
     const { data: tenantData } = await supabase.from("tenants").select("id, nama, no_hp, room_id").in("id", tenantIds) as any;
     const tenants = tenantData || [];
-
-    // Get rooms
     const roomIds = tenants.filter((t: any) => t.room_id).map((t: any) => t.room_id);
     let rooms: any[] = [];
-    if (roomIds.length > 0) {
-      const { data } = await supabase.from("rooms").select("id, nomor").in("id", roomIds) as any;
-      rooms = data || [];
-    }
-
+    if (roomIds.length > 0) { const { data } = await supabase.from("rooms").select("id, nomor").in("id", roomIds) as any; rooms = data || []; }
     const mapped: PendingPayment[] = (txData as any[]).map(tx => {
       const tenant = tenants.find((t: any) => t.id === tx.tenant_id);
       const room = tenant?.room_id ? rooms.find((r: any) => r.id === tenant.room_id) : null;
-      return {
-        id: tx.id,
-        tenant_id: tx.tenant_id,
-        tenant_nama: tenant?.nama || "-",
-        tenant_hp: tenant?.no_hp,
-        kamar: room?.nomor || "-",
-        periode_bulan: tx.periode_bulan,
-        periode_tahun: tx.periode_tahun,
-        total_tagihan: tx.total_tagihan,
-        jumlah_dibayar: tx.jumlah_dibayar,
-        status: tx.status,
-        sisa: tx.total_tagihan - tx.jumlah_dibayar,
-      };
+      return { id: tx.id, tenant_nama: tenant?.nama || "-", tenant_hp: tenant?.no_hp, kamar: room?.nomor || "-", periode_bulan: tx.periode_bulan, periode_tahun: tx.periode_tahun, total_tagihan: tx.total_tagihan, jumlah_dibayar: tx.jumlah_dibayar, status: tx.status, sisa: tx.total_tagihan - tx.jumlah_dibayar };
     });
-
     setPayments(mapped);
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [activeProperty]);
+  useEffect(() => { fetchData(); }, [activeProperty, demo.isDemo]);
 
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowPay(null); return; }
     if (!showPay) return;
     const bayar = parseInt(jumlahBayar) || 0;
     const totalBayar = showPay.jumlah_dibayar + bayar;
     const newStatus = totalBayar >= showPay.total_tagihan ? "lunas" : "belum_lunas";
     const nota = newStatus === "lunas" ? generateNotaNumber(showPay.periode_bulan, showPay.periode_tahun) : null;
-
-    const { error } = await supabase.from("transactions").update({
-      jumlah_dibayar: totalBayar,
-      status: newStatus,
-      metode_bayar: metode,
-      tanggal_bayar: new Date().toISOString().split("T")[0],
-      catatan,
-      nota_number: nota,
-    } as any).eq("id", showPay.id);
-
+    const { error } = await supabase.from("transactions").update({ jumlah_dibayar: totalBayar, status: newStatus, metode_bayar: metode, tanggal_bayar: new Date().toISOString().split("T")[0], catatan, nota_number: nota } as any).eq("id", showPay.id);
     if (error) { toast.error(error.message); return; }
     toast.success(newStatus === "lunas" ? "Pembayaran lunas!" : "Pembayaran parsial berhasil");
-    setShowPay(null);
-    setJumlahBayar(""); setCatatan("");
+    setShowPay(null); setJumlahBayar(""); setCatatan("");
     fetchData();
   };
 
@@ -144,10 +129,7 @@ export default function PembayaranPage() {
                   <CreditCard size={14} className="mr-1" /> Bayar
                 </Button>
                 {p.tenant_hp && (
-                  <a
-                    href={waTagihanLink(p.tenant_nama, p.kamar, getMonthName(p.periode_bulan), `${getMonthName(p.periode_bulan)} ${p.periode_tahun}`, p.sisa, p.tenant_hp)}
-                    target="_blank" rel="noreferrer"
-                  >
+                  <a href={waTagihanLink(p.tenant_nama, p.kamar, getMonthName(p.periode_bulan), `${getMonthName(p.periode_bulan)} ${p.periode_tahun}`, p.sisa, p.tenant_hp)} target="_blank" rel="noreferrer">
                     <Button size="sm" variant="outline"><MessageCircle size={14} /></Button>
                   </a>
                 )}
@@ -165,25 +147,13 @@ export default function PembayaranPage() {
               <p className="text-xs text-muted-foreground">Kamar {showPay.kamar} · {getMonthName(showPay.periode_bulan)} {showPay.periode_tahun}</p>
               <p className="text-sm">Tagihan: {formatRupiah(showPay.total_tagihan)} | Sudah bayar: {formatRupiah(showPay.jumlah_dibayar)}</p>
             </div>
-            <div className="space-y-2">
-              <Label>Jumlah Bayar (Rp)</Label>
-              <Input type="number" value={jumlahBayar} onChange={e => setJumlahBayar(e.target.value)} required />
+            <div className="space-y-2"><Label>Jumlah Bayar (Rp)</Label><Input type="number" value={jumlahBayar} onChange={e => setJumlahBayar(e.target.value)} required /></div>
+            <div className="space-y-2"><Label>Metode Pembayaran</Label>
+              <Select value={metode} onValueChange={setMetode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
+                <SelectItem value="tunai">Tunai</SelectItem><SelectItem value="transfer">Transfer</SelectItem><SelectItem value="qris">QRIS</SelectItem>
+              </SelectContent></Select>
             </div>
-            <div className="space-y-2">
-              <Label>Metode Pembayaran</Label>
-              <Select value={metode} onValueChange={setMetode}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tunai">Tunai</SelectItem>
-                  <SelectItem value="transfer">Transfer</SelectItem>
-                  <SelectItem value="qris">QRIS</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Catatan</Label>
-              <Input value={catatan} onChange={e => setCatatan(e.target.value)} placeholder="Opsional" />
-            </div>
+            <div className="space-y-2"><Label>Catatan</Label><Input value={catatan} onChange={e => setCatatan(e.target.value)} placeholder="Opsional" /></div>
             <Button type="submit" className="w-full">Simpan Pembayaran</Button>
           </form>
         )}

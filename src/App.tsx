@@ -1,11 +1,12 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { PropertyProvider, useProperty } from "@/lib/property-context";
+import { DemoProvider, useDemo } from "@/lib/demo-context";
 import AuthPage from "./pages/AuthPage";
 import OnboardingPage from "./pages/OnboardingPage";
 
@@ -27,14 +28,7 @@ function LoadingScreen() {
   );
 }
 
-function AppRoutes() {
-  const { user, loading: authLoading } = useAuth();
-  const { properties, loading: propLoading } = useProperty();
-
-  if (authLoading || (user && propLoading)) return <LoadingScreen />;
-  if (!user) return <AuthPage />;
-  if (properties.length === 0) return <OnboardingPage />;
-
+function MainRoutes() {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
@@ -50,17 +44,34 @@ function AppRoutes() {
   );
 }
 
+function AppRoutes() {
+  const { user, loading: authLoading } = useAuth();
+  const { properties, loading: propLoading } = useProperty();
+  const { isDemo } = useDemo();
+
+  // Demo mode - skip auth entirely
+  if (isDemo) return <MainRoutes />;
+
+  if (authLoading || (user && propLoading)) return <LoadingScreen />;
+  if (!user) return <AuthPage />;
+  if (properties.length === 0) return <OnboardingPage />;
+
+  return <MainRoutes />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <PropertyProvider>
-            <AppRoutes />
-          </PropertyProvider>
-        </AuthProvider>
+        <DemoProvider>
+          <AuthProvider>
+            <PropertyProvider>
+              <AppRoutes />
+            </PropertyProvider>
+          </AuthProvider>
+        </DemoProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
