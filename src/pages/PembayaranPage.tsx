@@ -191,8 +191,3 @@ export default function PembayaranPage() {
     </AppShell>
   );
 }
-
-function waTagihanLink(nama: string, kamar: string, bulan: string, tanggal: string, jumlah: number, hp?: string): string {
-  const { waTagihanLink: fn } = require("@/lib/helpers");
-  return fn(nama, kamar, bulan, tanggal, jumlah, hp);
-}
