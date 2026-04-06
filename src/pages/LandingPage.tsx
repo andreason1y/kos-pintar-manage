@@ -207,7 +207,7 @@ const COMPETITOR_LABEL = "Aplikasi Lain";
 /* ─── FAQ ─── */
 const FAQS = [
   { q: "Apakah data saya aman?", a: "Ya, data disimpan di server terenkripsi dan hanya bisa diakses oleh Anda." },
-  { q: "Berapa batas jumlah kamar?", a: "Tidak ada batas. Kelola 5 kamar atau 500 kamar dengan harga yang sama." },
+  { q: "Berapa batas jumlah kamar?", a: "Paket standar mendukung hingga 40 unit kamar. Untuk lebih dari 40 unit, tersedia paket yang lebih besar." },
   { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga Rp 249.000 sudah termasuk semua fitur." },
   { q: "Bagaimana cara perpanjang langganan?", a: "Kami akan kirim notifikasi sebelum masa langganan habis. Perpanjang langsung dari aplikasi." },
   { q: "Apakah bisa dicoba dulu?", a: "Ya, tersedia mode demo tanpa perlu daftar. Klik \"Coba Demo\" di halaman utama." },
