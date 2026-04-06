@@ -141,7 +141,7 @@ export default function DashboardPage() {
         pemasukanBulanIni: pemasukan,
         pengeluaranBulanIni: pengeluaran,
         pemasukanBulanLalu: txLastMonth.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0),
-        pengeluaranBulanLalu: 0,
+        pengeluaranBulanLalu: (expLastData || []).reduce((s: number, e: any) => s + (e.jumlah || 0), 0),
         totalTxBulanIni: txThisMonth.length,
         lunasBulanIni: txThisMonth.filter((t: any) => t.status === "lunas").length,
       } as DashboardStats,
