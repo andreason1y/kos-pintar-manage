@@ -45,8 +45,9 @@ function MainRoutes() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/broadcast" element={<AdminBroadcast />} />
-        {/* Redirect old / to /beranda for logged in users */}
+        {/* Redirect old / and /login to /beranda for logged in users */}
         <Route path="/" element={<Navigate to="/beranda" replace />} />
+        <Route path="/login" element={<Navigate to="/beranda" replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

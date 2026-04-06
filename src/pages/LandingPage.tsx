@@ -123,6 +123,7 @@ function RoomListPreview() {
   const rooms = [
     { type: "Standar", price: "1.2jt", rooms: [{ no: "A1", tenant: "Budi S.", filled: true }, { no: "A2", tenant: "Siti R.", filled: true }, { no: "A3", tenant: null, filled: false }] },
     { type: "Deluxe", price: "1.8jt", rooms: [{ no: "B1", tenant: "Dewi L.", filled: true }, { no: "B2", tenant: "Rizky P.", filled: true }] },
+    { type: "Suite", price: "2.5jt", rooms: [{ no: "C1", tenant: "Fajar R.", filled: true }, { no: "C2", tenant: null, filled: false }] },
   ];
   return (
     <div className="bg-background p-3 space-y-2 text-[10px]">
@@ -202,10 +203,12 @@ const COMPARISON = [
   { feature: "Tanpa biaya tersembunyi", kp: true, sk: false },
 ];
 
+const COMPETITOR_LABEL = "Aplikasi Lain";
+
 /* ─── FAQ ─── */
 const FAQS = [
   { q: "Apakah data saya aman?", a: "Ya, data disimpan di server terenkripsi dan hanya bisa diakses oleh Anda." },
-  { q: "Berapa batas jumlah kamar?", a: "Tidak ada batas. Kelola 5 kamar atau 500 kamar dengan harga yang sama." },
+  { q: "Berapa batas jumlah kamar?", a: "Paket standar mendukung hingga 40 unit kamar. Untuk lebih dari 40 unit, tersedia paket yang lebih besar." },
   { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga Rp 249.000 sudah termasuk semua fitur." },
   { q: "Bagaimana cara perpanjang langganan?", a: "Kami akan kirim notifikasi sebelum masa langganan habis. Perpanjang langsung dari aplikasi." },
   { q: "Apakah bisa dicoba dulu?", a: "Ya, tersedia mode demo tanpa perlu daftar. Klik \"Coba Demo\" di halaman utama." },
@@ -270,7 +273,7 @@ export default function LandingPage() {
           <FadeIn delay={0.2}>
             <div className="mt-6 flex gap-3">
               <Button size="lg" className="flex-1 font-bold" onClick={handleRegister}>
-                Mulai Gratis 14 Hari
+                Daftar Sekarang
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
               <Button size="lg" variant="outline" className="flex-1 font-bold" onClick={handleDemo}>
@@ -348,7 +351,7 @@ export default function LandingPage() {
                   <tr className="bg-muted">
                     <th className="text-left p-2.5 font-semibold text-muted-foreground">Fitur</th>
                     <th className="p-2.5 font-bold text-primary bg-primary/10 text-center">KosPintar</th>
-                    <th className="p-2.5 font-semibold text-muted-foreground text-center">SuperKos</th>
+                    <th className="p-2.5 font-semibold text-muted-foreground text-center">{COMPETITOR_LABEL}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -397,8 +400,13 @@ export default function LandingPage() {
                   <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
                 </div>
 
+                <div className="bg-accent/10 rounded-lg p-3 text-center">
+                  <p className="text-xs font-semibold text-accent">Maks. 40 unit kamar</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Di atas 40 unit: Rp 349.000/tahun <span className="line-through">Rp 699.000</span></p>
+                </div>
+
                 <div className="space-y-2">
-                  {["Unlimited kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
+                  {["Maks. 40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
                     <div key={f} className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-primary flex-shrink-0" />
                       <span className="text-sm text-foreground">{f}</span>
@@ -463,7 +471,7 @@ export default function LandingPage() {
                 Mulai Kelola Kos Lebih Cerdas
               </h2>
               <p className="text-xs text-primary-foreground/80">
-                Gratis 14 hari, tanpa kartu kredit
+                Coba demo gratis, tanpa perlu daftar
               </p>
               <Button
                 size="lg"

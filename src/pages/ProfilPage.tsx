@@ -14,19 +14,23 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Building2, LogOut, User, Info, Crown, Sparkles, Pencil, Loader2 } from "lucide-react";
+import { Building2, LogOut, User, Info, Crown, Sparkles, Pencil, Loader2, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 export default function ProfilPage() {
   const { user, signOut } = useAuth();
-  const { properties, activeProperty, setActiveProperty } = useProperty();
+  const { properties, activeProperty, setActiveProperty, refetch: refetchProperties } = useProperty();
   const demo = useDemo();
 
   const [profileData, setProfileData] = useState<{ nama: string | null; no_hp: string | null }>({ nama: null, no_hp: null });
   const [showEdit, setShowEdit] = useState(false);
+  const [showEditProperty, setShowEditProperty] = useState(false);
   const [editNama, setEditNama] = useState("");
   const [editHp, setEditHp] = useState("");
+  const [editKosName, setEditKosName] = useState("");
+  const [editKosAlamat, setEditKosAlamat] = useState("");
+  const [editPropertyId, setEditPropertyId] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -57,6 +61,20 @@ export default function ProfilPage() {
       toast.success("Profil diperbarui!");
       setProfileData({ nama: editNama, no_hp: editHp || null });
       setShowEdit(false);
+    }
+    setSaving(false);
+  };
+
+  const handleSaveProperty = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (demo.isDemo || !user) return;
+    setSaving(true);
+    const { error } = await supabase.from("properties").update({ nama_kos: editKosName, alamat: editKosAlamat || null } as any).eq("id", editPropertyId);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Properti diperbarui!");
+      setShowEditProperty(false);
+      refetchProperties();
     }
     setSaving(false);
   };
@@ -128,17 +146,34 @@ export default function ProfilPage() {
           <h2 className="text-sm font-semibold text-foreground mb-3">Properti</h2>
           <div className="space-y-2">
             {displayProperties.map(p => (
-              <button key={p.id} onClick={() => !demo.isDemo && setActiveProperty(p as any)}
-                className={`w-full text-left p-3 rounded-xl border transition-colors shadow-sm ${displayActive?.id === p.id ? "border-primary bg-secondary" : "border-border bg-card"}`}
-              >
-                <div className="flex items-center gap-2">
-                  <Building2 size={18} className={displayActive?.id === p.id ? "text-primary" : "text-muted-foreground"} />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{p.nama_kos}</p>
-                    {p.alamat && <p className="text-xs text-muted-foreground">{p.alamat}</p>}
+              <div key={p.id} className="relative">
+                <button onClick={() => !demo.isDemo && setActiveProperty(p as any)}
+                  className={`w-full text-left p-3 rounded-xl border transition-colors shadow-sm ${displayActive?.id === p.id ? "border-primary bg-secondary" : "border-border bg-card"}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Building2 size={18} className={displayActive?.id === p.id ? "text-primary" : "text-muted-foreground"} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{p.nama_kos}</p>
+                      {p.alamat && <p className="text-xs text-muted-foreground">{p.alamat}</p>}
+                    </div>
+                    {!demo.isDemo && (
+                      <div
+                        role="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditPropertyId(p.id);
+                          setEditKosName(p.nama_kos);
+                          setEditKosAlamat(p.alamat || "");
+                          setShowEditProperty(true);
+                        }}
+                        className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted"
+                      >
+                        <Pencil size={14} className="text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
-                </div>
-              </button>
+                </button>
+              </div>
             ))}
           </div>
         </div>
@@ -194,6 +229,33 @@ export default function ProfilPage() {
           <div className="bottom-sheet-footer">
             <Button type="submit" className="w-full" disabled={saving}>
               {saving ? <><Loader2 size={16} className="mr-2 animate-spin" /> Menyimpan...</> : "Simpan Profil"}
+            </Button>
+          </div>
+        </form>
+      </BottomSheet>
+
+      {/* Edit Property */}
+      <BottomSheet open={showEditProperty} onClose={() => setShowEditProperty(false)} title="Edit Properti">
+        <form onSubmit={handleSaveProperty} className="bottom-sheet-form">
+          <div className="bottom-sheet-body">
+            <div className="space-y-2">
+              <Label>Nama Kos</Label>
+              <div className="relative">
+                <Building2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input value={editKosName} onChange={e => setEditKosName(e.target.value)} className="pl-9" required />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Alamat</Label>
+              <div className="relative">
+                <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input value={editKosAlamat} onChange={e => setEditKosAlamat(e.target.value)} className="pl-9" placeholder="Jl. Contoh No. 123" />
+              </div>
+            </div>
+          </div>
+          <div className="bottom-sheet-footer">
+            <Button type="submit" className="w-full" disabled={saving}>
+              {saving ? <><Loader2 size={16} className="mr-2 animate-spin" /> Menyimpan...</> : "Simpan Properti"}
             </Button>
           </div>
         </form>

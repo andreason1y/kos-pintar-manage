@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,9 @@ import { useDemo } from "@/lib/demo-context";
 
 export default function AuthPage() {
   const { setIsDemo } = useDemo();
-  const [isLogin, setIsLogin] = useState(true);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [isLogin, setIsLogin] = useState(!searchParams.get("tab") || searchParams.get("tab") !== "register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -25,6 +28,7 @@ export default function AuthPage() {
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
+      else navigate("/beranda", { replace: true });
     } else {
       if (password !== confirmPassword) {
         toast.error("Kata sandi dan konfirmasi tidak cocok");
