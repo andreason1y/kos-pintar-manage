@@ -1,15 +1,16 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { PropertyProvider, useProperty } from "@/lib/property-context";
 import { DemoProvider, useDemo } from "@/lib/demo-context";
-import AuthPage from "./pages/AuthPage";
-import OnboardingPage from "./pages/OnboardingPage";
 
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const KamarPage = lazy(() => import("./pages/KamarPage"));
 const PenyewaPage = lazy(() => import("./pages/PenyewaPage"));
@@ -35,7 +36,7 @@ function MainRoutes() {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
-        <Route path="/" element={<DashboardPage />} />
+        <Route path="/beranda" element={<DashboardPage />} />
         <Route path="/kamar" element={<KamarPage />} />
         <Route path="/penyewa" element={<PenyewaPage />} />
         <Route path="/pembayaran" element={<PembayaranPage />} />
@@ -44,6 +45,8 @@ function MainRoutes() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/broadcast" element={<AdminBroadcast />} />
+        {/* Redirect old / to /beranda for logged in users */}
+        <Route path="/" element={<Navigate to="/beranda" replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
@@ -59,8 +62,29 @@ function AppRoutes() {
   if (isDemo) return <MainRoutes />;
 
   if (authLoading || (user && propLoading)) return <LoadingScreen />;
-  if (!user) return <AuthPage />;
-  if (properties.length === 0) return <OnboardingPage />;
+
+  // Not authenticated: show landing page or login
+  if (!user) {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    );
+  }
+
+  if (properties.length === 0) {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          <Route path="*" element={<OnboardingPage />} />
+        </Routes>
+      </Suspense>
+    );
+  }
 
   return <MainRoutes />;
 }

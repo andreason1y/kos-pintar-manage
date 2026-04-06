@@ -1,0 +1,515 @@
+import { useRef, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, useInView } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useDemo } from "@/lib/demo-context";
+import {
+  ClipboardList, Wallet, Home, FileText, BarChart3, Bell,
+  Check, X, Instagram, MessageCircle, ChevronRight, ArrowRight,
+  Users, DoorOpen, TrendingUp, CreditCard
+} from "lucide-react";
+
+/* ─── Fade-in wrapper ─── */
+function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ─── Phone Mockup ─── */
+function PhoneMockup({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`relative mx-auto ${className}`}>
+      <div className="rounded-[2rem] border-[6px] border-foreground/90 bg-background shadow-2xl overflow-hidden">
+        {/* Notch */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-foreground/90 rounded-b-xl z-10" />
+        {/* Screen content */}
+        <div className="pt-6 overflow-hidden">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Mini Dashboard Preview ─── */
+function DashboardPreview() {
+  return (
+    <div className="bg-background p-3 space-y-3 text-[10px]">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-muted-foreground text-[8px]">Selamat datang 👋</p>
+          <p className="font-bold text-[11px] text-foreground">Kos Harmoni</p>
+        </div>
+        <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+          <Bell className="w-3 h-3 text-primary" />
+        </div>
+      </div>
+      {/* Laba card */}
+      <div className="gradient-primary rounded-xl p-3 text-primary-foreground">
+        <p className="text-[8px] opacity-80">Laba Bulan Ini</p>
+        <p className="text-lg font-extrabold">Rp 9.150.000</p>
+        <p className="text-[8px] opacity-80">↑ 12% dari bulan lalu</p>
+      </div>
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: "Penyewa", value: "8", icon: Users, color: "text-primary" },
+          { label: "Kamar Terisi", value: "8/12", icon: DoorOpen, color: "text-accent" },
+          { label: "Belum Bayar", value: "2", icon: CreditCard, color: "text-destructive" },
+        ].map((s) => (
+          <div key={s.label} className="bg-card border border-border rounded-lg p-2 text-center">
+            <s.icon className={`w-3 h-3 mx-auto mb-1 ${s.color}`} />
+            <p className="font-bold text-[11px]">{s.value}</p>
+            <p className="text-muted-foreground text-[7px]">{s.label}</p>
+          </div>
+        ))}
+      </div>
+      {/* Donut placeholder */}
+      <div className="bg-card border border-border rounded-lg p-3 flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full border-4 border-primary border-t-destructive border-r-accent flex-shrink-0" />
+        <div className="space-y-1">
+          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-primary" /><span className="text-[8px]">Lunas (5)</span></div>
+          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-accent" /><span className="text-[8px]">Belum Lunas (1)</span></div>
+          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-destructive" /><span className="text-[8px]">Belum Bayar (2)</span></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TenantListPreview() {
+  const tenants = [
+    { name: "Budi Santoso", room: "A1 · Standar", status: "lunas", color: "bg-emerald-500" },
+    { name: "Siti Rahayu", room: "A2 · Standar", status: "belum_lunas", color: "bg-amber-500" },
+    { name: "Dewi Lestari", room: "B1 · Deluxe", status: "lunas", color: "bg-emerald-500" },
+    { name: "Rizky Pratama", room: "B2 · Deluxe", status: "belum_bayar", color: "bg-red-500" },
+    { name: "Fajar Ramadhan", room: "C1 · Suite", status: "lunas", color: "bg-emerald-500" },
+  ];
+  return (
+    <div className="bg-background p-3 space-y-2 text-[10px]">
+      <p className="font-bold text-[12px] text-foreground">Penyewa</p>
+      {tenants.map((t) => (
+        <div key={t.name} className="flex items-center gap-2 bg-card border border-border rounded-lg p-2">
+          <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
+            {t.name.split(" ").map(w => w[0]).join("")}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-[10px] truncate">{t.name}</p>
+            <p className="text-muted-foreground text-[8px]">{t.room}</p>
+          </div>
+          <div className={`w-2 h-2 rounded-full ${t.color}`} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RoomListPreview() {
+  const rooms = [
+    { type: "Standar", price: "1.2jt", rooms: [{ no: "A1", tenant: "Budi S.", filled: true }, { no: "A2", tenant: "Siti R.", filled: true }, { no: "A3", tenant: null, filled: false }] },
+    { type: "Deluxe", price: "1.8jt", rooms: [{ no: "B1", tenant: "Dewi L.", filled: true }, { no: "B2", tenant: "Rizky P.", filled: true }] },
+  ];
+  return (
+    <div className="bg-background p-3 space-y-2 text-[10px]">
+      <p className="font-bold text-[12px] text-foreground">Kamar</p>
+      {rooms.map((rt) => (
+        <div key={rt.type} className="bg-card border border-border rounded-lg p-2 space-y-1.5">
+          <div className="flex justify-between">
+            <p className="font-semibold text-[10px]">{rt.type}</p>
+            <p className="text-muted-foreground text-[8px]">Rp {rt.price}/bln</p>
+          </div>
+          {rt.rooms.map((r) => (
+            <div key={r.no} className="flex items-center gap-2 pl-1">
+              <div className={`w-1.5 h-1.5 rounded-full ${r.filled ? "bg-primary" : "bg-muted-foreground/30"}`} />
+              <span className="font-medium">{r.no}</span>
+              <span className="text-muted-foreground text-[8px]">{r.tenant || "Kosong"}</span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FinancePreview() {
+  return (
+    <div className="bg-background p-3 space-y-2 text-[10px]">
+      <p className="font-bold text-[12px] text-foreground">Keuangan</p>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="bg-primary/10 rounded-lg p-2">
+          <p className="text-[8px] text-muted-foreground">Pemasukan</p>
+          <p className="font-bold text-primary text-[11px]">Rp 12.0jt</p>
+        </div>
+        <div className="bg-destructive/10 rounded-lg p-2">
+          <p className="text-[8px] text-muted-foreground">Pengeluaran</p>
+          <p className="font-bold text-destructive text-[11px]">Rp 2.85jt</p>
+        </div>
+      </div>
+      {[
+        { title: "Bayar Listrik", cat: "Listrik", amount: "-850rb" },
+        { title: "Bayar Air PDAM", cat: "Air", amount: "-350rb" },
+        { title: "Internet Bulanan", cat: "Internet", amount: "-500rb" },
+        { title: "Gaji Kebersihan", cat: "Kebersihan", amount: "-600rb" },
+      ].map((e) => (
+        <div key={e.title} className="flex items-center justify-between bg-card border border-border rounded-lg p-2">
+          <div>
+            <p className="font-semibold text-[10px]">{e.title}</p>
+            <p className="text-muted-foreground text-[8px]">{e.cat}</p>
+          </div>
+          <p className="text-destructive font-semibold text-[10px]">{e.amount}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── FEATURES ─── */
+const FEATURES = [
+  { icon: ClipboardList, title: "Manajemen Penyewa", desc: "Catat data, status bayar, dan riwayat sewa semua penyewa dalam satu tempat" },
+  { icon: Wallet, title: "Tagihan Otomatis", desc: "Tagihan dibuat otomatis tiap bulan, reminder WA dikirim otomatis ke penyewa" },
+  { icon: Home, title: "Manajemen Kamar", desc: "Pantau status kamar kosong/terisi beserta nama penyewa secara real-time" },
+  { icon: FileText, title: "Nota PDF", desc: "Generate dan kirim nota pembayaran langsung ke WhatsApp penyewa" },
+  { icon: BarChart3, title: "Laporan Keuangan", desc: "Pantau pemasukan, pengeluaran, dan laba kos setiap bulan" },
+  { icon: Bell, title: "Pengingat Otomatis", desc: "Notifikasi kontrak mau habis dan tagihan jatuh tempo" },
+];
+
+const EMOJIS = ["📋", "💰", "🏠", "📄", "📊", "🔔"];
+
+/* ─── COMPARISON ─── */
+const COMPARISON = [
+  { feature: "Harga", kp: "Rp 249k/tahun (flat)", sk: "Rp 9.000/kamar/bulan" },
+  { feature: "10 kamar setahun", kp: "Rp 249.000", sk: "Rp 1.080.000" },
+  { feature: "20 kamar setahun", kp: "Rp 249.000", sk: "Rp 2.160.000" },
+  { feature: "Manajemen penyewa", kp: true, sk: true },
+  { feature: "Nota PDF", kp: true, sk: true },
+  { feature: "Reminder WA otomatis", kp: true, sk: true },
+  { feature: "Harga flat (bukan per kamar)", kp: true, sk: false },
+  { feature: "Tanpa biaya tersembunyi", kp: true, sk: false },
+];
+
+/* ─── FAQ ─── */
+const FAQS = [
+  { q: "Apakah data saya aman?", a: "Ya, data disimpan di server terenkripsi dan hanya bisa diakses oleh Anda." },
+  { q: "Berapa batas jumlah kamar?", a: "Tidak ada batas. Kelola 5 kamar atau 500 kamar dengan harga yang sama." },
+  { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga Rp 249.000 sudah termasuk semua fitur." },
+  { q: "Bagaimana cara perpanjang langganan?", a: "Kami akan kirim notifikasi sebelum masa langganan habis. Perpanjang langsung dari aplikasi." },
+  { q: "Apakah bisa dicoba dulu?", a: "Ya, tersedia mode demo tanpa perlu daftar. Klik \"Coba Demo\" di halaman utama." },
+];
+
+const SCREENSHOTS = [
+  { label: "Beranda", component: <DashboardPreview /> },
+  { label: "Penyewa", component: <TenantListPreview /> },
+  { label: "Kamar", component: <RoomListPreview /> },
+  { label: "Keuangan", component: <FinancePreview /> },
+];
+
+const SLOT_TOTAL = 100;
+
+export default function LandingPage() {
+  const navigate = useNavigate();
+  const { setIsDemo } = useDemo();
+  const [slotsUsed] = useState(37); // placeholder
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleDemo = () => {
+    setIsDemo(true);
+    navigate("/beranda");
+  };
+
+  const handleRegister = () => navigate("/login?tab=register");
+  const handleLogin = () => navigate("/login");
+
+  return (
+    <div className="min-h-screen bg-background font-sans">
+      {/* ─── STICKY HEADER ─── */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
+        <div className="mx-auto max-w-app flex items-center justify-between px-4 h-14">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
+              <Home className="w-4 h-4 text-primary-foreground" />
+            </div>
+            <span className="font-extrabold text-base text-foreground">KosPintar</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleLogin}>Masuk</Button>
+            <Button size="sm" onClick={handleRegister}>Daftar</Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-app">
+        {/* ─── HERO ─── */}
+        <section className="px-4 pt-10 pb-8">
+          <FadeIn>
+            <h1 className="text-2xl font-extrabold leading-tight text-foreground">
+              Kelola Kos-kosan<br />
+              <span className="text-primary">Lebih Mudah</span> &{" "}
+              <span className="text-primary">Lebih Hemat</span>
+            </h1>
+          </FadeIn>
+          <FadeIn delay={0.1}>
+            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+              Catat penyewa, tagihan, dan keuangan kos dalam satu aplikasi. Lebih murah dari kopi sebulan.
+            </p>
+          </FadeIn>
+          <FadeIn delay={0.2}>
+            <div className="mt-6 flex gap-3">
+              <Button size="lg" className="flex-1 font-bold" onClick={handleRegister}>
+                Mulai Gratis 14 Hari
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+              <Button size="lg" variant="outline" className="flex-1 font-bold" onClick={handleDemo}>
+                Coba Demo
+              </Button>
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.3}>
+            <div className="mt-8">
+              <PhoneMockup className="w-56">
+                <DashboardPreview />
+              </PhoneMockup>
+            </div>
+          </FadeIn>
+        </section>
+
+        {/* ─── FEATURES ─── */}
+        <section className="px-4 py-10">
+          <FadeIn>
+            <h2 className="text-lg font-extrabold text-foreground text-center">
+              Semua yang Kamu Butuhkan<br />untuk Kelola Kos
+            </h2>
+          </FadeIn>
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            {FEATURES.map((f, i) => (
+              <FadeIn key={f.title} delay={i * 0.08}>
+                <Card className="h-full border-border/60">
+                  <CardContent className="p-4 space-y-2">
+                    <span className="text-xl">{EMOJIS[i]}</span>
+                    <p className="font-bold text-sm text-foreground">{f.title}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+                  </CardContent>
+                </Card>
+              </FadeIn>
+            ))}
+          </div>
+        </section>
+
+        {/* ─── APP SCREENSHOTS ─── */}
+        <section className="py-10">
+          <FadeIn>
+            <h2 className="text-lg font-extrabold text-foreground text-center px-4">
+              Tampilan Aplikasi
+            </h2>
+          </FadeIn>
+          <FadeIn delay={0.1}>
+            <div
+              ref={scrollRef}
+              className="mt-6 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {SCREENSHOTS.map((s) => (
+                <div key={s.label} className="snap-center flex-shrink-0 w-48 space-y-2">
+                  <PhoneMockup className="w-full">
+                    {s.component}
+                  </PhoneMockup>
+                  <p className="text-center text-xs font-semibold text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </FadeIn>
+        </section>
+
+        {/* ─── COMPARISON TABLE ─── */}
+        <section className="px-4 py-10">
+          <FadeIn>
+            <h2 className="text-lg font-extrabold text-foreground text-center">
+              Kenapa Pilih KosPintar?
+            </h2>
+          </FadeIn>
+          <FadeIn delay={0.1}>
+            <div className="mt-6 rounded-xl border border-border overflow-hidden">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-muted">
+                    <th className="text-left p-2.5 font-semibold text-muted-foreground">Fitur</th>
+                    <th className="p-2.5 font-bold text-primary bg-primary/10 text-center">KosPintar</th>
+                    <th className="p-2.5 font-semibold text-muted-foreground text-center">SuperKos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMPARISON.map((row, i) => (
+                    <tr key={i} className={i % 2 === 0 ? "bg-card" : "bg-muted/30"}>
+                      <td className="p-2.5 text-foreground font-medium">{row.feature}</td>
+                      <td className="p-2.5 text-center bg-primary/5 font-semibold text-primary">
+                        {typeof row.kp === "boolean" ? (
+                          row.kp ? <Check className="w-4 h-4 mx-auto text-primary" /> : <X className="w-4 h-4 mx-auto text-muted-foreground" />
+                        ) : row.kp}
+                      </td>
+                      <td className="p-2.5 text-center text-muted-foreground">
+                        {typeof row.sk === "boolean" ? (
+                          row.sk ? <Check className="w-4 h-4 mx-auto text-primary" /> : <X className="w-4 h-4 mx-auto text-muted-foreground" />
+                        ) : row.sk}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </FadeIn>
+        </section>
+
+        {/* ─── PRICING ─── */}
+        <section className="px-4 py-10">
+          <FadeIn>
+            <h2 className="text-lg font-extrabold text-foreground text-center">
+              Harga Transparan,<br />Tanpa Biaya Tersembunyi
+            </h2>
+          </FadeIn>
+          <FadeIn delay={0.15}>
+            <Card className="mt-6 border-primary/30 shadow-lg overflow-hidden">
+              <div className="gradient-primary p-3 text-center">
+                <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground border-0 font-bold text-xs">
+                  🔥 Early Bird — 100 Pengguna Pertama
+                </Badge>
+              </div>
+              <CardContent className="p-5 space-y-4">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground line-through">Rp 499.000/tahun</p>
+                  <p className="text-3xl font-extrabold text-foreground">
+                    Rp 249.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                  </p>
+                  <p className="text-xs text-primary font-semibold mt-1">+ 3 bulan gratis (total 15 bulan)</p>
+                  <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
+                </div>
+
+                <div className="space-y-2">
+                  {["Unlimited kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
+                    <div key={f} className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span className="text-sm text-foreground">{f}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <Button className="w-full font-bold" size="lg" onClick={handleRegister}>
+                  Mulai Sekarang — Rp 249.000
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Harga naik ke Rp 499.000 setelah 100 pengguna pertama
+                </p>
+
+                {/* Slot counter */}
+                <div className="bg-muted rounded-lg p-3 text-center">
+                  <p className="text-xs font-semibold text-foreground">
+                    Tersisa <span className="text-primary font-extrabold">{SLOT_TOTAL - slotsUsed}</span> dari {SLOT_TOTAL} slot
+                  </p>
+                  <div className="mt-2 h-2 bg-border rounded-full overflow-hidden">
+                    <div
+                      className="h-full gradient-primary rounded-full transition-all duration-500"
+                      style={{ width: `${(slotsUsed / SLOT_TOTAL) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </FadeIn>
+        </section>
+
+        {/* ─── FAQ ─── */}
+        <section className="px-4 py-10">
+          <FadeIn>
+            <h2 className="text-lg font-extrabold text-foreground text-center">
+              Pertanyaan Umum
+            </h2>
+          </FadeIn>
+          <FadeIn delay={0.1}>
+            <Accordion type="single" collapsible className="mt-6 space-y-2">
+              {FAQS.map((faq, i) => (
+                <AccordionItem key={i} value={`faq-${i}`} className="border rounded-lg px-3">
+                  <AccordionTrigger className="text-sm font-semibold text-left">
+                    {faq.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground">
+                    {faq.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </FadeIn>
+        </section>
+
+        {/* ─── FINAL CTA ─── */}
+        <section className="px-4 py-10">
+          <FadeIn>
+            <div className="gradient-primary rounded-2xl p-6 text-center space-y-4">
+              <h2 className="text-lg font-extrabold text-primary-foreground">
+                Mulai Kelola Kos Lebih Cerdas
+              </h2>
+              <p className="text-xs text-primary-foreground/80">
+                Gratis 14 hari, tanpa kartu kredit
+              </p>
+              <Button
+                size="lg"
+                variant="secondary"
+                className="font-bold"
+                onClick={handleRegister}
+              >
+                Daftar Sekarang
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </FadeIn>
+        </section>
+
+        {/* ─── FOOTER ─── */}
+        <footer className="border-t border-border px-4 py-8 space-y-6">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-md gradient-primary flex items-center justify-center">
+              <Home className="w-3 h-3 text-primary-foreground" />
+            </div>
+            <span className="font-extrabold text-sm text-foreground">KosPintar</span>
+          </div>
+          <p className="text-xs text-muted-foreground">Kelola kos-kosan lebih mudah & lebih hemat.</p>
+
+          <div className="flex flex-wrap gap-4 text-xs">
+            {["Tentang", "Fitur", "Harga", "FAQ", "Kontak"].map((link) => (
+              <button key={link} className="text-muted-foreground hover:text-foreground transition-colors">
+                {link}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-3">
+            <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors">
+              <Instagram className="w-4 h-4 text-muted-foreground" />
+            </a>
+            <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors">
+              <MessageCircle className="w-4 h-4 text-muted-foreground" />
+            </a>
+          </div>
+
+          <p className="text-[11px] text-muted-foreground">
+            © 2026 KosPintar. All rights reserved.
+          </p>
+        </footer>
+      </main>
+    </div>
+  );
+}
