@@ -164,6 +164,42 @@ export default function PenyewaPage() {
     fetchData();
   };
 
+  const handleEndContract = async (tenant: Tenant) => {
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    setShowEndContract(tenant);
+    setDeductionNote("");
+    // Fetch deposit info
+    const { data } = await supabase.from("deposits").select("*").eq("tenant_id", tenant.id).eq("status", "ditahan").single() as any;
+    if (data) {
+      setDepositInfo(data);
+      setReturnAmount(String(data.jumlah));
+    } else {
+      setDepositInfo(null);
+      setReturnAmount("0");
+    }
+  };
+
+  const handleConfirmEndContract = async () => {
+    if (!showEndContract) return;
+    // Update tenant status
+    await supabase.from("tenants").update({ status: "keluar", tanggal_keluar: new Date().toISOString().split("T")[0] } as any).eq("id", showEndContract.id);
+    if (showEndContract.room_id) {
+      await supabase.from("rooms").update({ status: "kosong" } as any).eq("id", showEndContract.room_id);
+    }
+    // Return deposit if exists
+    if (depositInfo) {
+      await supabase.from("deposits").update({
+        status: "dikembalikan",
+        jumlah_dikembalikan: parseInt(returnAmount) || 0,
+        catatan_potongan: deductionNote || null,
+        tanggal_kembali: new Date().toISOString().split("T")[0],
+      } as any).eq("id", depositInfo.id);
+    }
+    toast.success("Kontrak berakhir, penyewa dikeluarkan");
+    setShowEndContract(null); setDepositInfo(null);
+    fetchData();
+  };
+
   return (
     <AppShell>
       <PageHeader title="Penyewa" subtitle={`${tenants.filter(t => t.status === "aktif").length} penyewa aktif`} action={
