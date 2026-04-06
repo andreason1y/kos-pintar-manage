@@ -269,7 +269,7 @@ export default function KamarPage() {
                       }}>
                         <Pencil size={14} className="mr-2" /> Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteType(rt.id)}>
+                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ type: "room_type", id: rt.id, name: rt.nama })}>
                         <Trash2 size={14} className="mr-2" /> Hapus
                       </DropdownMenuItem>
                     </DropdownMenuContent>
