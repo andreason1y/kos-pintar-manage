@@ -311,6 +311,7 @@ export default function PenyewaPage() {
               </SelectContent></Select>
             </div>
           </div>
+          <div className="space-y-2"><Label>Deposit (Rp)</Label><Input type="number" value={deposit} onChange={e => setDeposit(e.target.value)} placeholder="0 (opsional)" /></div>
           <Button type="submit" className="w-full">Simpan</Button>
         </form>
       </BottomSheet>
