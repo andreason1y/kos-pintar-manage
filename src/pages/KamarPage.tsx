@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,6 +7,7 @@ import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { formatRupiah } from "@/lib/helpers";
 import { getAvatarColor, getInitials } from "@/lib/avatar-colors";
+import { useRoomTypesAndRooms, useTenants, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import SkeletonCard from "@/components/SkeletonCard";
@@ -43,8 +44,7 @@ export default function KamarPage() {
   const navigate = useNavigate();
   const { activeProperty } = useProperty();
   const demo = useDemo();
-  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
-  const [loading, setLoading] = useState(true);
+  const invalidate = useInvalidate();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [showAddRooms, setShowAddRooms] = useState<string | null>(null);
@@ -61,12 +61,8 @@ export default function KamarPage() {
   const [startNum, setStartNum] = useState("1");
   const [count, setCount] = useState("5");
   const [lantai, setLantai] = useState("1");
-
-  // Edit room state
   const [editRoomNomor, setEditRoomNomor] = useState("");
   const [editRoomLantai, setEditRoomLantai] = useState("1");
-
-  // Add tenant form
   const [tenantNama, setTenantNama] = useState("");
   const [tenantHp, setTenantHp] = useState("");
   const [tenantGender, setTenantGender] = useState("L");
@@ -74,49 +70,34 @@ export default function KamarPage() {
   const [tenantDurasi, setTenantDurasi] = useState("1");
   const [tenantDeposit, setTenantDeposit] = useState("");
 
-  const fetchData = async () => {
+  const { data: roomData, isLoading: roomsLoading } = useRoomTypesAndRooms();
+  const { data: tenantData, isLoading: tenantsLoading } = useTenants();
+  const loading = !demo.isDemo && (roomsLoading || tenantsLoading);
+
+  const roomTypes = useMemo(() => {
     if (demo.isDemo) {
-      const mapped: RoomType[] = demo.roomTypes.map(rt => ({
+      return demo.roomTypes.map(rt => ({
         ...rt,
         rooms: demo.rooms.filter(r => r.room_type_id === rt.id).map(r => {
           const tenant = demo.tenants.find(t => t.room_id === r.id && t.status === "aktif");
           return { ...r, tenantName: tenant?.nama, tenantId: tenant?.id };
         }),
-      }));
-      setRoomTypes(mapped);
-      setLoading(false);
-      return;
+      })) as RoomType[];
     }
-    if (!activeProperty) return;
-    setLoading(true);
-    const { data: types } = await supabase.from("room_types").select("*").eq("property_id", activeProperty.id).order("created_at") as any;
-    const rtIds = (types || []).map((t: any) => t.id);
-    let rooms: any[] = [];
-    if (rtIds.length > 0) {
-      const { data } = await supabase.from("rooms").select("*").in("room_type_id", rtIds).order("nomor") as any;
-      rooms = data || [];
-    }
-    const occupiedRoomIds = rooms.filter((r: any) => r.status === "terisi").map((r: any) => r.id);
-    let tenantsByRoom: Record<string, { nama: string; id: string }> = {};
-    if (occupiedRoomIds.length > 0) {
-      const { data: tenantData } = await supabase.from("tenants").select("id, nama, room_id").in("room_id", occupiedRoomIds).eq("status", "aktif") as any;
-      (tenantData || []).forEach((t: any) => {
-        if (t.room_id) tenantsByRoom[t.room_id] = { nama: t.nama, id: t.id };
-      });
-    }
-    const mapped: RoomType[] = (types || []).map((t: any) => ({
+    if (!roomData || !tenantData) return [] as RoomType[];
+    const tenantsByRoom: Record<string, { nama: string; id: string }> = {};
+    tenantData.filter((t: any) => t.status === "aktif" && t.room_id).forEach((t: any) => {
+      tenantsByRoom[t.room_id] = { nama: t.nama, id: t.id };
+    });
+    return roomData.roomTypes.map((t: any) => ({
       ...t,
-      rooms: rooms.filter((r: any) => r.room_type_id === t.id).map((r: any) => ({
-        ...r,
-        tenantName: tenantsByRoom[r.id]?.nama,
-        tenantId: tenantsByRoom[r.id]?.id,
+      rooms: roomData.rooms.filter((r: any) => r.room_type_id === t.id).map((r: any) => ({
+        ...r, tenantName: tenantsByRoom[r.id]?.nama, tenantId: tenantsByRoom[r.id]?.id,
       })),
-    }));
-    setRoomTypes(mapped);
-    setLoading(false);
-  };
+    })) as RoomType[];
+  }, [demo.isDemo, roomData, tenantData]);
 
-  useEffect(() => { fetchData(); }, [activeProperty, demo.isDemo]);
+  const refetch = () => { invalidate.rooms(); invalidate.tenants(); invalidate.transactions(); invalidate.deposits(); };
 
   const handleAddType = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +105,7 @@ export default function KamarPage() {
     if (!activeProperty) return;
     const { error } = await supabase.from("room_types").insert({ property_id: activeProperty.id, nama, harga_per_bulan: parseInt(harga) || 0, fasilitas } as any);
     if (error) toast.error(error.message);
-    else { toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); setFasilitas([]); setCustomFasilitas(""); fetchData(); }
+    else { toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); setFasilitas([]); setCustomFasilitas(""); refetch(); }
   };
 
   const handleEditType = async (e: React.FormEvent) => {
@@ -133,21 +114,21 @@ export default function KamarPage() {
     if (!showEditType) return;
     const { error } = await supabase.from("room_types").update({ nama, harga_per_bulan: parseInt(harga) || 0, fasilitas } as any).eq("id", showEditType.id);
     if (error) toast.error(error.message);
-    else { toast.success("Tipe kamar diperbarui!"); setShowEditType(null); fetchData(); }
+    else { toast.success("Tipe kamar diperbarui!"); setShowEditType(null); refetch(); }
   };
 
   const handleDeleteType = async (id: string) => {
     if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
     const { error } = await supabase.from("room_types").delete().eq("id", id) as any;
     if (error) toast.error(error.message);
-    else { toast.success("Tipe kamar dihapus"); fetchData(); }
+    else { toast.success("Tipe kamar dihapus"); refetch(); }
   };
 
   const handleDeleteRoom = async (id: string) => {
     if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
     const { error } = await supabase.from("rooms").delete().eq("id", id) as any;
     if (error) toast.error(error.message);
-    else { toast.success("Kamar dihapus"); fetchData(); }
+    else { toast.success("Kamar dihapus"); refetch(); }
   };
 
   const handleEditRoom = async (e: React.FormEvent) => {
@@ -156,7 +137,7 @@ export default function KamarPage() {
     if (!showEditRoom) return;
     const { error } = await supabase.from("rooms").update({ nomor: editRoomNomor, lantai: parseInt(editRoomLantai) || 1 } as any).eq("id", showEditRoom.id);
     if (error) toast.error(error.message);
-    else { toast.success("Kamar diperbarui!"); setShowEditRoom(null); fetchData(); }
+    else { toast.success("Kamar diperbarui!"); setShowEditRoom(null); refetch(); }
   };
 
   const handleBulkAdd = async (e: React.FormEvent) => {
@@ -169,7 +150,7 @@ export default function KamarPage() {
     const roomsToInsert = Array.from({ length: n }, (_, i) => ({ room_type_id: showAddRooms, nomor: `${prefix}${start + i}`, lantai: lt, status: "kosong" as const }));
     const { error } = await supabase.from("rooms").insert(roomsToInsert as any);
     if (error) toast.error(error.message);
-    else { toast.success(`${n} kamar ditambahkan!`); setShowAddRooms(null); fetchData(); }
+    else { toast.success(`${n} kamar ditambahkan!`); setShowAddRooms(null); refetch(); }
   };
 
   const handleAddTenant = async (e: React.FormEvent) => {
@@ -197,24 +178,18 @@ export default function KamarPage() {
       periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(),
       total_tagihan: hargaSewa,
     } as any);
-    // Create deposit if specified
     const depositAmount = parseInt(tenantDeposit) || 0;
     if (depositAmount > 0) {
-      await supabase.from("deposits").insert({
-        tenant_id: tenant.id, property_id: activeProperty.id, jumlah: depositAmount,
-      } as any);
+      await supabase.from("deposits").insert({ tenant_id: tenant.id, property_id: activeProperty.id, jumlah: depositAmount } as any);
     }
     toast.success("Penyewa berhasil ditambahkan!");
     setShowAddTenant(null); setTenantNama(""); setTenantHp(""); setTenantGender("L"); setTenantDurasi("1"); setTenantDeposit("");
-    fetchData();
+    refetch();
   };
 
   const handleRoomTap = (room: Room) => {
-    if (room.status === "terisi" && room.tenantId) {
-      navigate(`/penyewa?id=${room.tenantId}`);
-    } else if (room.status === "kosong") {
-      setShowAddTenant(room.id);
-    }
+    if (room.status === "terisi" && room.tenantId) navigate(`/penyewa?id=${room.tenantId}`);
+    else if (room.status === "kosong") setShowAddTenant(room.id);
   };
 
   return (
@@ -249,7 +224,7 @@ export default function KamarPage() {
                         <span className="text-sm font-medium text-foreground">{terisi}/{rt.rooms.length}</span>
                         <p className="text-[10px] text-muted-foreground">terisi</p>
                       </div>
-                      <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                      <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.15 }}>
                         <ChevronDown size={18} className="text-muted-foreground" />
                       </motion.div>
                     </div>
@@ -261,12 +236,7 @@ export default function KamarPage() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => {
-                        setShowEditType(rt);
-                        setNama(rt.nama);
-                        setHarga(String(rt.harga_per_bulan));
-                        setFasilitas(rt.fasilitas || []);
-                      }}>
+                      <DropdownMenuItem onClick={() => { setShowEditType(rt); setNama(rt.nama); setHarga(String(rt.harga_per_bulan)); setFasilitas(rt.fasilitas || []); }}>
                         <Pencil size={14} className="mr-2" /> Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ type: "room_type", id: rt.id, name: rt.nama })}>
@@ -281,7 +251,7 @@ export default function KamarPage() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25 }}
+                      transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
                       <div className="px-4 pb-4 space-y-2 border-t border-border pt-3">
@@ -289,25 +259,16 @@ export default function KamarPage() {
                           <p className="text-sm text-muted-foreground text-center py-2">Belum ada kamar</p>
                         ) : rt.rooms.map((room) => (
                           <div key={room.id} className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleRoomTap(room)}
-                              className="flex-1 flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-muted"
-                            >
+                            <button onClick={() => handleRoomTap(room)}
+                              className="flex-1 flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-muted">
                               <div className="flex items-center gap-3">
                                 {room.status === "terisi" && room.tenantName ? (
-                                  <div
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold"
-                                    style={{
-                                      background: getAvatarColor(room.tenantName).bg,
-                                      color: getAvatarColor(room.tenantName).fg,
-                                    }}
-                                  >
+                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold"
+                                    style={{ background: getAvatarColor(room.tenantName).bg, color: getAvatarColor(room.tenantName).fg }}>
                                     {getInitials(room.tenantName)}
                                   </div>
                                 ) : (
-                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold bg-muted text-muted-foreground">
-                                    {room.nomor}
-                                  </div>
+                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold bg-muted text-muted-foreground">{room.nomor}</div>
                                 )}
                                 <div>
                                   <span className="text-sm font-medium text-foreground">Kamar {room.nomor}</span>
@@ -320,15 +281,9 @@ export default function KamarPage() {
                               </div>
                               <div className="flex items-center gap-2">
                                 {room.status === "kosong" && (
-                                  <span className="text-[10px] font-medium text-primary flex items-center gap-0.5">
-                                    <UserPlus size={12} /> Isi
-                                  </span>
+                                  <span className="text-[10px] font-medium text-primary flex items-center gap-0.5"><UserPlus size={12} /> Isi</span>
                                 )}
-                                <Badge className={`text-[10px] border-0 ${
-                                  room.status === "terisi"
-                                    ? "bg-[hsl(142,71%,45%)] text-white"
-                                    : "bg-muted text-muted-foreground"
-                                }`}>
+                                <Badge className={`text-[10px] border-0 ${room.status === "terisi" ? "bg-[hsl(142,71%,45%)] text-white" : "bg-muted text-muted-foreground"}`}>
                                   {room.status === "terisi" ? "Terisi" : "Kosong"}
                                 </Badge>
                               </div>
@@ -340,11 +295,7 @@ export default function KamarPage() {
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => {
-                                  setShowEditRoom(room);
-                                  setEditRoomNomor(room.nomor);
-                                  setEditRoomLantai(String(room.lantai));
-                                }}>
+                                <DropdownMenuItem onClick={() => { setShowEditRoom(room); setEditRoomNomor(room.nomor); setEditRoomLantai(String(room.lantai)); }}>
                                   <Pencil size={14} className="mr-2" /> Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ type: "room", id: room.id, name: `Kamar ${room.nomor}` })}>

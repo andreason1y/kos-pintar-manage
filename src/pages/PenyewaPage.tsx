@@ -366,8 +366,7 @@ export default function PenyewaPage() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => { if (deleteTarget) handleDeleteTenant(deleteTarget.id); setDeleteTarget(null); }}
-        title="Hapus Penyewa"
-        description={`Yakin ingin menghapus ${deleteTarget?.name}? Data tidak bisa dikembalikan.`}
+        itemName={deleteTarget?.name || ""}
       />
     </AppShell>
   );

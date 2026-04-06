@@ -324,8 +324,7 @@ export default function PembayaranPage() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => { if (deleteTarget) handleDeleteTx(deleteTarget.id); setDeleteTarget(null); }}
-        title="Hapus Transaksi"
-        description={`Yakin ingin menghapus ${deleteTarget?.name}? Data tidak bisa dikembalikan.`}
+        itemName={deleteTarget?.name || ""}
       />
     </AppShell>
   );
