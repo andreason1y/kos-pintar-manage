@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 export default function ProfilPage() {
   const { user, signOut } = useAuth();
-  const { properties, activeProperty, setActiveProperty } = useProperty();
+  const { properties, activeProperty, setActiveProperty, refetch: refetchProperties } = useProperty();
   const demo = useDemo();
 
   const [profileData, setProfileData] = useState<{ nama: string | null; no_hp: string | null }>({ nama: null, no_hp: null });
