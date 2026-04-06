@@ -10,8 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ClipboardList, Wallet, Home, FileText, BarChart3, Bell,
   Check, X, Instagram, MessageCircle, ChevronRight, ArrowRight,
-  Users, DoorOpen, TrendingUp, CreditCard
+  Users, DoorOpen, TrendingUp, CreditCard, Star
 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 /* ─── Fade-in wrapper ─── */
 function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
