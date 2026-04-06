@@ -63,7 +63,7 @@ export default function PenyewaPage() {
         const rt = room ? demo.roomTypes.find(rr => rr.id === room.room_type_id) : null;
         const tx = demo.transactions.find(tx => tx.tenant_id === t.id && tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni);
         const sisaHari = t.tanggal_keluar ? Math.ceil((new Date(t.tanggal_keluar).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : undefined;
-        return { ...t, tanggal_keluar: t.tanggalKeluar || t.tanggal_keluar, roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-", latestTxStatus: tx?.status, sisaHari };
+        return { ...t, roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-", latestTxStatus: tx?.status, sisaHari };
       });
       setTenants(mapped);
       setEmptyRooms(demo.rooms.filter(r => r.status === "kosong").map(r => {
