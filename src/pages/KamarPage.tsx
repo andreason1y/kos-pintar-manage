@@ -483,6 +483,10 @@ export default function KamarPage() {
               </div>
             </div>
           </div>
+          <div className="space-y-2">
+            <Label>Deposit (Rp)</Label>
+            <Input type="number" value={tenantDeposit} onChange={e => setTenantDeposit(e.target.value)} placeholder="0 (opsional)" />
+          </div>
           <Button type="submit" className="w-full">Simpan Penyewa</Button>
         </form>
       </BottomSheet>
