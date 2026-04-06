@@ -369,6 +369,46 @@ export default function LandingPage() {
           </FadeIn>
         </section>
 
+        {/* ─── TESTIMONIALS ─── */}
+        <section className="py-10" aria-label="Testimoni pengguna KosPintar">
+          <FadeIn>
+            <h2 className="text-lg font-extrabold text-foreground text-center px-4">
+              Apa Kata Pengguna KosPintar?
+            </h2>
+          </FadeIn>
+          <FadeIn delay={0.1}>
+            <div
+              className="mt-6 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {TESTIMONIALS.map((t) => (
+                <Card key={t.name} className="snap-center flex-shrink-0 w-72 border-border/60">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star key={s} className="w-4 h-4 fill-accent text-accent" />
+                      ))}
+                    </div>
+                    <p className="text-xs text-foreground leading-relaxed">"{t.quote}"</p>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-8 h-8">
+                        <AvatarFallback className={`${t.color} text-primary-foreground text-[10px] font-bold`}>
+                          {t.name.split(" ").map(w => w[0]).join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-xs font-bold text-foreground">{t.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{t.kos}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center mt-2 italic">*Testimoni dari pengguna beta KosPintar</p>
+          </FadeIn>
+        </section>
+
         {/* ─── COMPARISON TABLE ─── */}
         <section className="px-4 py-10" aria-label="Perbandingan harga aplikasi kos">
           <FadeIn>
@@ -415,59 +455,95 @@ export default function LandingPage() {
               Harga Aplikasi Manajemen Kos<br />yang Terjangkau
             </h2>
           </FadeIn>
-          <FadeIn delay={0.15}>
+
+          {/* Starter */}
+          <FadeIn delay={0.1}>
             <Card className="mt-6 border-primary/30 shadow-lg overflow-hidden">
-              <div className="gradient-primary p-3 text-center">
+              <div className="gradient-primary p-2.5 text-center">
                 <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground border-0 font-bold text-xs">
-                  🔥 Early Bird — 100 Pengguna Pertama
+                  🔥 Early Bird
                 </Badge>
               </div>
-              <CardContent className="p-5 space-y-4">
+              <CardContent className="p-5 space-y-3">
                 <div className="text-center">
+                  <p className="text-lg font-bold text-foreground">Starter</p>
                   <p className="text-sm text-muted-foreground line-through">Rp 499.000/tahun</p>
                   <p className="text-3xl font-extrabold text-foreground">
                     Rp 249.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
                   </p>
-                  <p className="text-xs text-primary font-semibold mt-1">+ 3 bulan gratis (total 15 bulan)</p>
+                  <p className="text-xs text-primary font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
                   <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
                 </div>
-
-                <div className="bg-accent/10 rounded-lg p-3 text-center">
-                  <p className="text-xs font-semibold text-accent">Maks. 40 unit kamar</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Di atas 40 unit: Rp 349.000/tahun <span className="line-through">Rp 699.000</span></p>
-                </div>
-
                 <div className="space-y-2">
-                  {["Maks. 40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
+                  {["Cocok untuk 1–40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
                     <div key={f} className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
                       <span className="text-sm text-foreground">{f}</span>
                     </div>
                   ))}
                 </div>
-
                 <Button className="w-full font-bold" size="lg" onClick={handleRegister}>
                   Mulai Sekarang — Rp 249.000 →
                 </Button>
+              </CardContent>
+            </Card>
+          </FadeIn>
 
-                <p className="text-[11px] text-muted-foreground text-center">
-                  Harga naik ke Rp 499.000 setelah 100 pengguna pertama
-                </p>
+          {/* Pro */}
+          <FadeIn delay={0.2}>
+            <Card className="mt-4 border-accent/30 shadow-lg overflow-hidden">
+              <div className="bg-accent p-2.5 text-center">
+                <Badge variant="secondary" className="bg-accent-foreground/20 text-accent-foreground border-0 font-bold text-xs">
+                  Untuk kos besar
+                </Badge>
+              </div>
+              <CardContent className="p-5 space-y-3">
+                <div className="text-center">
+                  <p className="text-lg font-bold text-foreground">Pro</p>
+                  <p className="text-sm text-muted-foreground line-through">Rp 999.000/tahun</p>
+                  <p className="text-3xl font-extrabold text-foreground">
+                    Rp 499.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                  </p>
+                  <p className="text-xs text-accent font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
+                </div>
+                <div className="space-y-2">
+                  {["Unlimited kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
+                    <div key={f} className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-accent flex-shrink-0" aria-hidden="true" />
+                      <span className="text-sm text-foreground">{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button className="w-full font-bold bg-accent hover:bg-accent/90 text-accent-foreground" size="lg" onClick={handleRegister}>
+                  Mulai Sekarang — Rp 499.000 →
+                </Button>
+              </CardContent>
+            </Card>
+          </FadeIn>
 
-                {/* Slot counter */}
+          {/* Slot counter */}
+          <FadeIn delay={0.25}>
+            <div className="mt-4 space-y-3">
+              <p className="text-[11px] text-muted-foreground text-center">
+                Harga naik setelah 100 pengguna pertama
+              </p>
+              {slotsLoaded && earlyBirdActive && (
                 <div className="bg-muted rounded-lg p-3 text-center">
                   <p className="text-xs font-semibold text-foreground">
-                    Tersisa <span className="text-primary font-extrabold">{slotsRemaining}</span> dari {SLOT_TOTAL} slot
+                    Tersisa <span className="text-primary font-extrabold">{slotsRemaining}</span> dari {SLOT_TOTAL} slot Early Bird
                   </p>
-                  <div className="mt-2 h-2 bg-border rounded-full overflow-hidden" role="progressbar" aria-valuenow={slotsUsed} aria-valuemax={SLOT_TOTAL}>
+                  <div className="mt-2 h-2 bg-border rounded-full overflow-hidden" role="progressbar" aria-valuenow={SLOT_TOTAL - slotsRemaining} aria-valuemax={SLOT_TOTAL}>
                     <div
                       className="h-full gradient-primary rounded-full transition-all duration-500"
-                      style={{ width: `${(slotsUsed / SLOT_TOTAL) * 100}%` }}
+                      style={{ width: `${((SLOT_TOTAL - slotsRemaining) / SLOT_TOTAL) * 100}%` }}
                     />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+              {slotsLoaded && !earlyBirdActive && (
+                <p className="text-xs text-muted-foreground text-center font-semibold">Early Bird telah berakhir</p>
+              )}
+            </div>
           </FadeIn>
         </section>
 
