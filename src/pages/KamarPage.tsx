@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
@@ -50,6 +51,7 @@ export default function KamarPage() {
   const [showAddTenant, setShowAddTenant] = useState<string | null>(null);
   const [showEditType, setShowEditType] = useState<RoomType | null>(null);
   const [showEditRoom, setShowEditRoom] = useState<Room | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: "room_type" | "room"; id: string; name: string } | null>(null);
 
   const [nama, setNama] = useState("");
   const [harga, setHarga] = useState("");
@@ -267,7 +269,7 @@ export default function KamarPage() {
                       }}>
                         <Pencil size={14} className="mr-2" /> Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteType(rt.id)}>
+                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ type: "room_type", id: rt.id, name: rt.nama })}>
                         <Trash2 size={14} className="mr-2" /> Hapus
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -345,7 +347,7 @@ export default function KamarPage() {
                                 }}>
                                   <Pencil size={14} className="mr-2" /> Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteRoom(room.id)}>
+                                <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ type: "room", id: room.id, name: `Kamar ${room.nomor}` })}>
                                   <Trash2 size={14} className="mr-2" /> Hapus
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -490,6 +492,17 @@ export default function KamarPage() {
           <Button type="submit" className="w-full">Simpan Penyewa</Button>
         </form>
       </BottomSheet>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget?.type === "room_type") handleDeleteType(deleteTarget.id);
+          else if (deleteTarget?.type === "room") handleDeleteRoom(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        itemName={deleteTarget?.name || ""}
+      />
     </AppShell>
   );
 }

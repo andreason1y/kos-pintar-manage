@@ -1,21 +1,42 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
+import BottomSheet from "@/components/BottomSheet";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Building2, LogOut, User, Info, Crown, Sparkles } from "lucide-react";
+import { Building2, LogOut, User, Info, Crown, Sparkles, Pencil, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 export default function ProfilPage() {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { properties, activeProperty, setActiveProperty } = useProperty();
   const demo = useDemo();
+
+  const [profileData, setProfileData] = useState<{ nama: string | null; no_hp: string | null }>({ nama: null, no_hp: null });
+  const [showEdit, setShowEdit] = useState(false);
+  const [editNama, setEditNama] = useState("");
+  const [editHp, setEditHp] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (demo.isDemo || !user) return;
+    const fetchProfile = async () => {
+      const { data } = await supabase.from("profiles").select("nama, no_hp").eq("id", user.id).single() as any;
+      if (data) setProfileData(data);
+    };
+    fetchProfile();
+  }, [user, demo.isDemo]);
 
   const handleLogout = () => {
     if (demo.isDemo) {
@@ -25,8 +46,26 @@ export default function ProfilPage() {
     signOut();
   };
 
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    if (!user) return;
+    setSaving(true);
+    const { error } = await supabase.from("profiles").update({ nama: editNama, no_hp: editHp || null } as any).eq("id", user.id);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Profil diperbarui!");
+      setProfileData({ nama: editNama, no_hp: editHp || null });
+      setShowEdit(false);
+    }
+    setSaving(false);
+  };
+
   const displayProperties = demo.isDemo ? [demo.property] : properties;
   const displayActive = demo.isDemo ? demo.property : activeProperty;
+  const displayName = demo.isDemo ? "Demo User" : (profileData.nama || user?.user_metadata?.nama || user?.email?.split("@")[0] || "Pengguna");
+  const displayEmail = demo.isDemo ? "demo@kospintar.id" : (user?.email || "-");
+  const displayHp = demo.isDemo ? "-" : (profileData.no_hp || user?.user_metadata?.no_hp || "-");
 
   return (
     <AppShell>
@@ -38,10 +77,23 @@ export default function ProfilPage() {
             <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
               <User size={24} className="text-primary-foreground" />
             </div>
-            <div>
-              <p className="font-semibold text-foreground">{demo.isDemo ? "Demo User" : "Pengguna"}</p>
-              <p className="text-sm text-muted-foreground">{demo.isDemo ? "demo@kospintar.id" : "user@email.com"}</p>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-foreground truncate">{displayName}</p>
+              <p className="text-sm text-muted-foreground truncate">{displayEmail}</p>
+              {displayHp !== "-" && <p className="text-xs text-muted-foreground">{displayHp}</p>}
             </div>
+            {!demo.isDemo && (
+              <button
+                onClick={() => {
+                  setEditNama(profileData.nama || user?.user_metadata?.nama || "");
+                  setEditHp(profileData.no_hp || user?.user_metadata?.no_hp || "");
+                  setShowEdit(true);
+                }}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted"
+              >
+                <Pencil size={16} className="text-muted-foreground" />
+              </button>
+            )}
           </div>
 
           {demo.isDemo && (
@@ -120,6 +172,28 @@ export default function ProfilPage() {
         {/* App Version */}
         <p className="text-center text-[10px] text-muted-foreground pb-4">KosPintar v1.0.0</p>
       </div>
+
+      {/* Edit Profile */}
+      <BottomSheet open={showEdit} onClose={() => setShowEdit(false)} title="Edit Profil">
+        <form onSubmit={handleSaveProfile} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Nama Lengkap</Label>
+            <Input value={editNama} onChange={e => setEditNama(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input value={user?.email || ""} disabled className="bg-muted" />
+            <p className="text-[10px] text-muted-foreground">Email tidak dapat diubah</p>
+          </div>
+          <div className="space-y-2">
+            <Label>No. HP</Label>
+            <Input value={editHp} onChange={e => setEditHp(e.target.value)} placeholder="08123456789" />
+          </div>
+          <Button type="submit" className="w-full" disabled={saving}>
+            {saving ? <><Loader2 size={16} className="mr-2 animate-spin" /> Menyimpan...</> : "Simpan Profil"}
+          </Button>
+        </form>
+      </BottomSheet>
     </AppShell>
   );
 }

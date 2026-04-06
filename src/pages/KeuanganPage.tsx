@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import SwipeableRow from "@/components/SwipeableRow";
+import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { Plus, TrendingUp, TrendingDown, Minus, AlertTriangle, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -59,6 +60,7 @@ export default function KeuanganPage() {
   const [jumlah, setJumlah] = useState("");
   const [tanggal, setTanggal] = useState(now.toISOString().split("T")[0]);
   const [isRecurring, setIsRecurring] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const PIE_COLORS = [
     "hsl(171, 77%, 32%)", "hsl(38, 92%, 50%)", "hsl(262, 52%, 47%)",
@@ -380,7 +382,7 @@ export default function KeuanganPage() {
                             setTanggal(item.date);
                             setIsRecurring(item.is_recurring || false);
                           }}
-                          onDelete={() => handleDeleteExpense(item.id)}
+                          onDelete={() => setDeleteTarget({ id: item.id, name: item.label })}
                         >
                           {rowContent}
                         </SwipeableRow>
@@ -431,6 +433,16 @@ export default function KeuanganPage() {
           <Button type="submit" className="w-full">Simpan Perubahan</Button>
         </form>
       </BottomSheet>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) handleDeleteExpense(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        itemName={deleteTarget?.name || ""}
+      />
     </AppShell>
   );
 }

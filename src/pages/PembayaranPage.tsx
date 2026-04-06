@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { CreditCard, MessageCircle, FileText, Download, Send, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -54,6 +55,7 @@ export default function PembayaranPage() {
   const [editJumlah, setEditJumlah] = useState("");
   const [editMetode, setEditMetode] = useState("tunai");
   const [editStatus, setEditStatus] = useState("belum_bayar");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const propertyName = demo.isDemo ? demo.property.nama_kos : activeProperty?.nama_kos || "";
 
@@ -234,7 +236,7 @@ export default function PembayaranPage() {
                       }}>
                         <Pencil size={14} className="mr-2" /> Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTx(p.id)}>
+                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ id: p.id, name: `transaksi ${p.tenant_nama}` })}>
                         <Trash2 size={14} className="mr-2" /> Hapus
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -357,6 +359,16 @@ export default function PembayaranPage() {
           </div>
         )}
       </BottomSheet>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) handleDeleteTx(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        itemName={deleteTarget?.name || ""}
+      />
     </AppShell>
   );
 }

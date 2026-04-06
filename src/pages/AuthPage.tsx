@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { Building2, Play } from "lucide-react";
+import { Building2, Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDemo } from "@/lib/demo-context";
 
@@ -13,7 +13,9 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [nama, setNama] = useState("");
+  const [noHp, setNoHp] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,10 +26,15 @@ export default function AuthPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
     } else {
+      if (password !== confirmPassword) {
+        toast.error("Kata sandi dan konfirmasi tidak cocok");
+        setLoading(false);
+        return;
+      }
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { nama } },
+        options: { data: { nama, no_hp: noHp } },
       });
       if (error) toast.error(error.message);
       else toast.success("Akun berhasil dibuat! Silakan cek email untuk verifikasi.");
@@ -81,12 +88,24 @@ export default function AuthPage() {
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@contoh.com" required />
             </div>
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="noHp">No. HP</Label>
+                <Input id="noHp" value={noHp} onChange={(e) => setNoHp(e.target.value)} placeholder="08123456789" required />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="password">Kata Sandi</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min. 6 karakter" required minLength={6} />
             </div>
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Konfirmasi Kata Sandi</Label>
+                <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Ulangi kata sandi" required minLength={6} />
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Memproses..." : isLogin ? "Masuk" : "Daftar"}
+              {loading ? <><Loader2 size={16} className="mr-2 animate-spin" /> Memproses...</> : isLogin ? "Masuk" : "Daftar"}
             </Button>
           </form>
 

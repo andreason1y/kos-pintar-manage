@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
@@ -57,6 +58,7 @@ export default function PenyewaPage() {
   const [depositInfo, setDepositInfo] = useState<any>(null);
   const [returnAmount, setReturnAmount] = useState("");
   const [deductionNote, setDeductionNote] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const now = new Date();
   const bulanIni = now.getMonth() + 1;
@@ -276,7 +278,7 @@ export default function PenyewaPage() {
                                 <Trash2 size={14} className="mr-2" /> Akhiri Sewa
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTenant(t.id)}>
+                            <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ id: t.id, name: t.nama })}>
                               <Trash2 size={14} className="mr-2" /> Hapus
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -364,6 +366,16 @@ export default function PenyewaPage() {
           </div>
         )}
       </BottomSheet>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) handleDeleteTenant(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        itemName={deleteTarget?.name || ""}
+      />
     </AppShell>
   );
 }
