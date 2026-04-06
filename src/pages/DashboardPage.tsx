@@ -60,8 +60,9 @@ export default function DashboardPage() {
   const { data: tenantData, isLoading: tenantsLoading } = useTenants();
   const { data: txData, isLoading: txLoading } = useTransactions();
   const { data: expData, isLoading: expLoading } = useExpenses(bulanIni, tahunIni);
+  const { data: expLastData, isLoading: expLastLoading } = useExpenses(bulanLalu, tahunLalu);
 
-  const loading = !demo.isDemo && (roomsLoading || tenantsLoading || txLoading || expLoading);
+  const loading = !demo.isDemo && (roomsLoading || tenantsLoading || txLoading || expLoading || expLastLoading);
 
   const { stats, unpaidTenants } = useMemo(() => {
     if (demo.isDemo) {
