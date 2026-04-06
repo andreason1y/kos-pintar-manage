@@ -9,13 +9,25 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Building2, LogOut, User, Info, Crown, Sparkles } from "lucide-react";
+import { Building2, LogOut, User, Info, Crown, Sparkles, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { getAvatarColor } from "@/lib/avatar-colors";
 
 export default function ProfilPage() {
-  const { signOut } = useAuth();
-  const { properties, activeProperty, setActiveProperty } = useProperty();
+  const { session, user, signOut } = useAuth();
+  const { properties, activeProperty, setActiveProperty, refetch } = useProperty();
   const demo = useDemo();
+  const [profile, setProfile] = useState<{ nama: string | null; no_hp: string | null } | null>(null);
+  const [resetting, setResetting] = useState(false);
+
+  useEffect(() => {
+    if (!user || demo.isDemo) return;
+    supabase.from("profiles").select("nama, no_hp").eq("id", user.id).single()
+      .then(({ data }) => { if (data) setProfile(data); });
+  }, [user, demo.isDemo]);
 
   const handleLogout = () => {
     if (demo.isDemo) {
@@ -25,8 +37,36 @@ export default function ProfilPage() {
     signOut();
   };
 
+  const handleReset = async () => {
+    if (!session) return;
+    setResetting(true);
+    try {
+      const kosName = activeProperty?.nama_kos || "Kos Saya";
+      const kosAlamat = activeProperty?.alamat || "";
+      const res = await supabase.functions.invoke("seed-user-data", {
+        body: { nama_kos: kosName, alamat: kosAlamat, reset: true },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error) {
+        toast.error("Gagal reset: " + res.error.message);
+      } else {
+        toast.success("Data berhasil direset ke data awal!");
+        refetch();
+      }
+    } catch (err: any) {
+      toast.error("Gagal: " + err.message);
+    }
+    setResetting(false);
+  };
+
   const displayProperties = demo.isDemo ? [demo.property] : properties;
   const displayActive = demo.isDemo ? demo.property : activeProperty;
+
+  const displayName = demo.isDemo ? "Demo User" : (profile?.nama || user?.user_metadata?.nama || user?.email?.split("@")[0] || "Pengguna");
+  const displayEmail = demo.isDemo ? "demo@kospintar.id" : (user?.email || "");
+  const displayPhone = demo.isDemo ? null : (profile?.no_hp || null);
+  const initials = displayName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
+  const avatarColor = getAvatarColor(displayName);
 
   return (
     <AppShell>
@@ -35,12 +75,13 @@ export default function ProfilPage() {
         {/* User Info */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-              <User size={24} className="text-primary-foreground" />
+            <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg" style={{ backgroundColor: avatarColor }}>
+              {initials}
             </div>
             <div>
-              <p className="font-semibold text-foreground">{demo.isDemo ? "Demo User" : "Pengguna"}</p>
-              <p className="text-sm text-muted-foreground">{demo.isDemo ? "demo@kospintar.id" : "user@email.com"}</p>
+              <p className="font-semibold text-foreground">{displayName}</p>
+              <p className="text-sm text-muted-foreground">{displayEmail}</p>
+              {displayPhone && <p className="text-xs text-muted-foreground">{displayPhone}</p>}
             </div>
           </div>
 
@@ -90,6 +131,34 @@ export default function ProfilPage() {
             ))}
           </div>
         </div>
+
+        {/* Pengaturan */}
+        {!demo.isDemo && (
+          <div>
+            <h2 className="text-sm font-semibold text-foreground mb-3">Pengaturan</h2>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="w-full justify-start gap-2" disabled={resetting}>
+                  <RotateCcw size={16} /> {resetting ? "Mereset data..." : "Reset ke Data Awal"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset Data</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Semua data akan dihapus dan diganti dengan data contoh baru. Tindakan ini tidak bisa dibatalkan.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Reset Data
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
 
         {/* Logout */}
         <AlertDialog>
