@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, TrendingUp, TrendingDown, Minus, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, TrendingUp, TrendingDown, Minus, MoreVertical, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -333,46 +334,46 @@ export default function KeuanganPage() {
               <div className="space-y-2">
                 {items.map((item, i) => (
                   <motion.div key={item.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
-                    className="bg-card rounded-lg border border-border shadow-sm overflow-hidden"
+                    className="flex items-center bg-card rounded-lg border border-border px-4 py-3 shadow-sm"
                   >
-                    <div className="flex items-center px-4 py-3">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${item.type === "income" ? "bg-[hsl(142,71%,45%)]/10" : "bg-destructive/10"}`}>
-                          {item.type === "income" ? <TrendingUp size={14} className="text-[hsl(142,71%,45%)]" /> : <TrendingDown size={14} className="text-destructive" />}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{item.label}</p>
-                          <p className="text-xs text-muted-foreground">{item.date}</p>
-                        </div>
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${item.type === "income" ? "bg-[hsl(142,71%,45%)]/10" : "bg-destructive/10"}`}>
+                        {item.type === "income" ? <TrendingUp size={14} className="text-[hsl(142,71%,45%)]" /> : <TrendingDown size={14} className="text-destructive" />}
                       </div>
-                      <span className={`text-sm font-semibold flex-shrink-0 text-right ${item.type === "income" ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>
-                        {item.type === "income" ? "+" : "-"}{formatRupiah(item.amount)}
-                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{item.label}</p>
+                        <p className="text-xs text-muted-foreground">{item.date}</p>
+                      </div>
                     </div>
-                    {item.type === "expense" && (
-                      <div className="flex border-t border-border">
-                        <button
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:bg-muted/50 transition-colors"
-                          onClick={() => {
-                            setShowEdit(item);
-                            setJudul(item.label);
-                            setKategori(item.kategori || "Lainnya");
-                            setJumlah(String(item.amount));
-                            setTanggal(item.date);
-                            setIsRecurring(item.is_recurring || false);
-                          }}
-                        >
-                          <Pencil size={12} /> Edit
-                        </button>
-                        <div className="w-px bg-border" />
-                        <button
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs text-destructive hover:bg-destructive/5 transition-colors"
-                          onClick={() => handleDeleteExpense(item.id)}
-                        >
-                          <Trash2 size={12} /> Hapus
-                        </button>
-                      </div>
-                    )}
+                    <span className={`text-sm font-semibold flex-shrink-0 text-right ${item.type === "income" ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>
+                      {item.type === "income" ? "+" : "-"}{formatRupiah(item.amount)}
+                    </span>
+                    <div className="w-8 flex-shrink-0 flex justify-center">
+                      {item.type === "expense" ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-muted">
+                              <MoreVertical size={14} className="text-muted-foreground" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              setShowEdit(item);
+                              setJudul(item.label);
+                              setKategori(item.kategori || "Lainnya");
+                              setJumlah(String(item.amount));
+                              setTanggal(item.date);
+                              setIsRecurring(item.is_recurring || false);
+                            }}>
+                              <Pencil size={14} className="mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteExpense(item.id)}>
+                              <Trash2 size={14} className="mr-2" /> Hapus
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : null}
+                    </div>
                   </motion.div>
                 ))}
               </div>
