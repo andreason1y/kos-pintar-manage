@@ -278,7 +278,7 @@ export default function PenyewaPage() {
                                 <Trash2 size={14} className="mr-2" /> Akhiri Sewa
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTenant(t.id)}>
+                            <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ id: t.id, name: t.nama })}>
                               <Trash2 size={14} className="mr-2" /> Hapus
                             </DropdownMenuItem>
                           </DropdownMenuContent>
