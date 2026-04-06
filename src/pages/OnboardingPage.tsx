@@ -20,24 +20,16 @@ export default function OnboardingPage() {
     e.preventDefault();
     if (!user) return;
     setLoading(true);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await supabase.functions.invoke("seed-user-data", {
-        body: { nama_kos: namaKos, alamat: alamat || null },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
-
-      if (res.error) {
-        toast.error("Gagal menambahkan kos: " + res.error.message);
-      } else {
-        toast.success("Kos berhasil ditambahkan dengan data contoh!");
-        refetch();
-      }
-    } catch (err: any) {
-      toast.error("Gagal: " + err.message);
+    const { error } = await supabase.from("properties").insert({
+      user_id: user.id,
+      nama_kos: namaKos,
+      alamat: alamat || null,
+    } as any);
+    if (error) toast.error("Gagal menambahkan kos: " + error.message);
+    else {
+      toast.success("Kos berhasil ditambahkan!");
+      refetch();
     }
-
     setLoading(false);
   };
 
@@ -68,7 +60,7 @@ export default function OnboardingPage() {
               </div>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Menyiapkan data..." : "Mulai Sekarang"}
+              {loading ? "Menyimpan..." : "Mulai Sekarang"}
             </Button>
           </form>
         </div>

@@ -46,7 +46,7 @@ function MainRoutes() {
 
 function AppRoutes() {
   const { user, loading: authLoading } = useAuth();
-  const { properties, loading: propLoading, refetch } = useProperty();
+  const { properties, loading: propLoading } = useProperty();
   const { isDemo } = useDemo();
 
   // Demo mode - skip auth entirely
