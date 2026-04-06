@@ -100,6 +100,60 @@ export type Database = {
         }
         Relationships: []
       }
+      reminders: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          periode_bulan: number
+          periode_tahun: number
+          property_id: string
+          tenant_id: string
+          type: string
+          wa_link: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          periode_bulan: number
+          periode_tahun: number
+          property_id: string
+          tenant_id: string
+          type: string
+          wa_link?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          periode_bulan?: number
+          periode_tahun?: number
+          property_id?: string
+          tenant_id?: string
+          type?: string
+          wa_link?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_types: {
         Row: {
           created_at: string
