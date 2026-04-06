@@ -229,13 +229,20 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { setIsDemo } = useDemo();
   const [slotsUsed, setSlotsUsed] = useState(0);
+  const [slotsTaken, setSlotsTaken] = useState(0);
   const [slotsLoaded, setSlotsLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch real user count for urgency banner
+  // Fetch real user count + settings for slot counter
   useEffect(() => {
-    supabase.from("profiles").select("id", { count: "exact", head: true }).then(({ count }) => {
-      setSlotsUsed(count || 0);
+    Promise.all([
+      supabase.from("profiles").select("id", { count: "exact", head: true }),
+      supabase.from("settings").select("value").eq("key", "early_bird_slots_taken").single(),
+    ]).then(([profileRes, settingsRes]) => {
+      const userCount = profileRes.count || 0;
+      const taken = settingsRes.data?.value || 0;
+      setSlotsUsed(userCount);
+      setSlotsTaken(taken);
       setSlotsLoaded(true);
     });
   }, []);
