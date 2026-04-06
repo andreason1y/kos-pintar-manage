@@ -255,7 +255,8 @@ export default function LandingPage() {
   const handleRegister = () => navigate("/login?tab=register");
   const handleLogin = () => navigate("/login");
 
-  const slotsRemaining = SLOT_TOTAL - slotsUsed;
+  const slotsRemaining = SLOT_TOTAL - (slotsTaken + slotsUsed);
+  const earlyBirdActive = slotsRemaining > 0;
 
   return (
     <div className="min-h-screen bg-background font-sans">
