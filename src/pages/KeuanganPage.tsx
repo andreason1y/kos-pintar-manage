@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { formatRupiah, getMonthName } from "@/lib/helpers";
+import { useTransactions, useExpenses, useDeposits, useTenants, useRoomTypesAndRooms, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import SkeletonCard from "@/components/SkeletonCard";
@@ -22,34 +23,13 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 const EXPENSE_CATEGORIES = ["Listrik", "Air", "Kebersihan", "Perbaikan", "Internet", "Keamanan", "Lainnya"];
 
-interface MonthData {
-  bulan: string;
-  pemasukan: number;
-  pengeluaran: number;
-}
-
-interface UnpaidItem {
-  nama: string;
-  kamar: string;
-  sisa: number;
-}
-
 export default function KeuanganPage() {
   const { activeProperty } = useProperty();
   const demo = useDemo();
-  const [loading, setLoading] = useState(true);
-  const [pemasukan, setPemasukan] = useState(0);
-  const [pengeluaran, setPengeluaran] = useState(0);
-  const [pemasukanLalu, setPemasukanLalu] = useState(0);
-  const [pengeluaranLalu, setPengeluaranLalu] = useState(0);
-  const [items, setItems] = useState<any[]>([]);
+  const invalidate = useInvalidate();
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<any>(null);
-  const [barData, setBarData] = useState<MonthData[]>([]);
-  const [pieData, setPieData] = useState<{ name: string; value: number }[]>([]);
-  const [unpaidList, setUnpaidList] = useState<UnpaidItem[]>([]);
-  const [totalUnpaid, setTotalUnpaid] = useState(0);
-  const [totalDeposit, setTotalDeposit] = useState(0);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const now = new Date();
   const [bulan, setBulan] = useState(now.getMonth() + 1);
@@ -60,130 +40,109 @@ export default function KeuanganPage() {
   const [jumlah, setJumlah] = useState("");
   const [tanggal, setTanggal] = useState(now.toISOString().split("T")[0]);
   const [isRecurring, setIsRecurring] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const PIE_COLORS = [
     "hsl(171, 77%, 32%)", "hsl(38, 92%, 50%)", "hsl(262, 52%, 47%)",
     "hsl(199, 89%, 48%)", "hsl(142, 71%, 45%)", "hsl(0, 72%, 51%)",
   ];
 
-  const fetchData = async () => {
+  const { data: txData, isLoading: txLoading } = useTransactions();
+  const { data: expData, isLoading: expLoading } = useExpenses(bulan, tahun);
+  const { data: depositData, isLoading: depLoading } = useDeposits();
+  const { data: tenantData } = useTenants();
+  const { data: roomData } = useRoomTypesAndRooms();
+
+  const loading = !demo.isDemo && (txLoading || expLoading || depLoading);
+
+  const computed = useMemo(() => {
+    const bulanLalu = bulan === 1 ? 12 : bulan - 1;
+    const tahunLalu = bulan === 1 ? tahun - 1 : tahun;
+
     if (demo.isDemo) {
       const txAll = demo.transactions;
-      const txData = txAll.filter(t => t.periode_bulan === bulan && t.periode_tahun === tahun);
-      const expData = demo.expenses;
-      const totalPemasukan = txData.reduce((s, t) => s + t.jumlah_dibayar, 0);
-      const totalPengeluaran = expData.reduce((s, e) => s + e.jumlah, 0);
-      setPemasukan(totalPemasukan);
-      setPengeluaran(totalPengeluaran);
+      const txMonth = txAll.filter(t => t.periode_bulan === bulan && t.periode_tahun === tahun);
+      const exp = demo.expenses;
+      const pemasukan = txMonth.reduce((s, t) => s + t.jumlah_dibayar, 0);
+      const pengeluaran = exp.reduce((s, e) => s + e.jumlah, 0);
+      const txLalu = txAll.filter(t => t.periode_bulan === bulanLalu && t.periode_tahun === tahunLalu);
+      const pemasukanLalu = txLalu.reduce((s, t) => s + t.jumlah_dibayar, 0);
 
-      // Last month comparison
-      const bl = bulan === 1 ? 12 : bulan - 1;
-      const tl = bulan === 1 ? tahun - 1 : tahun;
-      const txLalu = txAll.filter(t => t.periode_bulan === bl && t.periode_tahun === tl);
-      setPemasukanLalu(txLalu.reduce((s, t) => s + t.jumlah_dibayar, 0));
-      setPengeluaranLalu(totalPengeluaran * 0.9);
-
-      // Bar chart - last 6 months
-      const bars: MonthData[] = [];
+      const bars = [];
       for (let i = 5; i >= 0; i--) {
-        let mb = bulan - i;
-        let mt = tahun;
+        let mb = bulan - i, mt = tahun;
         while (mb <= 0) { mb += 12; mt--; }
         const txM = txAll.filter(t => t.periode_bulan === mb && t.periode_tahun === mt);
-        const pem = txM.reduce((s, t) => s + t.jumlah_dibayar, 0);
-        const pen = i === 0 ? totalPengeluaran : totalPengeluaran * (0.8 + Math.random() * 0.3);
-        bars.push({ bulan: getMonthName(mb).slice(0, 3), pemasukan: pem, pengeluaran: Math.round(pen) });
+        bars.push({ bulan: getMonthName(mb).slice(0, 3), pemasukan: txM.reduce((s, t) => s + t.jumlah_dibayar, 0), pengeluaran: i === 0 ? pengeluaran : Math.round(pengeluaran * (0.8 + Math.random() * 0.3)) });
       }
-      setBarData(bars);
 
-      // Pie chart - income by room type
       const pieMap: Record<string, number> = {};
-      txData.forEach(tx => {
+      txMonth.forEach(tx => {
         const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
         const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
         const rt = room ? demo.roomTypes.find(r => r.id === room.room_type_id) : null;
-        const label = rt?.nama || "Lainnya";
-        pieMap[label] = (pieMap[label] || 0) + tx.jumlah_dibayar;
+        pieMap[rt?.nama || "Lainnya"] = (pieMap[rt?.nama || "Lainnya"] || 0) + tx.jumlah_dibayar;
       });
-      setPieData(Object.entries(pieMap).filter(([, v]) => v > 0).map(([name, value]) => ({ name, value })));
 
-      // Unpaid tenants
-      const unpaid = txData.filter(t => t.status !== "lunas").map(tx => {
+      const unpaid = txMonth.filter(t => t.status !== "lunas").map(tx => {
         const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
         const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
         return { nama: tenant?.nama || "-", kamar: room?.nomor || "-", sisa: tx.total_tagihan - tx.jumlah_dibayar };
       });
-      setUnpaidList(unpaid);
-      setTotalUnpaid(unpaid.reduce((s, u) => s + u.sisa, 0));
-      setTotalDeposit(1500000); // demo deposit
 
-      const combined = [
-        ...txData.filter(t => t.jumlah_dibayar > 0).map(t => ({ id: t.id, type: "income", amount: t.jumlah_dibayar, label: `Sewa ${getMonthName(t.periode_bulan)}`, date: t.tanggal_bayar || t.created_at })),
-        ...expData.map(e => ({ id: e.id, type: "expense", amount: e.jumlah, label: e.judul, date: e.tanggal, kategori: e.kategori, is_recurring: e.is_recurring })),
+      const items = [
+        ...txMonth.filter(t => t.jumlah_dibayar > 0).map(t => ({ id: t.id, type: "income", amount: t.jumlah_dibayar, label: `Sewa ${getMonthName(t.periode_bulan)}`, date: t.tanggal_bayar || t.created_at })),
+        ...exp.map(e => ({ id: e.id, type: "expense", amount: e.jumlah, label: e.judul, date: e.tanggal, kategori: e.kategori, is_recurring: e.is_recurring })),
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-      setItems(combined);
-      setLoading(false);
-      return;
+      return {
+        pemasukan, pengeluaran, pemasukanLalu, pengeluaranLalu: pengeluaran * 0.9,
+        barData: bars,
+        pieData: Object.entries(pieMap).filter(([, v]) => v > 0).map(([name, value]) => ({ name, value })),
+        unpaidList: unpaid, totalUnpaid: unpaid.reduce((s, u) => s + u.sisa, 0),
+        totalDeposit: 1500000,
+        items,
+      };
     }
 
-    if (!activeProperty) return;
-    setLoading(true);
-    const pid = activeProperty.id;
-    const startDate = `${tahun}-${String(bulan).padStart(2, "0")}-01`;
-    const endMonth = bulan === 12 ? 1 : bulan + 1;
-    const endYear = bulan === 12 ? tahun + 1 : tahun;
-    const endDate = `${endYear}-${String(endMonth).padStart(2, "0")}-01`;
+    if (!txData || !expData) return null;
 
-    const [txRes, expRes] = await Promise.all([
-      supabase.from("transactions").select("*").eq("property_id", pid).eq("periode_bulan", bulan).eq("periode_tahun", tahun).order("created_at", { ascending: false }) as any,
-      supabase.from("expenses").select("*").eq("property_id", pid).gte("tanggal", startDate).lt("tanggal", endDate).order("tanggal", { ascending: false }) as any,
-    ]);
+    const txMonth = txData.filter((t: any) => t.periode_bulan === bulan && t.periode_tahun === tahun);
+    const txLast = txData.filter((t: any) => t.periode_bulan === bulanLalu && t.periode_tahun === tahunLalu);
+    const pemasukan = txMonth.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
+    const pengeluaran = expData.reduce((s: number, e: any) => s + (e.jumlah || 0), 0);
+    const pemasukanLalu = txLast.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
 
-    const txData = (txRes.data || []) as any[];
-    const expData = (expRes.data || []) as any[];
+    const unpaidTx = txMonth.filter((t: any) => t.status !== "lunas");
+    const tenants = tenantData || [];
+    const rooms = roomData?.rooms || [];
+    const tenantMap: Record<string, any> = {};
+    tenants.forEach((t: any) => { tenantMap[t.id] = t; });
+    const roomMap: Record<string, string> = {};
+    rooms.forEach((r: any) => { roomMap[r.id] = r.nomor; });
 
-    const totalPem = txData.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
-    const totalPen = expData.reduce((s: number, e: any) => s + (e.jumlah || 0), 0);
-    setPemasukan(totalPem);
-    setPengeluaran(totalPen);
-
-    // Unpaid
-    const unpaidTx = txData.filter((t: any) => t.status !== "lunas");
-    const tenantIds = [...new Set(unpaidTx.map((t: any) => t.tenant_id))];
-    let tenantMap: Record<string, any> = {};
-    if (tenantIds.length > 0) {
-      const { data: td } = await supabase.from("tenants").select("id, nama, room_id").in("id", tenantIds) as any;
-      (td || []).forEach((t: any) => { tenantMap[t.id] = t; });
-    }
-    const roomIds = Object.values(tenantMap).filter((t: any) => t.room_id).map((t: any) => t.room_id);
-    let roomMap: Record<string, string> = {};
-    if (roomIds.length > 0) {
-      const { data: rd } = await supabase.from("rooms").select("id, nomor").in("id", roomIds) as any;
-      (rd || []).forEach((r: any) => { roomMap[r.id] = r.nomor; });
-    }
     const unpaid = unpaidTx.map((tx: any) => {
       const t = tenantMap[tx.tenant_id];
       return { nama: t?.nama || "-", kamar: t?.room_id ? roomMap[t.room_id] || "-" : "-", sisa: tx.total_tagihan - tx.jumlah_dibayar };
     });
-    setUnpaidList(unpaid);
-    setTotalUnpaid(unpaid.reduce((s: number, u: any) => s + u.sisa, 0));
 
-    // Fetch total deposits held
-    const { data: depData } = await supabase.from("deposits").select("jumlah").eq("property_id", pid).eq("status", "ditahan") as any;
-    setTotalDeposit((depData || []).reduce((s: number, d: any) => s + (d.jumlah || 0), 0));
+    const totalDep = (depositData || []).filter((d: any) => d.status === "ditahan").reduce((s: number, d: any) => s + (d.jumlah || 0), 0);
 
-    const combined = [
-      ...txData.filter((t: any) => t.jumlah_dibayar > 0).map((t: any) => ({ id: t.id, type: "income", amount: t.jumlah_dibayar, label: `Sewa ${getMonthName(t.periode_bulan)}`, date: t.tanggal_bayar || t.created_at })),
+    const items = [
+      ...txMonth.filter((t: any) => t.jumlah_dibayar > 0).map((t: any) => ({ id: t.id, type: "income", amount: t.jumlah_dibayar, label: `Sewa ${getMonthName(t.periode_bulan)}`, date: t.tanggal_bayar || t.created_at })),
       ...expData.map((e: any) => ({ id: e.id, type: "expense", amount: e.jumlah, label: e.judul, date: e.tanggal, kategori: e.kategori, is_recurring: e.is_recurring })),
     ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    setItems(combined);
-    setLoading(false);
-  };
+    return {
+      pemasukan, pengeluaran, pemasukanLalu, pengeluaranLalu: 0,
+      barData: [] as any[],
+      pieData: [] as any[],
+      unpaidList: unpaid, totalUnpaid: unpaid.reduce((s: number, u: any) => s + u.sisa, 0),
+      totalDeposit: totalDep,
+      items,
+    };
+  }, [demo.isDemo, txData, expData, depositData, tenantData, roomData, bulan, tahun]);
 
-  useEffect(() => { fetchData(); }, [activeProperty, bulan, tahun, demo.isDemo]);
+  const refetch = () => { invalidate.expenses(); invalidate.transactions(); };
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,7 +150,7 @@ export default function KeuanganPage() {
     if (!activeProperty) return;
     const { error } = await supabase.from("expenses").insert({ property_id: activeProperty.id, judul, kategori, jumlah: parseInt(jumlah) || 0, tanggal, is_recurring: isRecurring } as any);
     if (error) toast.error(error.message);
-    else { toast.success("Pengeluaran ditambahkan!"); setShowAdd(false); setJudul(""); setJumlah(""); fetchData(); }
+    else { toast.success("Pengeluaran ditambahkan!"); setShowAdd(false); setJudul(""); setJumlah(""); refetch(); }
   };
 
   const handleEditExpense = async (e: React.FormEvent) => {
@@ -200,16 +159,19 @@ export default function KeuanganPage() {
     if (!showEdit) return;
     const { error } = await supabase.from("expenses").update({ judul, kategori, jumlah: parseInt(jumlah) || 0, tanggal, is_recurring: isRecurring } as any).eq("id", showEdit.id);
     if (error) toast.error(error.message);
-    else { toast.success("Pengeluaran diperbarui!"); setShowEdit(null); fetchData(); }
+    else { toast.success("Pengeluaran diperbarui!"); setShowEdit(null); refetch(); }
   };
 
   const handleDeleteExpense = async (id: string) => {
     if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
     const { error } = await supabase.from("expenses").delete().eq("id", id) as any;
     if (error) toast.error(error.message);
-    else { toast.success("Pengeluaran dihapus"); fetchData(); }
+    else { toast.success("Pengeluaran dihapus"); refetch(); }
   };
 
+  if (!computed) return <AppShell><PageHeader title="Keuangan" /><div className="px-4 space-y-3"><SkeletonCard lines={2} /><SkeletonCard /><SkeletonCard /></div></AppShell>;
+
+  const { pemasukan, pengeluaran, pemasukanLalu, pengeluaranLalu, barData, pieData, unpaidList, totalUnpaid, totalDeposit, items } = computed;
   const selisih = pemasukan - pengeluaran;
   const pemasukanDiff = pemasukan - pemasukanLalu;
   const pengeluaranDiff = pengeluaran - pengeluaranLalu;
@@ -233,7 +195,6 @@ export default function KeuanganPage() {
           <div className="space-y-3"><SkeletonCard lines={2} /><SkeletonCard /><SkeletonCard /></div>
         ) : (
           <>
-            {/* Summary cards with trends */}
             <div className="grid grid-cols-3 gap-2">
               <div className="bg-card rounded-xl border border-border p-3 text-center shadow-sm">
                 <TrendingUp size={18} className="text-[hsl(142,71%,45%)] mx-auto" />
@@ -264,9 +225,8 @@ export default function KeuanganPage() {
               </div>
             </div>
 
-            {/* Bar chart - 6 months */}
             {barData.length > 0 && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
                 <p className="text-sm font-semibold text-foreground mb-3">Tren 6 Bulan Terakhir</p>
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
@@ -283,22 +243,21 @@ export default function KeuanganPage() {
               </motion.div>
             )}
 
-            {/* Pie chart - income by room type */}
             {pieData.length > 0 && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
                 <p className="text-sm font-semibold text-foreground mb-3">Pemasukan per Tipe Kamar</p>
                 <div className="flex items-center gap-4">
                   <div className="w-28 h-28">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={pieData} cx="50%" cy="50%" innerRadius={25} outerRadius={50} dataKey="value" strokeWidth={0} paddingAngle={2}>
-                          {pieData.map((_, idx) => <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />)}
+                          {pieData.map((_: any, idx: number) => <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />)}
                         </Pie>
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                   <div className="space-y-1.5">
-                    {pieData.map((d, idx) => (
+                    {pieData.map((d: any, idx: number) => (
                       <div key={d.name} className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full" style={{ background: PIE_COLORS[idx % PIE_COLORS.length] }} />
                         <span className="text-xs text-muted-foreground">{d.name}: {formatRupiah(d.value)}</span>
@@ -309,21 +268,17 @@ export default function KeuanganPage() {
               </motion.div>
             )}
 
-            {/* Unpaid section */}
             {unpaidList.length > 0 && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08, duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-3">
                   <AlertTriangle size={16} className="text-[hsl(38,92%,50%)]" />
                   <p className="text-sm font-semibold text-foreground">Tagihan Belum Lunas</p>
                 </div>
                 <p className="text-lg font-bold text-destructive mb-3">{formatRupiah(totalUnpaid)}</p>
                 <div className="space-y-2">
-                  {unpaidList.map((u, i) => (
+                  {unpaidList.map((u: any, i: number) => (
                     <div key={i} className="flex justify-between items-center text-sm">
-                      <div>
-                        <p className="font-medium text-foreground">{u.nama}</p>
-                        <p className="text-xs text-muted-foreground">Kamar {u.kamar}</p>
-                      </div>
+                      <div><p className="font-medium text-foreground">{u.nama}</p><p className="text-xs text-muted-foreground">Kamar {u.kamar}</p></div>
                       <span className="font-semibold text-destructive">{formatRupiah(u.sisa)}</span>
                     </div>
                   ))}
@@ -331,9 +286,8 @@ export default function KeuanganPage() {
               </motion.div>
             )}
 
-            {/* Deposit card */}
             {totalDeposit > 0 && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <Shield size={16} className="text-primary" />
                   <p className="text-sm font-semibold text-foreground">Deposit Ditahan</p>
@@ -352,7 +306,7 @@ export default function KeuanganPage() {
               <EmptyState title="Belum ada transaksi" description="Transaksi akan muncul di sini" />
             ) : (
               <div className="space-y-2">
-                {items.map((item, i) => {
+                {items.map((item: any, i: number) => {
                   const rowContent = (
                     <div className="flex items-center px-4 py-3 border border-border rounded-lg shadow-sm">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -372,29 +326,15 @@ export default function KeuanganPage() {
 
                   if (item.type === "expense") {
                     return (
-                      <motion.div key={item.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}>
+                      <motion.div key={item.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02, duration: 0.15 }}>
                         <SwipeableRow
-                          onEdit={() => {
-                            setShowEdit(item);
-                            setJudul(item.label);
-                            setKategori(item.kategori || "Lainnya");
-                            setJumlah(String(item.amount));
-                            setTanggal(item.date);
-                            setIsRecurring(item.is_recurring || false);
-                          }}
+                          onEdit={() => { setShowEdit(item); setJudul(item.label); setKategori(item.kategori || "Lainnya"); setJumlah(String(item.amount)); setTanggal(item.date); setIsRecurring(item.is_recurring || false); }}
                           onDelete={() => setDeleteTarget({ id: item.id, name: item.label })}
-                        >
-                          {rowContent}
-                        </SwipeableRow>
+                        >{rowContent}</SwipeableRow>
                       </motion.div>
                     );
                   }
-
-                  return (
-                    <motion.div key={item.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}>
-                      {rowContent}
-                    </motion.div>
-                  );
+                  return <motion.div key={item.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02, duration: 0.15 }}>{rowContent}</motion.div>;
                 })}
               </div>
             )}
@@ -402,7 +342,6 @@ export default function KeuanganPage() {
         )}
       </div>
 
-      {/* Add expense */}
       <BottomSheet open={showAdd} onClose={() => setShowAdd(false)} title="Tambah Pengeluaran">
         <form onSubmit={handleAddExpense} className="bottom-sheet-form">
           <div className="bottom-sheet-body">
@@ -422,7 +361,6 @@ export default function KeuanganPage() {
         </form>
       </BottomSheet>
 
-      {/* Edit expense */}
       <BottomSheet open={!!showEdit} onClose={() => setShowEdit(null)} title="Edit Pengeluaran">
         <form onSubmit={handleEditExpense} className="bottom-sheet-form">
           <div className="bottom-sheet-body">
@@ -445,10 +383,7 @@ export default function KeuanganPage() {
       <DeleteConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => {
-          if (deleteTarget) handleDeleteExpense(deleteTarget.id);
-          setDeleteTarget(null);
-        }}
+        onConfirm={() => { if (deleteTarget) handleDeleteExpense(deleteTarget.id); setDeleteTarget(null); }}
         itemName={deleteTarget?.name || ""}
       />
     </AppShell>

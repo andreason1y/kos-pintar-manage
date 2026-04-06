@@ -1,10 +1,11 @@
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { getInitials, getAvatarColor } from "@/lib/avatar-colors";
 import { formatRupiah } from "@/lib/helpers";
+import { useRoomTypesAndRooms, useTenants, useTransactions, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import SkeletonCard from "@/components/SkeletonCard";
@@ -39,8 +40,7 @@ const tabsList = ["Semua", "Aktif", "Jatuh Tempo", "Keluar"];
 export default function PenyewaPage() {
   const { activeProperty } = useProperty();
   const demo = useDemo();
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [loading, setLoading] = useState(true);
+  const invalidate = useInvalidate();
   const [activeTab, setActiveTab] = useState("Semua");
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
@@ -53,7 +53,6 @@ export default function PenyewaPage() {
   const [tanggalMasuk, setTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
   const [durasi, setDurasi] = useState("1");
   const [deposit, setDeposit] = useState("");
-  const [emptyRooms, setEmptyRooms] = useState<any[]>([]);
   const [showEndContract, setShowEndContract] = useState<Tenant | null>(null);
   const [depositInfo, setDepositInfo] = useState<any>(null);
   const [returnAmount, setReturnAmount] = useState("");
@@ -64,53 +63,46 @@ export default function PenyewaPage() {
   const bulanIni = now.getMonth() + 1;
   const tahunIni = now.getFullYear();
 
-  const fetchData = async () => {
+  // React Query
+  const { data: roomData, isLoading: roomsLoading } = useRoomTypesAndRooms();
+  const { data: tenantData, isLoading: tenantsLoading } = useTenants();
+  const { data: txData, isLoading: txLoading } = useTransactions();
+
+  const loading = !demo.isDemo && (roomsLoading || tenantsLoading || txLoading);
+
+  const { tenants, emptyRooms } = useMemo(() => {
     if (demo.isDemo) {
       const mapped: Tenant[] = demo.tenants.map(t => {
         const room = demo.rooms.find(r => r.id === t.room_id);
         const rt = room ? demo.roomTypes.find(rr => rr.id === room.room_type_id) : null;
         const tx = demo.transactions.find(tx => tx.tenant_id === t.id && tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni);
         const sisaHari = t.tanggal_keluar ? Math.ceil((new Date(t.tanggal_keluar).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : undefined;
-        return { ...t, roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-", latestTxStatus: tx?.status, sisaHari };
+        return { ...t, tanggal_masuk: t.tanggal_masuk, tanggal_keluar: t.tanggal_keluar || null, roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-", latestTxStatus: tx?.status, sisaHari };
       });
-      setTenants(mapped);
-      setEmptyRooms(demo.rooms.filter(r => r.status === "kosong").map(r => {
+      const empty = demo.rooms.filter(r => r.status === "kosong").map(r => {
         const rt = demo.roomTypes.find(rr => rr.id === r.room_type_id);
         return { ...r, room_type: rt };
-      }));
-      setLoading(false);
-      return;
+      });
+      return { tenants: mapped, emptyRooms: empty };
     }
 
-    if (!activeProperty) return;
-    setLoading(true);
-    const { data: tenantData } = await supabase.from("tenants").select("*").eq("property_id", activeProperty.id).order("created_at", { ascending: false }) as any;
-    const { data: roomTypes } = await supabase.from("room_types").select("id, nama, harga_per_bulan").eq("property_id", activeProperty.id) as any;
-    const rtIds = (roomTypes || []).map((rt: any) => rt.id);
-    let rooms: any[] = [];
-    if (rtIds.length > 0) {
-      const { data } = await supabase.from("rooms").select("*").in("room_type_id", rtIds) as any;
-      rooms = data || [];
-    }
-    const tenantIds = (tenantData || []).map((t: any) => t.id);
-    let transactions: any[] = [];
-    if (tenantIds.length > 0) {
-      const { data } = await supabase.from("transactions").select("tenant_id, status").in("tenant_id", tenantIds).eq("periode_bulan", bulanIni).eq("periode_tahun", tahunIni) as any;
-      transactions = data || [];
-    }
-    const mapped: Tenant[] = (tenantData || []).map((t: any) => {
+    if (!roomData || !tenantData || !txData) return { tenants: [] as Tenant[], emptyRooms: [] as any[] };
+
+    const { roomTypes, rooms } = roomData;
+    const transactions = txData.filter((tx: any) => tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni);
+
+    const mapped: Tenant[] = tenantData.map((t: any) => {
       const room = rooms.find((r: any) => r.id === t.room_id);
-      const rt = room ? (roomTypes || []).find((rr: any) => rr.id === room.room_type_id) : null;
+      const rt = room ? roomTypes.find((rr: any) => rr.id === room.room_type_id) : null;
       const tx = transactions.find((tx: any) => tx.tenant_id === t.id);
       const sisaHari = t.tanggal_keluar ? Math.ceil((new Date(t.tanggal_keluar).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : undefined;
       return { ...t, roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-", latestTxStatus: tx?.status, sisaHari };
     });
-    setTenants(mapped);
-    setEmptyRooms(rooms.filter((r: any) => r.status === "kosong").map((r: any) => ({ ...r, room_type: (roomTypes || []).find((rt: any) => rt.id === r.room_type_id) })));
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchData(); }, [activeProperty, demo.isDemo]);
+    const empty = rooms.filter((r: any) => r.status === "kosong").map((r: any) => ({
+      ...r, room_type: roomTypes.find((rt: any) => rt.id === r.room_type_id)
+    }));
+    return { tenants: mapped, emptyRooms: empty };
+  }, [demo.isDemo, roomData, tenantData, txData]);
 
   const filtered = useMemo(() => {
     let list = tenants;
@@ -120,6 +112,8 @@ export default function PenyewaPage() {
     if (search) list = list.filter(t => t.nama.toLowerCase().includes(search.toLowerCase()));
     return list;
   }, [tenants, activeTab, search]);
+
+  const refetch = () => { invalidate.tenants(); invalidate.rooms(); invalidate.transactions(); invalidate.deposits(); };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +126,7 @@ export default function PenyewaPage() {
     const { data: tenant, error } = await supabase.from("tenants").insert({ property_id: activeProperty.id, room_id: roomId, nama, no_hp: noHp || null, gender, tanggal_masuk: tanggalMasuk, tanggal_keluar: keluar.toISOString().split("T")[0] } as any).select().single() as any;
     if (error) { toast.error(error.message); return; }
     await supabase.from("rooms").update({ status: "terisi" } as any).eq("id", roomId);
-    const selectedRoom = emptyRooms.find(r => r.id === roomId);
+    const selectedRoom = emptyRooms.find((r: any) => r.id === roomId);
     const harga = selectedRoom?.room_type?.harga_per_bulan || 0;
     await supabase.from("transactions").insert({ tenant_id: tenant.id, property_id: activeProperty.id, periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(), total_tagihan: harga } as any);
     const depositAmt = parseInt(deposit) || 0;
@@ -141,7 +135,7 @@ export default function PenyewaPage() {
     }
     toast.success("Penyewa berhasil ditambahkan!");
     setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1"); setDeposit("");
-    fetchData();
+    refetch();
   };
 
   const handleEditTenant = async (e: React.FormEvent) => {
@@ -152,7 +146,7 @@ export default function PenyewaPage() {
     if (error) { toast.error(error.message); return; }
     toast.success("Data penyewa diperbarui!");
     setShowEdit(null);
-    fetchData();
+    refetch();
   };
 
   const handleDeleteTenant = async (id: string) => {
@@ -164,14 +158,13 @@ export default function PenyewaPage() {
     const { error } = await supabase.from("tenants").delete().eq("id", id) as any;
     if (error) { toast.error(error.message); return; }
     toast.success("Penyewa dihapus");
-    fetchData();
+    refetch();
   };
 
   const handleEndContract = async (tenant: Tenant) => {
     if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
     setShowEndContract(tenant);
     setDeductionNote("");
-    // Fetch deposit info
     const { data } = await supabase.from("deposits").select("*").eq("tenant_id", tenant.id).eq("status", "ditahan").single() as any;
     if (data) {
       setDepositInfo(data);
@@ -184,12 +177,10 @@ export default function PenyewaPage() {
 
   const handleConfirmEndContract = async () => {
     if (!showEndContract) return;
-    // Update tenant status
     await supabase.from("tenants").update({ status: "keluar", tanggal_keluar: new Date().toISOString().split("T")[0] } as any).eq("id", showEndContract.id);
     if (showEndContract.room_id) {
       await supabase.from("rooms").update({ status: "kosong" } as any).eq("id", showEndContract.room_id);
     }
-    // Return deposit if exists
     if (depositInfo) {
       await supabase.from("deposits").update({
         status: "dikembalikan",
@@ -200,7 +191,7 @@ export default function PenyewaPage() {
     }
     toast.success("Kontrak berakhir, penyewa dikeluarkan");
     setShowEndContract(null); setDepositInfo(null);
-    fetchData();
+    refetch();
   };
 
   return (
@@ -229,7 +220,7 @@ export default function PenyewaPage() {
             const initials = getInitials(t.nama);
             const avatarColor = getAvatarColor(t.nama);
             return (
-              <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+              <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02, duration: 0.15 }}
                 className="bg-card rounded-xl border border-border p-4 shadow-sm"
               >
                 <div className="flex items-start gap-3">
@@ -304,7 +295,7 @@ export default function PenyewaPage() {
           </div>
           <div className="space-y-2"><Label>Kamar</Label>
             <Select value={roomId} onValueChange={setRoomId}><SelectTrigger><SelectValue placeholder="Pilih kamar kosong" /></SelectTrigger><SelectContent>
-              {emptyRooms.map(r => <SelectItem key={r.id} value={r.id}>{r.room_type?.nama} - No. {r.nomor} (Lt. {r.lantai})</SelectItem>)}
+              {emptyRooms.map((r: any) => <SelectItem key={r.id} value={r.id}>{r.room_type?.nama} - No. {r.nomor} (Lt. {r.lantai})</SelectItem>)}
             </SelectContent></Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -335,42 +326,38 @@ export default function PenyewaPage() {
             </div>
             </div>
             <div className="bottom-sheet-footer">
-              <Button type="submit" className="w-full">Simpan Penyewa</Button>
+              <Button type="submit" className="w-full">Simpan Perubahan</Button>
             </div>
           </form>
         )}
       </BottomSheet>
 
-      {/* End contract / deposit return */}
+      {/* End contract */}
       <BottomSheet open={!!showEndContract} onClose={() => setShowEndContract(null)} title="Akhiri Sewa">
         {showEndContract && (
-          <div className="space-y-4">
-            <div className="bg-muted rounded-lg p-3">
-              <p className="text-sm font-semibold text-foreground">{showEndContract.nama}</p>
-              <p className="text-xs text-muted-foreground">{showEndContract.roomLabel}</p>
-            </div>
-            {depositInfo ? (
-              <>
-                <div className="bg-[hsl(38,92%,50%)]/10 border border-[hsl(38,92%,50%)]/30 rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground">Deposit Ditahan</p>
-                  <p className="text-lg font-bold text-foreground">{formatRupiah(depositInfo.jumlah)}</p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Jumlah Dikembalikan (Rp)</Label>
-                  <Input type="number" value={returnAmount} onChange={e => setReturnAmount(e.target.value)} />
-                </div>
-                {parseInt(returnAmount) < depositInfo.jumlah && (
+          <div className="bottom-sheet-form">
+            <div className="bottom-sheet-body">
+              <div className="bg-muted rounded-lg p-3">
+                <p className="text-sm font-medium text-foreground">{showEndContract.nama}</p>
+                <p className="text-xs text-muted-foreground">{showEndContract.roomLabel}</p>
+              </div>
+              {depositInfo && (
+                <>
                   <div className="space-y-2">
-                    <Label>Alasan Potongan</Label>
-                    <Input value={deductionNote} onChange={e => setDeductionNote(e.target.value)} placeholder="Kerusakan fasilitas, dll." />
-                    <p className="text-xs text-muted-foreground">Potongan: {formatRupiah(depositInfo.jumlah - (parseInt(returnAmount) || 0))}</p>
+                    <Label>Deposit Ditahan: {formatRupiah(depositInfo.jumlah)}</Label>
+                    <Label>Jumlah Dikembalikan (Rp)</Label>
+                    <Input type="number" value={returnAmount} onChange={e => setReturnAmount(e.target.value)} />
                   </div>
-                )}
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">Tidak ada deposit untuk penyewa ini.</p>
-            )}
-            <Button onClick={handleConfirmEndContract} className="w-full" variant="destructive">Konfirmasi Akhiri Sewa</Button>
+                  <div className="space-y-2">
+                    <Label>Catatan Potongan</Label>
+                    <Input value={deductionNote} onChange={e => setDeductionNote(e.target.value)} placeholder="Contoh: kerusakan AC" />
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="bottom-sheet-footer">
+              <Button onClick={handleConfirmEndContract} className="w-full" variant="destructive">Konfirmasi Akhiri Sewa</Button>
+            </div>
           </div>
         )}
       </BottomSheet>
@@ -378,10 +365,7 @@ export default function PenyewaPage() {
       <DeleteConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => {
-          if (deleteTarget) handleDeleteTenant(deleteTarget.id);
-          setDeleteTarget(null);
-        }}
+        onConfirm={() => { if (deleteTarget) handleDeleteTenant(deleteTarget.id); setDeleteTarget(null); }}
         itemName={deleteTarget?.name || ""}
       />
     </AppShell>

@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { formatRupiah, getMonthName, generateNotaNumber, waTagihanLink } from "@/lib/helpers";
 import { downloadNota, getNotaWhatsAppLink } from "@/lib/nota-generator";
+import { useTenants, useTransactions, useRoomTypesAndRooms, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import SkeletonCard from "@/components/SkeletonCard";
@@ -39,9 +40,7 @@ interface Payment {
 export default function PembayaranPage() {
   const { activeProperty } = useProperty();
   const demo = useDemo();
-  const [pending, setPending] = useState<Payment[]>([]);
-  const [lunas, setLunas] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const invalidate = useInvalidate();
   const [showPay, setShowPay] = useState<Payment | null>(null);
   const [showNota, setShowNota] = useState<Payment | null>(null);
   const [showEdit, setShowEdit] = useState<Payment | null>(null);
@@ -50,8 +49,6 @@ export default function PembayaranPage() {
   const [metode, setMetode] = useState("tunai");
   const [catatan, setCatatan] = useState("");
   const [activeTab, setActiveTab] = useState<"pending" | "lunas">("pending");
-
-  // Edit form state
   const [editJumlah, setEditJumlah] = useState("");
   const [editMetode, setEditMetode] = useState("tunai");
   const [editStatus, setEditStatus] = useState("belum_bayar");
@@ -59,55 +56,40 @@ export default function PembayaranPage() {
 
   const propertyName = demo.isDemo ? demo.property.nama_kos : activeProperty?.nama_kos || "";
 
+  const { data: tenantData, isLoading: tenantsLoading } = useTenants();
+  const { data: txData, isLoading: txLoading } = useTransactions();
+  const { data: roomData, isLoading: roomsLoading } = useRoomTypesAndRooms();
+
+  const loading = !demo.isDemo && (tenantsLoading || txLoading || roomsLoading);
+
   const mapPayment = (tx: any, tenantNama: string, tenantHp: string | null, kamar: string): Payment => ({
-    id: tx.id,
-    tenant_nama: tenantNama,
-    tenant_hp: tenantHp,
-    kamar,
-    periode_bulan: tx.periode_bulan,
-    periode_tahun: tx.periode_tahun,
-    total_tagihan: tx.total_tagihan,
-    jumlah_dibayar: tx.jumlah_dibayar,
-    status: tx.status,
-    sisa: tx.total_tagihan - tx.jumlah_dibayar,
-    metode_bayar: tx.metode_bayar,
-    tanggal_bayar: tx.tanggal_bayar,
-    nota_number: tx.nota_number,
+    id: tx.id, tenant_nama: tenantNama, tenant_hp: tenantHp, kamar,
+    periode_bulan: tx.periode_bulan, periode_tahun: tx.periode_tahun,
+    total_tagihan: tx.total_tagihan, jumlah_dibayar: tx.jumlah_dibayar,
+    status: tx.status, sisa: tx.total_tagihan - tx.jumlah_dibayar,
+    metode_bayar: tx.metode_bayar, tanggal_bayar: tx.tanggal_bayar, nota_number: tx.nota_number,
   });
 
-  const fetchData = async () => {
+  const { pending, lunas } = useMemo(() => {
     if (demo.isDemo) {
       const all = demo.transactions.map(tx => {
         const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
         const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
         return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp || null, room?.nomor || "-");
       });
-      setPending(all.filter(p => p.status !== "lunas"));
-      setLunas(all.filter(p => p.status === "lunas"));
-      setLoading(false);
-      return;
+      return { pending: all.filter(p => p.status !== "lunas"), lunas: all.filter(p => p.status === "lunas") };
     }
-    if (!activeProperty) return;
-    setLoading(true);
-    const { data: txData } = await supabase.from("transactions").select("*").eq("property_id", activeProperty.id).order("created_at", { ascending: false }) as any;
-    if (!txData || txData.length === 0) { setPending([]); setLunas([]); setLoading(false); return; }
-    const tenantIds = [...new Set((txData as any[]).map(t => t.tenant_id))];
-    const { data: tenantData } = await supabase.from("tenants").select("id, nama, no_hp, room_id").in("id", tenantIds) as any;
-    const tenants = tenantData || [];
-    const roomIds = tenants.filter((t: any) => t.room_id).map((t: any) => t.room_id);
-    let rooms: any[] = [];
-    if (roomIds.length > 0) { const { data } = await supabase.from("rooms").select("id, nomor").in("id", roomIds) as any; rooms = data || []; }
-    const all: Payment[] = (txData as any[]).map(tx => {
-      const tenant = tenants.find((t: any) => t.id === tx.tenant_id);
+    if (!txData || !tenantData || !roomData) return { pending: [] as Payment[], lunas: [] as Payment[] };
+    const rooms = roomData.rooms;
+    const all: Payment[] = txData.map((tx: any) => {
+      const tenant = tenantData.find((t: any) => t.id === tx.tenant_id);
       const room = tenant?.room_id ? rooms.find((r: any) => r.id === tenant.room_id) : null;
       return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp, room?.nomor || "-");
     });
-    setPending(all.filter(p => p.status !== "lunas"));
-    setLunas(all.filter(p => p.status === "lunas"));
-    setLoading(false);
-  };
+    return { pending: all.filter(p => p.status !== "lunas"), lunas: all.filter(p => p.status === "lunas") };
+  }, [demo.isDemo, txData, tenantData, roomData]);
 
-  useEffect(() => { fetchData(); }, [activeProperty, demo.isDemo]);
+  const refetch = () => { invalidate.transactions(); invalidate.tenants(); };
 
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,10 +97,7 @@ export default function PembayaranPage() {
     if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowPay(null); return; }
     if (!showPay) return;
     const bayar = parseInt(jumlahBayar) || 0;
-    if (bayar <= 0) {
-      setPayError("Jumlah bayar harus lebih dari 0");
-      return;
-    }
+    if (bayar <= 0) { setPayError("Jumlah bayar harus lebih dari 0"); return; }
     const totalBayar = showPay.jumlah_dibayar + bayar;
     const newStatus = totalBayar >= showPay.total_tagihan ? "lunas" : "belum_lunas";
     const nota = newStatus === "lunas" ? generateNotaNumber(showPay.periode_bulan, showPay.periode_tahun) : null;
@@ -126,57 +105,36 @@ export default function PembayaranPage() {
     if (error) { toast.error(error.message); return; }
     toast.success(newStatus === "lunas" ? "Pembayaran lunas!" : "Pembayaran parsial berhasil");
     setShowPay(null); setJumlahBayar(""); setCatatan(""); setPayError("");
-    fetchData();
+    refetch();
   };
 
   const handleDownloadNota = (p: Payment) => {
     downloadNota({
-      propertyName,
-      notaNumber: p.nota_number || generateNotaNumber(p.periode_bulan, p.periode_tahun),
-      tenantName: p.tenant_nama,
-      roomNumber: p.kamar,
-      periodeBulan: p.periode_bulan,
-      periodeTahun: p.periode_tahun,
-      totalTagihan: p.total_tagihan,
-      jumlahDibayar: p.jumlah_dibayar,
-      metodeBayar: p.metode_bayar || "tunai",
+      propertyName, notaNumber: p.nota_number || generateNotaNumber(p.periode_bulan, p.periode_tahun),
+      tenantName: p.tenant_nama, roomNumber: p.kamar, periodeBulan: p.periode_bulan, periodeTahun: p.periode_tahun,
+      totalTagihan: p.total_tagihan, jumlahDibayar: p.jumlah_dibayar, metodeBayar: p.metode_bayar || "tunai",
       tanggalBayar: p.tanggal_bayar || "-",
     });
     toast.success("Mengunduh nota PDF...");
   };
 
-  const getWaNotaLink = (p: Payment) => {
-    return getNotaWhatsAppLink(
-      {
-        propertyName,
-        notaNumber: p.nota_number || generateNotaNumber(p.periode_bulan, p.periode_tahun),
-        tenantName: p.tenant_nama,
-        roomNumber: p.kamar,
-        periodeBulan: p.periode_bulan,
-        periodeTahun: p.periode_tahun,
-        totalTagihan: p.total_tagihan,
-        jumlahDibayar: p.jumlah_dibayar,
-        metodeBayar: p.metode_bayar || "tunai",
-        tanggalBayar: p.tanggal_bayar || "-",
-      },
-      p.tenant_hp || "",
-    );
-  };
+  const getWaNotaLink = (p: Payment) => getNotaWhatsAppLink(
+    { propertyName, notaNumber: p.nota_number || generateNotaNumber(p.periode_bulan, p.periode_tahun),
+      tenantName: p.tenant_nama, roomNumber: p.kamar, periodeBulan: p.periode_bulan, periodeTahun: p.periode_tahun,
+      totalTagihan: p.total_tagihan, jumlahDibayar: p.jumlah_dibayar, metodeBayar: p.metode_bayar || "tunai",
+      tanggalBayar: p.tanggal_bayar || "-" },
+    p.tenant_hp || "",
+  );
 
   const handleEditTx = async (e: React.FormEvent) => {
     e.preventDefault();
     if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowEdit(null); return; }
     if (!showEdit) return;
-    const jml = parseInt(editJumlah) || 0;
-    const { error } = await supabase.from("transactions").update({
-      jumlah_dibayar: jml,
-      status: editStatus,
-      metode_bayar: editMetode,
-    } as any).eq("id", showEdit.id);
+    const { error } = await supabase.from("transactions").update({ jumlah_dibayar: parseInt(editJumlah) || 0, status: editStatus, metode_bayar: editMetode } as any).eq("id", showEdit.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Transaksi diperbarui");
     setShowEdit(null);
-    fetchData();
+    refetch();
   };
 
   const handleDeleteTx = async (id: string) => {
@@ -184,7 +142,7 @@ export default function PembayaranPage() {
     const { error } = await supabase.from("transactions").delete().eq("id", id) as any;
     if (error) { toast.error(error.message); return; }
     toast.success("Transaksi dihapus");
-    fetchData();
+    refetch();
   };
 
   const currentList = activeTab === "pending" ? pending : lunas;
@@ -211,7 +169,7 @@ export default function PembayaranPage() {
           />
         ) : (
           currentList.map((p, i) => (
-            <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+            <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02, duration: 0.15 }}
               className="bg-card rounded-xl border border-border p-4 shadow-sm"
             >
               <div className="flex justify-between items-start mb-2">
@@ -229,10 +187,7 @@ export default function PembayaranPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => {
-                        setShowEdit(p);
-                        setEditJumlah(String(p.jumlah_dibayar));
-                        setEditMetode(p.metode_bayar || "tunai");
-                        setEditStatus(p.status);
+                        setShowEdit(p); setEditJumlah(String(p.jumlah_dibayar)); setEditMetode(p.metode_bayar || "tunai"); setEditStatus(p.status);
                       }}>
                         <Pencil size={14} className="mr-2" /> Edit
                       </DropdownMenuItem>
@@ -247,7 +202,6 @@ export default function PembayaranPage() {
                 <span className="text-muted-foreground">{p.status === "lunas" ? "Total" : "Sisa tagihan"}</span>
                 <span className="font-bold text-foreground">{formatRupiah(p.status === "lunas" ? p.total_tagihan : p.sisa)}</span>
               </div>
-
               {p.status === "lunas" ? (
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="flex-1" onClick={() => setShowNota(p)}>
@@ -346,20 +300,18 @@ export default function PembayaranPage() {
               <div className="border-t border-border pt-2 space-y-1 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Total</span><span className="font-bold text-foreground">{formatRupiah(showNota.total_tagihan)}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Dibayar</span><span className="text-foreground">{formatRupiah(showNota.jumlah_dibayar)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Metode</span><span className="text-foreground uppercase">{showNota.metode_bayar}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Metode</span><span className="text-foreground capitalize">{showNota.metode_bayar}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Tanggal</span><span className="text-foreground">{showNota.tanggal_bayar}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Sisa</span><span className="font-bold text-primary">{formatRupiah(showNota.sisa)}</span></div>
               </div>
             </div>
-            <div className="text-center text-xs text-muted-foreground">Terima kasih telah membayar tepat waktu 🙏</div>
             <div className="flex gap-2">
-              <Button className="flex-1" onClick={() => handleDownloadNota(showNota)}>
-                <Download size={14} className="mr-1" /> Unduh PDF
+              <Button variant="outline" className="flex-1" onClick={() => handleDownloadNota(showNota)}>
+                <Download size={14} className="mr-1" /> Download PDF
               </Button>
               {showNota.tenant_hp && (
                 <a href={getWaNotaLink(showNota)} target="_blank" rel="noreferrer" className="flex-1">
-                  <Button variant="outline" className="w-full">
-                    <Send size={14} className="mr-1" /> Kirim WA
+                  <Button variant="outline" className="w-full gap-1">
+                    <Send size={14} /> Kirim WA
                   </Button>
                 </a>
               )}
@@ -371,10 +323,7 @@ export default function PembayaranPage() {
       <DeleteConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => {
-          if (deleteTarget) handleDeleteTx(deleteTarget.id);
-          setDeleteTarget(null);
-        }}
+        onConfirm={() => { if (deleteTarget) handleDeleteTx(deleteTarget.id); setDeleteTarget(null); }}
         itemName={deleteTarget?.name || ""}
       />
     </AppShell>
