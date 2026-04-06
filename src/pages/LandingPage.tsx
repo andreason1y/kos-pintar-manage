@@ -261,7 +261,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background font-sans">
       {/* ─── URGENCY BANNER ─── */}
-      {slotsLoaded && slotsUsed > 0 && (
+      {slotsLoaded && earlyBirdActive && (
         <div className="bg-primary text-primary-foreground text-center py-2 px-4 text-xs font-semibold">
           🔥 Early Bird: Tersisa {slotsRemaining} slot — Hemat 50% hari ini
         </div>
