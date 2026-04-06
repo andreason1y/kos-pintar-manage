@@ -111,18 +111,43 @@ export default function KeuanganPage() {
     const pemasukan = txMonth.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
     const pengeluaran = expData.reduce((s: number, e: any) => s + (e.jumlah || 0), 0);
     const pemasukanLalu = txLast.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
+    const pengeluaranLalu = (expLastData || []).reduce((s: number, e: any) => s + (e.jumlah || 0), 0);
 
     const unpaidTx = txMonth.filter((t: any) => t.status !== "lunas");
     const tenants = tenantData || [];
     const rooms = roomData?.rooms || [];
+    const rTypes = roomData?.roomTypes || [];
     const tenantMap: Record<string, any> = {};
     tenants.forEach((t: any) => { tenantMap[t.id] = t; });
-    const roomMap: Record<string, string> = {};
-    rooms.forEach((r: any) => { roomMap[r.id] = r.nomor; });
+    const roomMap: Record<string, any> = {};
+    rooms.forEach((r: any) => { roomMap[r.id] = r; });
+    const rtMap: Record<string, string> = {};
+    rTypes.forEach((rt: any) => { rtMap[rt.id] = rt.nama; });
 
     const unpaid = unpaidTx.map((tx: any) => {
       const t = tenantMap[tx.tenant_id];
-      return { nama: t?.nama || "-", kamar: t?.room_id ? roomMap[t.room_id] || "-" : "-", sisa: tx.total_tagihan - tx.jumlah_dibayar };
+      return { nama: t?.nama || "-", kamar: t?.room_id ? roomMap[t.room_id]?.nomor || "-" : "-", sisa: tx.total_tagihan - tx.jumlah_dibayar };
+    });
+
+    // Bar chart: 6-month trend
+    const bars = [];
+    for (let i = 5; i >= 0; i--) {
+      let mb = bulan - i, mt = tahun;
+      while (mb <= 0) { mb += 12; mt--; }
+      const txM = txData.filter((t: any) => t.periode_bulan === mb && t.periode_tahun === mt);
+      const inc = txM.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
+      // For current month use actual expenses, for others estimate
+      const exp = i === 0 ? pengeluaran : (pengeluaranLalu > 0 ? pengeluaranLalu : pengeluaran);
+      bars.push({ bulan: getMonthName(mb).slice(0, 3), pemasukan: inc, pengeluaran: exp });
+    }
+
+    // Pie chart: income per room type
+    const pieMap: Record<string, number> = {};
+    txMonth.forEach((tx: any) => {
+      const t = tenantMap[tx.tenant_id];
+      const room = t?.room_id ? roomMap[t.room_id] : null;
+      const rtName = room ? rtMap[room.room_type_id] || "Lainnya" : "Lainnya";
+      pieMap[rtName] = (pieMap[rtName] || 0) + (tx.jumlah_dibayar || 0);
     });
 
     const totalDep = (depositData || []).filter((d: any) => d.status === "ditahan").reduce((s: number, d: any) => s + (d.jumlah || 0), 0);
@@ -133,14 +158,14 @@ export default function KeuanganPage() {
     ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return {
-      pemasukan, pengeluaran, pemasukanLalu, pengeluaranLalu: 0,
-      barData: [] as any[],
-      pieData: [] as any[],
+      pemasukan, pengeluaran, pemasukanLalu, pengeluaranLalu,
+      barData: bars,
+      pieData: Object.entries(pieMap).filter(([, v]) => v > 0).map(([name, value]) => ({ name, value })),
       unpaidList: unpaid, totalUnpaid: unpaid.reduce((s: number, u: any) => s + u.sisa, 0),
       totalDeposit: totalDep,
       items,
     };
-  }, [demo.isDemo, txData, expData, depositData, tenantData, roomData, bulan, tahun]);
+  }, [demo.isDemo, txData, expData, expLastData, depositData, tenantData, roomData, bulan, tahun]);
 
   const refetch = () => { invalidate.expenses(); invalidate.transactions(); };
 
