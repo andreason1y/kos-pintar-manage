@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import SwipeableRow from "@/components/SwipeableRow";
+import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { Plus, TrendingUp, TrendingDown, Minus, AlertTriangle, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
