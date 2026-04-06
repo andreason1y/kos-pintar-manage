@@ -41,9 +41,7 @@ export default function DashboardPage() {
     const fetchStats = async () => {
       const [tenants, rooms, txThisMonth, txLastMonth, expenses] = await Promise.all([
         supabase.from("tenants").select("id, status").eq("property_id", pid) as any,
-        supabase.from("rooms").select("id, status").eq("room_type_id", pid).throwOnError().catch(() =>
-          supabase.rpc("get_active_outlets") // fallback placeholder
-        ),
+        Promise.resolve({ data: [] }),
         supabase.from("transactions").select("*").eq("property_id", pid).eq("periode_bulan", bulanIni).eq("periode_tahun", tahunIni) as any,
         supabase.from("transactions").select("jumlah_dibayar").eq("property_id", pid)
           .eq("periode_bulan", bulanIni === 1 ? 12 : bulanIni - 1)
