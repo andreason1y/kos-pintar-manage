@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, MessageCircle } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, Search, MessageCircle, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -41,6 +42,7 @@ export default function PenyewaPage() {
   const [activeTab, setActiveTab] = useState("Semua");
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+  const [showEdit, setShowEdit] = useState<Tenant | null>(null);
 
   const [nama, setNama] = useState("");
   const [noHp, setNoHp] = useState("");
@@ -130,6 +132,29 @@ export default function PenyewaPage() {
     fetchData();
   };
 
+  const handleEditTenant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowEdit(null); return; }
+    if (!showEdit) return;
+    const { error } = await supabase.from("tenants").update({ nama, no_hp: noHp || null, gender } as any).eq("id", showEdit.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Data penyewa diperbarui!");
+    setShowEdit(null);
+    fetchData();
+  };
+
+  const handleDeleteTenant = async (id: string) => {
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    const tenant = tenants.find(t => t.id === id);
+    if (tenant?.room_id) {
+      await supabase.from("rooms").update({ status: "kosong" } as any).eq("id", tenant.room_id);
+    }
+    const { error } = await supabase.from("tenants").delete().eq("id", id) as any;
+    if (error) { toast.error(error.message); return; }
+    toast.success("Penyewa dihapus");
+    fetchData();
+  };
+
   return (
     <AppShell>
       <PageHeader title="Penyewa" subtitle={`${tenants.filter(t => t.status === "aktif").length} penyewa aktif`} action={
@@ -177,7 +202,7 @@ export default function PenyewaPage() {
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
                         <StatusBadge status={t.latestTxStatus} />
                         {t.no_hp && (
                           <a href={`https://wa.me/${t.no_hp.replace(/^0/, "62")}`} target="_blank" rel="noreferrer"
@@ -185,6 +210,26 @@ export default function PenyewaPage() {
                             <MessageCircle size={16} className="text-[hsl(142,71%,45%)]" />
                           </a>
                         )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted">
+                              <MoreVertical size={16} className="text-muted-foreground" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              setShowEdit(t);
+                              setNama(t.nama);
+                              setNoHp(t.no_hp || "");
+                              setGender(t.gender);
+                            }}>
+                              <Pencil size={14} className="mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTenant(t.id)}>
+                              <Trash2 size={14} className="mr-2" /> Hapus
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </div>
@@ -195,6 +240,7 @@ export default function PenyewaPage() {
         )}
       </div>
 
+      {/* Add tenant */}
       <BottomSheet open={showAdd} onClose={() => setShowAdd(false)} title="Tambah Penyewa">
         <form onSubmit={handleAdd} className="space-y-4">
           <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
@@ -217,6 +263,20 @@ export default function PenyewaPage() {
           </div>
           <Button type="submit" className="w-full">Simpan</Button>
         </form>
+      </BottomSheet>
+
+      {/* Edit tenant */}
+      <BottomSheet open={!!showEdit} onClose={() => setShowEdit(null)} title="Edit Penyewa">
+        {showEdit && (
+          <form onSubmit={handleEditTenant} className="space-y-4">
+            <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
+            <div className="space-y-2"><Label>No. HP</Label><Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" /></div>
+            <div className="space-y-2"><Label>Gender</Label>
+              <Select value={gender} onValueChange={setGender}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="L">Laki-laki</SelectItem><SelectItem value="P">Perempuan</SelectItem></SelectContent></Select>
+            </div>
+            <Button type="submit" className="w-full">Simpan Perubahan</Button>
+          </form>
+        )}
       </BottomSheet>
     </AppShell>
   );

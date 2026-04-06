@@ -15,7 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ChevronDown, UserPlus } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, ChevronDown, UserPlus, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 const FASILITAS_OPTIONS = ["AC", "TV", "Lemari", "Kamar Mandi Dalam", "WiFi", "Air Panas", "Parkir Motor"];
@@ -47,6 +48,8 @@ export default function KamarPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [showAddRooms, setShowAddRooms] = useState<string | null>(null);
   const [showAddTenant, setShowAddTenant] = useState<string | null>(null);
+  const [showEditType, setShowEditType] = useState<RoomType | null>(null);
+  const [showEditRoom, setShowEditRoom] = useState<Room | null>(null);
 
   const [nama, setNama] = useState("");
   const [harga, setHarga] = useState("");
@@ -55,6 +58,10 @@ export default function KamarPage() {
   const [startNum, setStartNum] = useState("1");
   const [count, setCount] = useState("5");
   const [lantai, setLantai] = useState("1");
+
+  // Edit room state
+  const [editRoomNomor, setEditRoomNomor] = useState("");
+  const [editRoomLantai, setEditRoomLantai] = useState("1");
 
   // Add tenant form
   const [tenantNama, setTenantNama] = useState("");
@@ -85,7 +92,6 @@ export default function KamarPage() {
       const { data } = await supabase.from("rooms").select("*").in("room_type_id", rtIds).order("nomor") as any;
       rooms = data || [];
     }
-    // Fetch tenants for occupied rooms
     const occupiedRoomIds = rooms.filter((r: any) => r.status === "terisi").map((r: any) => r.id);
     let tenantsByRoom: Record<string, { nama: string; id: string }> = {};
     if (occupiedRoomIds.length > 0) {
@@ -117,6 +123,38 @@ export default function KamarPage() {
     else { toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); setFasilitas([]); fetchData(); }
   };
 
+  const handleEditType = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowEditType(null); return; }
+    if (!showEditType) return;
+    const { error } = await supabase.from("room_types").update({ nama, harga_per_bulan: parseInt(harga) || 0, fasilitas } as any).eq("id", showEditType.id);
+    if (error) toast.error(error.message);
+    else { toast.success("Tipe kamar diperbarui!"); setShowEditType(null); fetchData(); }
+  };
+
+  const handleDeleteType = async (id: string) => {
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    const { error } = await supabase.from("room_types").delete().eq("id", id) as any;
+    if (error) toast.error(error.message);
+    else { toast.success("Tipe kamar dihapus"); fetchData(); }
+  };
+
+  const handleDeleteRoom = async (id: string) => {
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    const { error } = await supabase.from("rooms").delete().eq("id", id) as any;
+    if (error) toast.error(error.message);
+    else { toast.success("Kamar dihapus"); fetchData(); }
+  };
+
+  const handleEditRoom = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowEditRoom(null); return; }
+    if (!showEditRoom) return;
+    const { error } = await supabase.from("rooms").update({ nomor: editRoomNomor, lantai: parseInt(editRoomLantai) || 1 } as any).eq("id", showEditRoom.id);
+    if (error) toast.error(error.message);
+    else { toast.success("Kamar diperbarui!"); setShowEditRoom(null); fetchData(); }
+  };
+
   const handleBulkAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
@@ -145,7 +183,6 @@ export default function KamarPage() {
     } as any).select().single() as any;
     if (error) { toast.error(error.message); return; }
     await supabase.from("rooms").update({ status: "terisi" } as any).eq("id", showAddTenant);
-    // Find room type to get price
     let hargaSewa = 0;
     for (const rt of roomTypes) {
       const room = rt.rooms.find(r => r.id === showAddTenant);
@@ -187,24 +224,46 @@ export default function KamarPage() {
             const isExpanded = expanded === rt.id;
             return (
               <motion.div key={rt.id} layout className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
-                <button className="w-full p-4 flex items-center justify-between" onClick={() => setExpanded(isExpanded ? null : rt.id)}>
-                  <div className="text-left">
-                    <p className="font-semibold text-foreground">{rt.nama}</p>
-                    <p className="text-sm text-muted-foreground">{formatRupiah(rt.harga_per_bulan)}/bln</p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {rt.fasilitas?.map(f => <Badge key={f} variant="secondary" className="text-[10px]">{f}</Badge>)}
+                <div className="flex items-center">
+                  <button className="flex-1 p-4 flex items-center justify-between" onClick={() => setExpanded(isExpanded ? null : rt.id)}>
+                    <div className="text-left">
+                      <p className="font-semibold text-foreground">{rt.nama}</p>
+                      <p className="text-sm text-muted-foreground">{formatRupiah(rt.harga_per_bulan)}/bln</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {rt.fasilitas?.map(f => <Badge key={f} variant="secondary" className="text-[10px]">{f}</Badge>)}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <span className="text-sm font-medium text-foreground">{terisi}/{rt.rooms.length}</span>
-                      <p className="text-[10px] text-muted-foreground">terisi</p>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <span className="text-sm font-medium text-foreground">{terisi}/{rt.rooms.length}</span>
+                        <p className="text-[10px] text-muted-foreground">terisi</p>
+                      </div>
+                      <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                        <ChevronDown size={18} className="text-muted-foreground" />
+                      </motion.div>
                     </div>
-                    <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                      <ChevronDown size={18} className="text-muted-foreground" />
-                    </motion.div>
-                  </div>
-                </button>
+                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="w-8 h-8 mr-2 rounded-full flex items-center justify-center hover:bg-muted">
+                        <MoreVertical size={16} className="text-muted-foreground" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => {
+                        setShowEditType(rt);
+                        setNama(rt.nama);
+                        setHarga(String(rt.harga_per_bulan));
+                        setFasilitas(rt.fasilitas || []);
+                      }}>
+                        <Pencil size={14} className="mr-2" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteType(rt.id)}>
+                        <Trash2 size={14} className="mr-2" /> Hapus
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
                 <AnimatePresence>
                   {isExpanded && (
                     <motion.div
@@ -218,51 +277,71 @@ export default function KamarPage() {
                         {rt.rooms.length === 0 ? (
                           <p className="text-sm text-muted-foreground text-center py-2">Belum ada kamar</p>
                         ) : rt.rooms.map((room) => (
-                          <button
-                            key={room.id}
-                            onClick={() => handleRoomTap(room)}
-                            className="w-full flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-muted"
-                          >
-                            <div className="flex items-center gap-3">
-                              {room.status === "terisi" && room.tenantName ? (
-                                <div
-                                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold"
-                                  style={{
-                                    background: getAvatarColor(room.tenantName).bg,
-                                    color: getAvatarColor(room.tenantName).fg,
-                                  }}
-                                >
-                                  {getInitials(room.tenantName)}
-                                </div>
-                              ) : (
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold bg-muted text-muted-foreground">
-                                  {room.nomor}
-                                </div>
-                              )}
-                              <div>
-                                <span className="text-sm font-medium text-foreground">Kamar {room.nomor}</span>
+                          <div key={room.id} className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleRoomTap(room)}
+                              className="flex-1 flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-muted"
+                            >
+                              <div className="flex items-center gap-3">
                                 {room.status === "terisi" && room.tenantName ? (
-                                  <p className="text-[11px] text-muted-foreground">{room.tenantName}</p>
+                                  <div
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold"
+                                    style={{
+                                      background: getAvatarColor(room.tenantName).bg,
+                                      color: getAvatarColor(room.tenantName).fg,
+                                    }}
+                                  >
+                                    {getInitials(room.tenantName)}
+                                  </div>
                                 ) : (
-                                  <p className="text-[10px] text-muted-foreground">Lantai {room.lantai}</p>
+                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold bg-muted text-muted-foreground">
+                                    {room.nomor}
+                                  </div>
                                 )}
+                                <div>
+                                  <span className="text-sm font-medium text-foreground">Kamar {room.nomor}</span>
+                                  {room.status === "terisi" && room.tenantName ? (
+                                    <p className="text-[11px] text-muted-foreground">{room.tenantName}</p>
+                                  ) : (
+                                    <p className="text-[10px] text-muted-foreground">Lantai {room.lantai}</p>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {room.status === "kosong" && (
-                                <span className="text-[10px] font-medium text-primary flex items-center gap-0.5">
-                                  <UserPlus size={12} /> Isi
-                                </span>
-                              )}
-                              <Badge className={`text-[10px] border-0 ${
-                                room.status === "terisi"
-                                  ? "bg-[hsl(142,71%,45%)] text-white"
-                                  : "bg-muted text-muted-foreground"
-                              }`}>
-                                {room.status === "terisi" ? "Terisi" : "Kosong"}
-                              </Badge>
-                            </div>
-                          </button>
+                              <div className="flex items-center gap-2">
+                                {room.status === "kosong" && (
+                                  <span className="text-[10px] font-medium text-primary flex items-center gap-0.5">
+                                    <UserPlus size={12} /> Isi
+                                  </span>
+                                )}
+                                <Badge className={`text-[10px] border-0 ${
+                                  room.status === "terisi"
+                                    ? "bg-[hsl(142,71%,45%)] text-white"
+                                    : "bg-muted text-muted-foreground"
+                                }`}>
+                                  {room.status === "terisi" ? "Terisi" : "Kosong"}
+                                </Badge>
+                              </div>
+                            </button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted shrink-0">
+                                  <MoreVertical size={14} className="text-muted-foreground" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => {
+                                  setShowEditRoom(room);
+                                  setEditRoomNomor(room.nomor);
+                                  setEditRoomLantai(String(room.lantai));
+                                }}>
+                                  <Pencil size={14} className="mr-2" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteRoom(room.id)}>
+                                  <Trash2 size={14} className="mr-2" /> Hapus
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         ))}
                         <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => setShowAddRooms(rt.id)}>
                           <Plus size={14} className="mr-1" /> Tambah Kamar
@@ -277,6 +356,7 @@ export default function KamarPage() {
         )}
       </div>
 
+      {/* Add room type */}
       <BottomSheet open={showAdd} onClose={() => setShowAdd(false)} title="Tambah Tipe Kamar">
         <form onSubmit={handleAddType} className="space-y-4">
           <div className="space-y-2"><Label>Nama Tipe</Label><Input value={nama} onChange={e => setNama(e.target.value)} placeholder="Standar" required /></div>
@@ -295,6 +375,35 @@ export default function KamarPage() {
         </form>
       </BottomSheet>
 
+      {/* Edit room type */}
+      <BottomSheet open={!!showEditType} onClose={() => setShowEditType(null)} title="Edit Tipe Kamar">
+        <form onSubmit={handleEditType} className="space-y-4">
+          <div className="space-y-2"><Label>Nama Tipe</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
+          <div className="space-y-2"><Label>Harga per Bulan (Rp)</Label><Input type="number" value={harga} onChange={e => setHarga(e.target.value)} required /></div>
+          <div className="space-y-2">
+            <Label>Fasilitas</Label>
+            <div className="flex flex-wrap gap-2">
+              {FASILITAS_OPTIONS.map(f => (
+                <button key={f} type="button" onClick={() => setFasilitas(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f])}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${fasilitas.includes(f) ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}
+                >{f}</button>
+              ))}
+            </div>
+          </div>
+          <Button type="submit" className="w-full">Simpan Perubahan</Button>
+        </form>
+      </BottomSheet>
+
+      {/* Edit room */}
+      <BottomSheet open={!!showEditRoom} onClose={() => setShowEditRoom(null)} title="Edit Kamar">
+        <form onSubmit={handleEditRoom} className="space-y-4">
+          <div className="space-y-2"><Label>Nomor Kamar</Label><Input value={editRoomNomor} onChange={e => setEditRoomNomor(e.target.value)} required /></div>
+          <div className="space-y-2"><Label>Lantai</Label><Input type="number" value={editRoomLantai} onChange={e => setEditRoomLantai(e.target.value)} required /></div>
+          <Button type="submit" className="w-full">Simpan Perubahan</Button>
+        </form>
+      </BottomSheet>
+
+      {/* Add rooms bulk */}
       <BottomSheet open={!!showAddRooms} onClose={() => setShowAddRooms(null)} title="Tambah Kamar">
         <form onSubmit={handleBulkAdd} className="space-y-4">
           <div className="space-y-2"><Label>Prefix Nomor</Label><Input value={prefix} onChange={e => setPrefix(e.target.value)} placeholder="A" /></div>
@@ -307,6 +416,7 @@ export default function KamarPage() {
         </form>
       </BottomSheet>
 
+      {/* Add tenant */}
       <BottomSheet open={!!showAddTenant} onClose={() => setShowAddTenant(null)} title="Tambah Penyewa">
         <form onSubmit={handleAddTenant} className="space-y-4">
           <div className="bg-muted rounded-lg p-3">

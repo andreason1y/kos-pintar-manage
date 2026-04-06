@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreditCard, MessageCircle, FileText, Download, Send } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CreditCard, MessageCircle, FileText, Download, Send, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -42,10 +43,17 @@ export default function PembayaranPage() {
   const [loading, setLoading] = useState(true);
   const [showPay, setShowPay] = useState<Payment | null>(null);
   const [showNota, setShowNota] = useState<Payment | null>(null);
+  const [showEdit, setShowEdit] = useState<Payment | null>(null);
   const [jumlahBayar, setJumlahBayar] = useState("");
+  const [payError, setPayError] = useState("");
   const [metode, setMetode] = useState("tunai");
   const [catatan, setCatatan] = useState("");
   const [activeTab, setActiveTab] = useState<"pending" | "lunas">("pending");
+
+  // Edit form state
+  const [editJumlah, setEditJumlah] = useState("");
+  const [editMetode, setEditMetode] = useState("tunai");
+  const [editStatus, setEditStatus] = useState("belum_bayar");
 
   const propertyName = demo.isDemo ? demo.property.nama_kos : activeProperty?.nama_kos || "";
 
@@ -101,16 +109,21 @@ export default function PembayaranPage() {
 
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPayError("");
     if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowPay(null); return; }
     if (!showPay) return;
     const bayar = parseInt(jumlahBayar) || 0;
+    if (bayar <= 0) {
+      setPayError("Jumlah bayar harus lebih dari 0");
+      return;
+    }
     const totalBayar = showPay.jumlah_dibayar + bayar;
     const newStatus = totalBayar >= showPay.total_tagihan ? "lunas" : "belum_lunas";
     const nota = newStatus === "lunas" ? generateNotaNumber(showPay.periode_bulan, showPay.periode_tahun) : null;
     const { error } = await supabase.from("transactions").update({ jumlah_dibayar: totalBayar, status: newStatus, metode_bayar: metode, tanggal_bayar: new Date().toISOString().split("T")[0], catatan, nota_number: nota } as any).eq("id", showPay.id);
     if (error) { toast.error(error.message); return; }
     toast.success(newStatus === "lunas" ? "Pembayaran lunas!" : "Pembayaran parsial berhasil");
-    setShowPay(null); setJumlahBayar(""); setCatatan("");
+    setShowPay(null); setJumlahBayar(""); setCatatan(""); setPayError("");
     fetchData();
   };
 
@@ -148,13 +161,36 @@ export default function PembayaranPage() {
     );
   };
 
+  const handleEditTx = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowEdit(null); return; }
+    if (!showEdit) return;
+    const jml = parseInt(editJumlah) || 0;
+    const { error } = await supabase.from("transactions").update({
+      jumlah_dibayar: jml,
+      status: editStatus,
+      metode_bayar: editMetode,
+    } as any).eq("id", showEdit.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Transaksi diperbarui");
+    setShowEdit(null);
+    fetchData();
+  };
+
+  const handleDeleteTx = async (id: string) => {
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    const { error } = await supabase.from("transactions").delete().eq("id", id) as any;
+    if (error) { toast.error(error.message); return; }
+    toast.success("Transaksi dihapus");
+    fetchData();
+  };
+
   const currentList = activeTab === "pending" ? pending : lunas;
 
   return (
     <AppShell>
       <PageHeader title="Pembayaran" subtitle="Selesaikan tagihan penyewa" />
       <div className="px-4 space-y-3">
-        {/* Tabs */}
         <div className="flex gap-2">
           {([["pending", "Belum Lunas"], ["lunas", "Lunas"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setActiveTab(key)}
@@ -181,7 +217,29 @@ export default function PembayaranPage() {
                   <p className="font-semibold text-foreground">{p.tenant_nama}</p>
                   <p className="text-sm text-muted-foreground">Kamar {p.kamar} · {getMonthName(p.periode_bulan)} {p.periode_tahun}</p>
                 </div>
-                <StatusBadge status={p.status} />
+                <div className="flex items-center gap-1">
+                  <StatusBadge status={p.status} />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted">
+                        <MoreVertical size={14} className="text-muted-foreground" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => {
+                        setShowEdit(p);
+                        setEditJumlah(String(p.jumlah_dibayar));
+                        setEditMetode(p.metode_bayar || "tunai");
+                        setEditStatus(p.status);
+                      }}>
+                        <Pencil size={14} className="mr-2" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTx(p.id)}>
+                        <Trash2 size={14} className="mr-2" /> Hapus
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
               <div className="flex justify-between items-center text-sm mb-3">
                 <span className="text-muted-foreground">{p.status === "lunas" ? "Total" : "Sisa tagihan"}</span>
@@ -196,7 +254,7 @@ export default function PembayaranPage() {
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <Button size="sm" className="flex-1" onClick={() => { setShowPay(p); setJumlahBayar(String(p.sisa)); }}>
+                  <Button size="sm" className="flex-1" onClick={() => { setShowPay(p); setJumlahBayar(String(p.sisa)); setPayError(""); }}>
                     <CreditCard size={14} className="mr-1" /> Bayar
                   </Button>
                   {p.tenant_hp && (
@@ -212,7 +270,7 @@ export default function PembayaranPage() {
       </div>
 
       {/* Pay bottom sheet */}
-      <BottomSheet open={!!showPay} onClose={() => setShowPay(null)} title="Selesaikan Pembayaran">
+      <BottomSheet open={!!showPay} onClose={() => { setShowPay(null); setPayError(""); }} title="Selesaikan Pembayaran">
         {showPay && (
           <form onSubmit={handlePay} className="space-y-4">
             <div className="bg-muted rounded-lg p-3 space-y-1">
@@ -220,14 +278,40 @@ export default function PembayaranPage() {
               <p className="text-xs text-muted-foreground">Kamar {showPay.kamar} · {getMonthName(showPay.periode_bulan)} {showPay.periode_tahun}</p>
               <p className="text-sm">Tagihan: {formatRupiah(showPay.total_tagihan)} | Sudah bayar: {formatRupiah(showPay.jumlah_dibayar)}</p>
             </div>
-            <div className="space-y-2"><Label>Jumlah Bayar (Rp)</Label><Input type="number" value={jumlahBayar} onChange={e => setJumlahBayar(e.target.value)} required /></div>
+            <div className="space-y-2">
+              <Label>Jumlah Bayar (Rp)</Label>
+              <Input type="number" value={jumlahBayar} onChange={e => { setJumlahBayar(e.target.value); setPayError(""); }} />
+              {payError && <p className="text-xs text-destructive">{payError}</p>}
+            </div>
             <div className="space-y-2"><Label>Metode Pembayaran</Label>
               <Select value={metode} onValueChange={setMetode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
                 <SelectItem value="tunai">Tunai</SelectItem><SelectItem value="transfer">Transfer</SelectItem><SelectItem value="qris">QRIS</SelectItem>
               </SelectContent></Select>
             </div>
             <div className="space-y-2"><Label>Catatan</Label><Input value={catatan} onChange={e => setCatatan(e.target.value)} placeholder="Opsional" /></div>
-            <Button type="submit" className="w-full">Simpan Pembayaran</Button>
+            <Button type="submit" className="w-full h-12 text-base font-semibold">
+              <CreditCard size={18} className="mr-2" /> Selesaikan Pembayaran
+            </Button>
+          </form>
+        )}
+      </BottomSheet>
+
+      {/* Edit transaction */}
+      <BottomSheet open={!!showEdit} onClose={() => setShowEdit(null)} title="Edit Transaksi">
+        {showEdit && (
+          <form onSubmit={handleEditTx} className="space-y-4">
+            <div className="space-y-2"><Label>Jumlah Dibayar (Rp)</Label><Input type="number" value={editJumlah} onChange={e => setEditJumlah(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Metode</Label>
+              <Select value={editMetode} onValueChange={setEditMetode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
+                <SelectItem value="tunai">Tunai</SelectItem><SelectItem value="transfer">Transfer</SelectItem><SelectItem value="qris">QRIS</SelectItem>
+              </SelectContent></Select>
+            </div>
+            <div className="space-y-2"><Label>Status</Label>
+              <Select value={editStatus} onValueChange={setEditStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
+                <SelectItem value="belum_bayar">Belum Bayar</SelectItem><SelectItem value="belum_lunas">Belum Lunas</SelectItem><SelectItem value="lunas">Lunas</SelectItem>
+              </SelectContent></Select>
+            </div>
+            <Button type="submit" className="w-full">Simpan Perubahan</Button>
           </form>
         )}
       </BottomSheet>
@@ -260,7 +344,7 @@ export default function PembayaranPage() {
             <div className="text-center text-xs text-muted-foreground">Terima kasih telah membayar tepat waktu 🙏</div>
             <div className="flex gap-2">
               <Button className="flex-1" onClick={() => handleDownloadNota(showNota)}>
-                <Download size={14} className="mr-1" /> Download PDF
+                <Download size={14} className="mr-1" /> Unduh PDF
               </Button>
               {showNota.tenant_hp && (
                 <a href={getWaNotaLink(showNota)} target="_blank" rel="noreferrer" className="flex-1">
