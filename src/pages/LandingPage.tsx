@@ -470,7 +470,7 @@ export default function LandingPage() {
                 Mulai Kelola Kos Lebih Cerdas
               </h2>
               <p className="text-xs text-primary-foreground/80">
-                Gratis 14 hari, tanpa kartu kredit
+                Coba demo gratis, tanpa perlu daftar
               </p>
               <Button
                 size="lg"
