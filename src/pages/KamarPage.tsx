@@ -409,6 +409,18 @@ export default function KamarPage() {
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${fasilitas.includes(f) ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}
                 >{f}</button>
               ))}
+              {fasilitas.filter(f => !FASILITAS_OPTIONS.includes(f)).map(f => (
+                <button key={f} type="button" onClick={() => setFasilitas(prev => prev.filter(x => x !== f))}
+                  className="px-3 py-1.5 rounded-full text-xs font-medium border bg-primary text-primary-foreground border-primary"
+                >{f} ✕</button>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-1">
+              <Input value={customFasilitas} onChange={e => setCustomFasilitas(e.target.value)} placeholder="Fasilitas lainnya..." className="text-sm" />
+              <Button type="button" variant="outline" size="sm" onClick={() => {
+                const val = customFasilitas.trim();
+                if (val && !fasilitas.includes(val)) { setFasilitas(prev => [...prev, val]); setCustomFasilitas(""); }
+              }}>Tambah</Button>
             </div>
           </div>
           <Button type="submit" className="w-full">Simpan Perubahan</Button>
