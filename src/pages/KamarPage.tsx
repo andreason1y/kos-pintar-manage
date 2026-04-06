@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { formatRupiah } from "@/lib/helpers";
+import { getAvatarColor, getInitials } from "@/lib/avatar-colors";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import SkeletonCard from "@/components/SkeletonCard";
@@ -13,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, ChevronDown, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 const FASILITAS_OPTIONS = ["AC", "TV", "Lemari", "Kamar Mandi Dalam", "WiFi", "Air Panas", "Parkir Motor"];
@@ -31,9 +33,12 @@ interface Room {
   nomor: string;
   lantai: number;
   status: string;
+  tenantName?: string;
+  tenantId?: string;
 }
 
 export default function KamarPage() {
+  const navigate = useNavigate();
   const { activeProperty } = useProperty();
   const demo = useDemo();
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
@@ -41,6 +46,7 @@ export default function KamarPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [showAddRooms, setShowAddRooms] = useState<string | null>(null);
+  const [showAddTenant, setShowAddTenant] = useState<string | null>(null);
 
   const [nama, setNama] = useState("");
   const [harga, setHarga] = useState("");
@@ -50,11 +56,21 @@ export default function KamarPage() {
   const [count, setCount] = useState("5");
   const [lantai, setLantai] = useState("1");
 
+  // Add tenant form
+  const [tenantNama, setTenantNama] = useState("");
+  const [tenantHp, setTenantHp] = useState("");
+  const [tenantGender, setTenantGender] = useState("L");
+  const [tenantTanggalMasuk, setTenantTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
+  const [tenantDurasi, setTenantDurasi] = useState("1");
+
   const fetchData = async () => {
     if (demo.isDemo) {
       const mapped: RoomType[] = demo.roomTypes.map(rt => ({
         ...rt,
-        rooms: demo.rooms.filter(r => r.room_type_id === rt.id),
+        rooms: demo.rooms.filter(r => r.room_type_id === rt.id).map(r => {
+          const tenant = demo.tenants.find(t => t.room_id === r.id && t.status === "aktif");
+          return { ...r, tenantName: tenant?.nama, tenantId: tenant?.id };
+        }),
       }));
       setRoomTypes(mapped);
       setLoading(false);
@@ -69,9 +85,22 @@ export default function KamarPage() {
       const { data } = await supabase.from("rooms").select("*").in("room_type_id", rtIds).order("nomor") as any;
       rooms = data || [];
     }
+    // Fetch tenants for occupied rooms
+    const occupiedRoomIds = rooms.filter((r: any) => r.status === "terisi").map((r: any) => r.id);
+    let tenantsByRoom: Record<string, { nama: string; id: string }> = {};
+    if (occupiedRoomIds.length > 0) {
+      const { data: tenantData } = await supabase.from("tenants").select("id, nama, room_id").in("room_id", occupiedRoomIds).eq("status", "aktif") as any;
+      (tenantData || []).forEach((t: any) => {
+        if (t.room_id) tenantsByRoom[t.room_id] = { nama: t.nama, id: t.id };
+      });
+    }
     const mapped: RoomType[] = (types || []).map((t: any) => ({
       ...t,
-      rooms: rooms.filter((r: any) => r.room_type_id === t.id),
+      rooms: rooms.filter((r: any) => r.room_type_id === t.id).map((r: any) => ({
+        ...r,
+        tenantName: tenantsByRoom[r.id]?.nama,
+        tenantId: tenantsByRoom[r.id]?.id,
+      })),
     }));
     setRoomTypes(mapped);
     setLoading(false);
@@ -99,6 +128,45 @@ export default function KamarPage() {
     const { error } = await supabase.from("rooms").insert(roomsToInsert as any);
     if (error) toast.error(error.message);
     else { toast.success(`${n} kamar ditambahkan!`); setShowAddRooms(null); fetchData(); }
+  };
+
+  const handleAddTenant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowAddTenant(null); return; }
+    if (!activeProperty || !showAddTenant) return;
+    const d = parseInt(tenantDurasi);
+    const masuk = new Date(tenantTanggalMasuk);
+    const keluar = new Date(masuk);
+    keluar.setMonth(keluar.getMonth() + d);
+    const { data: tenant, error } = await supabase.from("tenants").insert({
+      property_id: activeProperty.id, room_id: showAddTenant, nama: tenantNama,
+      no_hp: tenantHp || null, gender: tenantGender,
+      tanggal_masuk: tenantTanggalMasuk, tanggal_keluar: keluar.toISOString().split("T")[0],
+    } as any).select().single() as any;
+    if (error) { toast.error(error.message); return; }
+    await supabase.from("rooms").update({ status: "terisi" } as any).eq("id", showAddTenant);
+    // Find room type to get price
+    let hargaSewa = 0;
+    for (const rt of roomTypes) {
+      const room = rt.rooms.find(r => r.id === showAddTenant);
+      if (room) { hargaSewa = rt.harga_per_bulan; break; }
+    }
+    await supabase.from("transactions").insert({
+      tenant_id: tenant.id, property_id: activeProperty.id,
+      periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(),
+      total_tagihan: hargaSewa,
+    } as any);
+    toast.success("Penyewa berhasil ditambahkan!");
+    setShowAddTenant(null); setTenantNama(""); setTenantHp(""); setTenantGender("L"); setTenantDurasi("1");
+    fetchData();
+  };
+
+  const handleRoomTap = (room: Room) => {
+    if (room.status === "terisi" && room.tenantId) {
+      navigate(`/penyewa?id=${room.tenantId}`);
+    } else if (room.status === "kosong") {
+      setShowAddTenant(room.id);
+    }
   };
 
   return (
@@ -150,28 +218,51 @@ export default function KamarPage() {
                         {rt.rooms.length === 0 ? (
                           <p className="text-sm text-muted-foreground text-center py-2">Belum ada kamar</p>
                         ) : rt.rooms.map((room) => (
-                          <div key={room.id} className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2.5">
+                          <button
+                            key={room.id}
+                            onClick={() => handleRoomTap(room)}
+                            className="w-full flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-muted"
+                          >
                             <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
-                                room.status === "terisi"
-                                  ? "bg-[hsl(142,71%,45%)]/15 text-[hsl(142,71%,45%)]"
-                                  : "bg-muted text-muted-foreground"
-                              }`}>
-                                {room.nomor}
-                              </div>
+                              {room.status === "terisi" && room.tenantName ? (
+                                <div
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold"
+                                  style={{
+                                    background: getAvatarColor(room.tenantName).bg,
+                                    color: getAvatarColor(room.tenantName).fg,
+                                  }}
+                                >
+                                  {getInitials(room.tenantName)}
+                                </div>
+                              ) : (
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold bg-muted text-muted-foreground">
+                                  {room.nomor}
+                                </div>
+                              )}
                               <div>
                                 <span className="text-sm font-medium text-foreground">Kamar {room.nomor}</span>
-                                <p className="text-[10px] text-muted-foreground">Lantai {room.lantai}</p>
+                                {room.status === "terisi" && room.tenantName ? (
+                                  <p className="text-[11px] text-muted-foreground">{room.tenantName}</p>
+                                ) : (
+                                  <p className="text-[10px] text-muted-foreground">Lantai {room.lantai}</p>
+                                )}
                               </div>
                             </div>
-                            <Badge className={`text-[10px] border-0 ${
-                              room.status === "terisi"
-                                ? "bg-[hsl(142,71%,45%)] text-white"
-                                : "bg-muted text-muted-foreground"
-                            }`}>
-                              {room.status === "terisi" ? "Terisi" : "Kosong"}
-                            </Badge>
-                          </div>
+                            <div className="flex items-center gap-2">
+                              {room.status === "kosong" && (
+                                <span className="text-[10px] font-medium text-primary flex items-center gap-0.5">
+                                  <UserPlus size={12} /> Isi
+                                </span>
+                              )}
+                              <Badge className={`text-[10px] border-0 ${
+                                room.status === "terisi"
+                                  ? "bg-[hsl(142,71%,45%)] text-white"
+                                  : "bg-muted text-muted-foreground"
+                              }`}>
+                                {room.status === "terisi" ? "Terisi" : "Kosong"}
+                              </Badge>
+                            </div>
+                          </button>
                         ))}
                         <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => setShowAddRooms(rt.id)}>
                           <Plus size={14} className="mr-1" /> Tambah Kamar
@@ -213,6 +304,43 @@ export default function KamarPage() {
             <div className="space-y-2"><Label>Lantai</Label><Input type="number" value={lantai} onChange={e => setLantai(e.target.value)} /></div>
           </div>
           <Button type="submit" className="w-full">Tambah</Button>
+        </form>
+      </BottomSheet>
+
+      <BottomSheet open={!!showAddTenant} onClose={() => setShowAddTenant(null)} title="Tambah Penyewa">
+        <form onSubmit={handleAddTenant} className="space-y-4">
+          <div className="bg-muted rounded-lg p-3">
+            <p className="text-xs text-muted-foreground">Kamar yang dipilih</p>
+            <p className="text-sm font-semibold text-foreground">
+              {showAddTenant && roomTypes.flatMap(rt => rt.rooms).find(r => r.id === showAddTenant)?.nomor}
+            </p>
+          </div>
+          <div className="space-y-2"><Label>Nama</Label><Input value={tenantNama} onChange={e => setTenantNama(e.target.value)} required /></div>
+          <div className="space-y-2"><Label>No. HP</Label><Input value={tenantHp} onChange={e => setTenantHp(e.target.value)} placeholder="08123456789" /></div>
+          <div className="space-y-2">
+            <Label>Gender</Label>
+            <div className="flex gap-2">
+              {[{ v: "L", l: "Laki-laki" }, { v: "P", l: "Perempuan" }].map(g => (
+                <button key={g.v} type="button" onClick={() => setTenantGender(g.v)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${tenantGender === g.v ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}
+                >{g.l}</button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2"><Label>Tanggal Masuk</Label><Input type="date" value={tenantTanggalMasuk} onChange={e => setTenantTanggalMasuk(e.target.value)} /></div>
+            <div className="space-y-2">
+              <Label>Durasi</Label>
+              <div className="flex gap-1">
+                {[1, 3, 6, 12].map(d => (
+                  <button key={d} type="button" onClick={() => setTenantDurasi(String(d))}
+                    className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-colors ${tenantDurasi === String(d) ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}
+                  >{d}bl</button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <Button type="submit" className="w-full">Simpan Penyewa</Button>
         </form>
       </BottomSheet>
     </AppShell>
