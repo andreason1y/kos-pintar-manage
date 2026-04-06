@@ -28,6 +28,7 @@ export default function AuthPage() {
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
+      else navigate("/beranda", { replace: true });
     } else {
       if (password !== confirmPassword) {
         toast.error("Kata sandi dan konfirmasi tidak cocok");
