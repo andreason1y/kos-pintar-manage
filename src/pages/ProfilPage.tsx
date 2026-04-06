@@ -65,6 +65,21 @@ export default function ProfilPage() {
     setSaving(false);
   };
 
+  const handleSaveProperty = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (demo.isDemo || !user) return;
+    setSaving(true);
+    const { error } = await supabase.from("properties").update({ nama_kos: editKosName, alamat: editKosAlamat || null } as any).eq("id", editPropertyId);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Properti diperbarui!");
+      setShowEditProperty(false);
+      // refetch properties
+      const { refetch } = useProperty as any;
+    }
+    setSaving(false);
+  };
+
   const displayProperties = demo.isDemo ? [demo.property] : properties;
   const displayActive = demo.isDemo ? demo.property : activeProperty;
   const displayName = demo.isDemo ? "Demo User" : (profileData.nama || user?.user_metadata?.nama || user?.email?.split("@")[0] || "Pengguna");
