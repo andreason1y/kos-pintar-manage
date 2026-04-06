@@ -17,6 +17,9 @@ const PembayaranPage = lazy(() => import("./pages/PembayaranPage"));
 const KeuanganPage = lazy(() => import("./pages/KeuanganPage"));
 const ProfilPage = lazy(() => import("./pages/ProfilPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminBroadcast = lazy(() => import("./pages/admin/AdminBroadcast"));
 
 const queryClient = new QueryClient();
 
@@ -38,6 +41,9 @@ function MainRoutes() {
         <Route path="/pembayaran" element={<PembayaranPage />} />
         <Route path="/keuangan" element={<KeuanganPage />} />
         <Route path="/profil" element={<ProfilPage />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/admin/broadcast" element={<AdminBroadcast />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
