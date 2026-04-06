@@ -274,26 +274,30 @@ export default function PembayaranPage() {
       {/* Pay bottom sheet */}
       <BottomSheet open={!!showPay} onClose={() => { setShowPay(null); setPayError(""); }} title="Selesaikan Pembayaran">
         {showPay && (
-          <form onSubmit={handlePay} className="space-y-4">
-            <div className="bg-muted rounded-lg p-3 space-y-1">
-              <p className="text-sm font-medium text-foreground">{showPay.tenant_nama}</p>
-              <p className="text-xs text-muted-foreground">Kamar {showPay.kamar} · {getMonthName(showPay.periode_bulan)} {showPay.periode_tahun}</p>
-              <p className="text-sm">Tagihan: {formatRupiah(showPay.total_tagihan)} | Sudah bayar: {formatRupiah(showPay.jumlah_dibayar)}</p>
-            </div>
-            <div className="space-y-2">
-              <Label>Jumlah Bayar (Rp)</Label>
-              <Input type="number" value={jumlahBayar} onChange={e => { setJumlahBayar(e.target.value); setPayError(""); }} />
-              {payError && <p className="text-xs text-destructive">{payError}</p>}
-            </div>
-            <div className="space-y-2"><Label>Metode Pembayaran</Label>
+          <form onSubmit={handlePay} className="bottom-sheet-form">
+            <div className="bottom-sheet-body">
+              <div className="bg-muted rounded-lg p-3 space-y-1">
+                <p className="text-sm font-medium text-foreground">{showPay.tenant_nama}</p>
+                <p className="text-xs text-muted-foreground">Kamar {showPay.kamar} · {getMonthName(showPay.periode_bulan)} {showPay.periode_tahun}</p>
+                <p className="text-sm">Tagihan: {formatRupiah(showPay.total_tagihan)} | Sudah bayar: {formatRupiah(showPay.jumlah_dibayar)}</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Jumlah Bayar (Rp)</Label>
+                <Input type="number" value={jumlahBayar} onChange={e => { setJumlahBayar(e.target.value); setPayError(""); }} />
+                {payError && <p className="text-xs text-destructive">{payError}</p>}
+              </div>
+              <div className="space-y-2"><Label>Metode Pembayaran</Label>
               <Select value={metode} onValueChange={setMetode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
                 <SelectItem value="tunai">Tunai</SelectItem><SelectItem value="transfer">Transfer</SelectItem><SelectItem value="qris">QRIS</SelectItem>
               </SelectContent></Select>
+              </div>
+              <div className="space-y-2"><Label>Catatan</Label><Input value={catatan} onChange={e => setCatatan(e.target.value)} placeholder="Opsional" /></div>
             </div>
-            <div className="space-y-2"><Label>Catatan</Label><Input value={catatan} onChange={e => setCatatan(e.target.value)} placeholder="Opsional" /></div>
-            <Button type="submit" className="w-full h-12 text-base font-semibold">
-              <CreditCard size={18} className="mr-2" /> Selesaikan Pembayaran
-            </Button>
+            <div className="bottom-sheet-footer">
+              <Button type="submit" className="w-full h-12 text-base font-semibold">
+                <CreditCard size={18} className="mr-2" /> Selesaikan Pembayaran
+              </Button>
+            </div>
           </form>
         )}
       </BottomSheet>
@@ -301,19 +305,23 @@ export default function PembayaranPage() {
       {/* Edit transaction */}
       <BottomSheet open={!!showEdit} onClose={() => setShowEdit(null)} title="Edit Transaksi">
         {showEdit && (
-          <form onSubmit={handleEditTx} className="space-y-4">
-            <div className="space-y-2"><Label>Jumlah Dibayar (Rp)</Label><Input type="number" value={editJumlah} onChange={e => setEditJumlah(e.target.value)} /></div>
-            <div className="space-y-2"><Label>Metode</Label>
+          <form onSubmit={handleEditTx} className="bottom-sheet-form">
+            <div className="bottom-sheet-body">
+              <div className="space-y-2"><Label>Jumlah Dibayar (Rp)</Label><Input type="number" value={editJumlah} onChange={e => setEditJumlah(e.target.value)} /></div>
+              <div className="space-y-2"><Label>Metode</Label>
               <Select value={editMetode} onValueChange={setEditMetode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
                 <SelectItem value="tunai">Tunai</SelectItem><SelectItem value="transfer">Transfer</SelectItem><SelectItem value="qris">QRIS</SelectItem>
               </SelectContent></Select>
-            </div>
-            <div className="space-y-2"><Label>Status</Label>
+              </div>
+              <div className="space-y-2"><Label>Status</Label>
               <Select value={editStatus} onValueChange={setEditStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
                 <SelectItem value="belum_bayar">Belum Bayar</SelectItem><SelectItem value="belum_lunas">Belum Lunas</SelectItem><SelectItem value="lunas">Lunas</SelectItem>
               </SelectContent></Select>
+              </div>
             </div>
-            <Button type="submit" className="w-full">Simpan Perubahan</Button>
+            <div className="bottom-sheet-footer">
+              <Button type="submit" className="w-full">Simpan Perubahan</Button>
+            </div>
           </form>
         )}
       </BottomSheet>

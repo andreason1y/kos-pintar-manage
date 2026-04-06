@@ -369,10 +369,11 @@ export default function KamarPage() {
 
       {/* Add room type */}
       <BottomSheet open={showAdd} onClose={() => setShowAdd(false)} title="Tambah Tipe Kamar">
-        <form onSubmit={handleAddType} className="space-y-4">
-          <div className="space-y-2"><Label>Nama Tipe</Label><Input value={nama} onChange={e => setNama(e.target.value)} placeholder="Standar" required /></div>
-          <div className="space-y-2"><Label>Harga per Bulan (Rp)</Label><Input type="number" value={harga} onChange={e => setHarga(e.target.value)} placeholder="500000" required /></div>
-          <div className="space-y-2">
+        <form onSubmit={handleAddType} className="bottom-sheet-form">
+          <div className="bottom-sheet-body">
+            <div className="space-y-2"><Label>Nama Tipe</Label><Input value={nama} onChange={e => setNama(e.target.value)} placeholder="Standar" required /></div>
+            <div className="space-y-2"><Label>Harga per Bulan (Rp)</Label><Input type="number" value={harga} onChange={e => setHarga(e.target.value)} placeholder="500000" required /></div>
+            <div className="space-y-2">
             <Label>Fasilitas</Label>
             <div className="flex flex-wrap gap-2">
               {FASILITAS_OPTIONS.map(f => (
@@ -394,16 +395,20 @@ export default function KamarPage() {
               }}>Tambah</Button>
             </div>
           </div>
-          <Button type="submit" className="w-full">Simpan</Button>
+          </div>
+          <div className="bottom-sheet-footer">
+            <Button type="submit" className="w-full">Simpan Tipe</Button>
+          </div>
         </form>
       </BottomSheet>
 
       {/* Edit room type */}
       <BottomSheet open={!!showEditType} onClose={() => setShowEditType(null)} title="Edit Tipe Kamar">
-        <form onSubmit={handleEditType} className="space-y-4">
-          <div className="space-y-2"><Label>Nama Tipe</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
-          <div className="space-y-2"><Label>Harga per Bulan (Rp)</Label><Input type="number" value={harga} onChange={e => setHarga(e.target.value)} required /></div>
-          <div className="space-y-2">
+        <form onSubmit={handleEditType} className="bottom-sheet-form">
+          <div className="bottom-sheet-body">
+            <div className="space-y-2"><Label>Nama Tipe</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
+            <div className="space-y-2"><Label>Harga per Bulan (Rp)</Label><Input type="number" value={harga} onChange={e => setHarga(e.target.value)} required /></div>
+            <div className="space-y-2">
             <Label>Fasilitas</Label>
             <div className="flex flex-wrap gap-2">
               {FASILITAS_OPTIONS.map(f => (
@@ -425,36 +430,48 @@ export default function KamarPage() {
               }}>Tambah</Button>
             </div>
           </div>
-          <Button type="submit" className="w-full">Simpan Perubahan</Button>
+          </div>
+          <div className="bottom-sheet-footer">
+            <Button type="submit" className="w-full">Simpan Tipe</Button>
+          </div>
         </form>
       </BottomSheet>
 
       {/* Edit room */}
       <BottomSheet open={!!showEditRoom} onClose={() => setShowEditRoom(null)} title="Edit Kamar">
-        <form onSubmit={handleEditRoom} className="space-y-4">
-          <div className="space-y-2"><Label>Nomor Kamar</Label><Input value={editRoomNomor} onChange={e => setEditRoomNomor(e.target.value)} required /></div>
-          <div className="space-y-2"><Label>Lantai</Label><Input type="number" value={editRoomLantai} onChange={e => setEditRoomLantai(e.target.value)} required /></div>
-          <Button type="submit" className="w-full">Simpan Perubahan</Button>
+        <form onSubmit={handleEditRoom} className="bottom-sheet-form">
+          <div className="bottom-sheet-body">
+            <div className="space-y-2"><Label>Nomor Kamar</Label><Input value={editRoomNomor} onChange={e => setEditRoomNomor(e.target.value)} required /></div>
+            <div className="space-y-2"><Label>Lantai</Label><Input type="number" value={editRoomLantai} onChange={e => setEditRoomLantai(e.target.value)} required /></div>
+          </div>
+          <div className="bottom-sheet-footer">
+            <Button type="submit" className="w-full">Simpan Kamar</Button>
+          </div>
         </form>
       </BottomSheet>
 
       {/* Add rooms bulk */}
       <BottomSheet open={!!showAddRooms} onClose={() => setShowAddRooms(null)} title="Tambah Kamar">
-        <form onSubmit={handleBulkAdd} className="space-y-4">
-          <div className="space-y-2"><Label>Prefix Nomor</Label><Input value={prefix} onChange={e => setPrefix(e.target.value)} placeholder="A" /></div>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-2"><Label>Mulai</Label><Input type="number" value={startNum} onChange={e => setStartNum(e.target.value)} /></div>
-            <div className="space-y-2"><Label>Jumlah</Label><Input type="number" value={count} onChange={e => setCount(e.target.value)} /></div>
-            <div className="space-y-2"><Label>Lantai</Label><Input type="number" value={lantai} onChange={e => setLantai(e.target.value)} /></div>
+        <form onSubmit={handleBulkAdd} className="bottom-sheet-form">
+          <div className="bottom-sheet-body">
+            <div className="space-y-2"><Label>Prefix Nomor</Label><Input value={prefix} onChange={e => setPrefix(e.target.value)} placeholder="A" /></div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2"><Label>Mulai</Label><Input type="number" value={startNum} onChange={e => setStartNum(e.target.value)} /></div>
+              <div className="space-y-2"><Label>Jumlah</Label><Input type="number" value={count} onChange={e => setCount(e.target.value)} /></div>
+              <div className="space-y-2"><Label>Lantai</Label><Input type="number" value={lantai} onChange={e => setLantai(e.target.value)} /></div>
+            </div>
           </div>
-          <Button type="submit" className="w-full">Tambah</Button>
+          <div className="bottom-sheet-footer">
+            <Button type="submit" className="w-full">Simpan Kamar</Button>
+          </div>
         </form>
       </BottomSheet>
 
       {/* Add tenant */}
       <BottomSheet open={!!showAddTenant} onClose={() => setShowAddTenant(null)} title="Tambah Penyewa">
-        <form onSubmit={handleAddTenant} className="space-y-4">
-          <div className="bg-muted rounded-lg p-3">
+        <form onSubmit={handleAddTenant} className="bottom-sheet-form">
+          <div className="bottom-sheet-body">
+            <div className="bg-muted rounded-lg p-3">
             <p className="text-xs text-muted-foreground">Kamar yang dipilih</p>
             <p className="text-sm font-semibold text-foreground">
               {showAddTenant && roomTypes.flatMap(rt => rt.rooms).find(r => r.id === showAddTenant)?.nomor}
@@ -489,7 +506,10 @@ export default function KamarPage() {
             <Label>Deposit (Rp)</Label>
             <Input type="number" value={tenantDeposit} onChange={e => setTenantDeposit(e.target.value)} placeholder="0 (opsional)" />
           </div>
-          <Button type="submit" className="w-full">Simpan Penyewa</Button>
+          </div>
+          <div className="bottom-sheet-footer">
+            <Button type="submit" className="w-full">Tambah Penyewa</Button>
+          </div>
         </form>
       </BottomSheet>
 

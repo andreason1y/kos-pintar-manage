@@ -404,9 +404,10 @@ export default function KeuanganPage() {
 
       {/* Add expense */}
       <BottomSheet open={showAdd} onClose={() => setShowAdd(false)} title="Tambah Pengeluaran">
-        <form onSubmit={handleAddExpense} className="space-y-4">
-          <div className="space-y-2"><Label>Judul</Label><Input value={judul} onChange={e => setJudul(e.target.value)} placeholder="Bayar listrik" required /></div>
-          <div className="space-y-2"><Label>Kategori</Label>
+        <form onSubmit={handleAddExpense} className="bottom-sheet-form">
+          <div className="bottom-sheet-body">
+            <div className="space-y-2"><Label>Judul</Label><Input value={judul} onChange={e => setJudul(e.target.value)} placeholder="Bayar listrik" required /></div>
+            <div className="space-y-2"><Label>Kategori</Label>
             <Select value={kategori} onValueChange={setKategori}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
               {EXPENSE_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent></Select>
@@ -414,15 +415,19 @@ export default function KeuanganPage() {
           <div className="space-y-2"><Label>Jumlah (Rp)</Label><Input type="number" value={jumlah} onChange={e => setJumlah(e.target.value)} required /></div>
           <div className="space-y-2"><Label>Tanggal</Label><Input type="date" value={tanggal} onChange={e => setTanggal(e.target.value)} /></div>
           <div className="flex items-center justify-between"><Label>Pengeluaran Rutin</Label><Switch checked={isRecurring} onCheckedChange={setIsRecurring} /></div>
-          <Button type="submit" className="w-full">Simpan</Button>
+          </div>
+          <div className="bottom-sheet-footer">
+            <Button type="submit" className="w-full">Simpan Pengeluaran</Button>
+          </div>
         </form>
       </BottomSheet>
 
       {/* Edit expense */}
       <BottomSheet open={!!showEdit} onClose={() => setShowEdit(null)} title="Edit Pengeluaran">
-        <form onSubmit={handleEditExpense} className="space-y-4">
-          <div className="space-y-2"><Label>Judul</Label><Input value={judul} onChange={e => setJudul(e.target.value)} required /></div>
-          <div className="space-y-2"><Label>Kategori</Label>
+        <form onSubmit={handleEditExpense} className="bottom-sheet-form">
+          <div className="bottom-sheet-body">
+            <div className="space-y-2"><Label>Judul</Label><Input value={judul} onChange={e => setJudul(e.target.value)} required /></div>
+            <div className="space-y-2"><Label>Kategori</Label>
             <Select value={kategori} onValueChange={setKategori}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
               {EXPENSE_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent></Select>
@@ -430,7 +435,10 @@ export default function KeuanganPage() {
           <div className="space-y-2"><Label>Jumlah (Rp)</Label><Input type="number" value={jumlah} onChange={e => setJumlah(e.target.value)} required /></div>
           <div className="space-y-2"><Label>Tanggal</Label><Input type="date" value={tanggal} onChange={e => setTanggal(e.target.value)} /></div>
           <div className="flex items-center justify-between"><Label>Pengeluaran Rutin</Label><Switch checked={isRecurring} onCheckedChange={setIsRecurring} /></div>
-          <Button type="submit" className="w-full">Simpan Perubahan</Button>
+          </div>
+          <div className="bottom-sheet-footer">
+            <Button type="submit" className="w-full">Simpan Pengeluaran</Button>
+          </div>
         </form>
       </BottomSheet>
 
