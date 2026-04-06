@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import BottomNav from "./BottomNav";
 
-const TAB_ORDER = ["/", "/kamar", "/penyewa", "/keuangan", "/profil"];
+const TAB_ORDER = ["/beranda", "/kamar", "/penyewa", "/keuangan", "/profil"];
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
