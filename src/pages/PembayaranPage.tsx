@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { formatRupiah, getMonthName, generateNotaNumber, waTagihanLink } from "@/lib/helpers";
+import type { DemoTransaction } from "@/lib/demo-context";
 import { downloadNota, getNotaWhatsAppLink } from "@/lib/nota-generator";
 import { useTenants, useTransactions, useRoomTypesAndRooms, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
@@ -94,13 +95,26 @@ export default function PembayaranPage() {
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
     setPayError("");
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowPay(null); return; }
     if (!showPay) return;
     const bayar = parseInt(jumlahBayar) || 0;
     if (bayar <= 0) { setPayError("Jumlah bayar harus lebih dari 0"); return; }
     const totalBayar = showPay.jumlah_dibayar + bayar;
     const newStatus = totalBayar >= showPay.total_tagihan ? "lunas" : "belum_lunas";
     const nota = newStatus === "lunas" ? generateNotaNumber(showPay.periode_bulan, showPay.periode_tahun) : null;
+
+    if (demo.isDemo) {
+      demo.updateTransaction(showPay.id, {
+        jumlah_dibayar: totalBayar,
+        status: newStatus as DemoTransaction["status"],
+        metode_bayar: metode,
+        tanggal_bayar: new Date().toISOString().split("T")[0],
+        catatan,
+        nota_number: nota,
+      });
+      toast.success(newStatus === "lunas" ? "Pembayaran lunas!" : "Pembayaran parsial berhasil");
+      setShowPay(null); setJumlahBayar(""); setCatatan(""); setPayError("");
+      return;
+    }
     const { error } = await supabase.from("transactions").update({ jumlah_dibayar: totalBayar, status: newStatus, metode_bayar: metode, tanggal_bayar: new Date().toISOString().split("T")[0], catatan, nota_number: nota } as any).eq("id", showPay.id);
     if (error) { toast.error(error.message); return; }
     toast.success(newStatus === "lunas" ? "Pembayaran lunas!" : "Pembayaran parsial berhasil");
@@ -128,8 +142,17 @@ export default function PembayaranPage() {
 
   const handleEditTx = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowEdit(null); return; }
     if (!showEdit) return;
+    if (demo.isDemo) {
+      demo.updateTransaction(showEdit.id, {
+        jumlah_dibayar: parseInt(editJumlah) || 0,
+        status: editStatus as DemoTransaction["status"],
+        metode_bayar: editMetode,
+      });
+      toast.success("Transaksi diperbarui");
+      setShowEdit(null);
+      return;
+    }
     const { error } = await supabase.from("transactions").update({ jumlah_dibayar: parseInt(editJumlah) || 0, status: editStatus, metode_bayar: editMetode } as any).eq("id", showEdit.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Transaksi diperbarui");
@@ -138,7 +161,11 @@ export default function PembayaranPage() {
   };
 
   const handleDeleteTx = async (id: string) => {
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    if (demo.isDemo) {
+      demo.deleteTransaction(id);
+      toast.success("Transaksi dihapus");
+      return;
+    }
     const { error } = await supabase.from("transactions").delete().eq("id", id) as any;
     if (error) { toast.error(error.message); return; }
     toast.success("Transaksi dihapus");

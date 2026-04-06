@@ -101,7 +101,11 @@ export default function KamarPage() {
 
   const handleAddType = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    if (demo.isDemo) {
+      demo.addRoomType({ property_id: "prop-1", nama, harga_per_bulan: parseInt(harga) || 0, fasilitas });
+      toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); setFasilitas([]); setCustomFasilitas("");
+      return;
+    }
     if (!activeProperty) return;
     const { error } = await supabase.from("room_types").insert({ property_id: activeProperty.id, nama, harga_per_bulan: parseInt(harga) || 0, fasilitas } as any);
     if (error) toast.error(error.message);
@@ -110,22 +114,34 @@ export default function KamarPage() {
 
   const handleEditType = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowEditType(null); return; }
     if (!showEditType) return;
+    if (demo.isDemo) {
+      demo.updateRoomType(showEditType.id, { nama, harga_per_bulan: parseInt(harga) || 0, fasilitas });
+      toast.success("Tipe kamar diperbarui!"); setShowEditType(null);
+      return;
+    }
     const { error } = await supabase.from("room_types").update({ nama, harga_per_bulan: parseInt(harga) || 0, fasilitas } as any).eq("id", showEditType.id);
     if (error) toast.error(error.message);
     else { toast.success("Tipe kamar diperbarui!"); setShowEditType(null); refetch(); }
   };
 
   const handleDeleteType = async (id: string) => {
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    if (demo.isDemo) {
+      demo.deleteRoomType(id);
+      toast.success("Tipe kamar dihapus");
+      return;
+    }
     const { error } = await supabase.from("room_types").delete().eq("id", id) as any;
     if (error) toast.error(error.message);
     else { toast.success("Tipe kamar dihapus"); refetch(); }
   };
 
   const handleDeleteRoom = async (id: string) => {
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    if (demo.isDemo) {
+      demo.deleteRoom(id);
+      toast.success("Kamar dihapus");
+      return;
+    }
     const { error } = await supabase.from("rooms").delete().eq("id", id) as any;
     if (error) toast.error(error.message);
     else { toast.success("Kamar dihapus"); refetch(); }
@@ -133,8 +149,12 @@ export default function KamarPage() {
 
   const handleEditRoom = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowEditRoom(null); return; }
     if (!showEditRoom) return;
+    if (demo.isDemo) {
+      demo.updateRoom(showEditRoom.id, { nomor: editRoomNomor, lantai: parseInt(editRoomLantai) || 1 });
+      toast.success("Kamar diperbarui!"); setShowEditRoom(null);
+      return;
+    }
     const { error } = await supabase.from("rooms").update({ nomor: editRoomNomor, lantai: parseInt(editRoomLantai) || 1 } as any).eq("id", showEditRoom.id);
     if (error) toast.error(error.message);
     else { toast.success("Kamar diperbarui!"); setShowEditRoom(null); refetch(); }
@@ -142,11 +162,17 @@ export default function KamarPage() {
 
   const handleBulkAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
     if (!showAddRooms) return;
     const n = parseInt(count) || 0;
     const start = parseInt(startNum) || 1;
     const lt = parseInt(lantai) || 1;
+    if (demo.isDemo) {
+      for (let i = 0; i < n; i++) {
+        demo.addRoom({ room_type_id: showAddRooms, nomor: `${prefix}${start + i}`, lantai: lt, status: "kosong" });
+      }
+      toast.success(`${n} kamar ditambahkan!`); setShowAddRooms(null);
+      return;
+    }
     const roomsToInsert = Array.from({ length: n }, (_, i) => ({ room_type_id: showAddRooms, nomor: `${prefix}${start + i}`, lantai: lt, status: "kosong" as const }));
     const { error } = await supabase.from("rooms").insert(roomsToInsert as any);
     if (error) toast.error(error.message);
@@ -155,12 +181,26 @@ export default function KamarPage() {
 
   const handleAddTenant = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowAddTenant(null); return; }
-    if (!activeProperty || !showAddTenant) return;
+    if (!showAddTenant) return;
     const d = parseInt(tenantDurasi);
     const masuk = new Date(tenantTanggalMasuk);
     const keluar = new Date(masuk);
     keluar.setMonth(keluar.getMonth() + d);
+
+    if (demo.isDemo) {
+      let hargaSewa = 0;
+      for (const rt of roomTypes) {
+        const room = rt.rooms.find(r => r.id === showAddTenant);
+        if (room) { hargaSewa = rt.harga_per_bulan; break; }
+      }
+      const tenantId = demo.addTenant({ property_id: "prop-1", room_id: showAddTenant, nama: tenantNama, no_hp: tenantHp || null, gender: tenantGender as "L" | "P", tanggal_masuk: tenantTanggalMasuk, tanggal_keluar: keluar.toISOString().split("T")[0], status: "aktif" });
+      demo.updateRoom(showAddTenant, { status: "terisi" });
+      demo.addTransaction({ tenant_id: tenantId, property_id: "prop-1", periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(), total_tagihan: hargaSewa, jumlah_dibayar: 0, status: "belum_bayar", metode_bayar: null, tanggal_bayar: null, catatan: null, nota_number: null, created_at: new Date().toISOString() });
+      toast.success("Penyewa berhasil ditambahkan!");
+      setShowAddTenant(null); setTenantNama(""); setTenantHp(""); setTenantGender("L"); setTenantDurasi("1"); setTenantDeposit("");
+      return;
+    }
+    if (!activeProperty) return;
     const { data: tenant, error } = await supabase.from("tenants").insert({
       property_id: activeProperty.id, room_id: showAddTenant, nama: tenantNama,
       no_hp: tenantHp || null, gender: tenantGender,

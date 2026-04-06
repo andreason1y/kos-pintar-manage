@@ -117,12 +117,23 @@ export default function PenyewaPage() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
-    if (!activeProperty || !roomId) return;
+    if (!roomId) return;
     const d = parseInt(durasi);
     const masuk = new Date(tanggalMasuk);
     const keluar = new Date(masuk);
     keluar.setMonth(keluar.getMonth() + d);
+
+    if (demo.isDemo) {
+      const selectedRoom = emptyRooms.find((r: any) => r.id === roomId);
+      const harga = selectedRoom?.room_type?.harga_per_bulan || 0;
+      const tenantId = demo.addTenant({ property_id: "prop-1", room_id: roomId, nama, no_hp: noHp || null, gender: gender as "L" | "P", tanggal_masuk: tanggalMasuk, tanggal_keluar: keluar.toISOString().split("T")[0], status: "aktif" });
+      demo.updateRoom(roomId, { status: "terisi" });
+      demo.addTransaction({ tenant_id: tenantId, property_id: "prop-1", periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(), total_tagihan: harga, jumlah_dibayar: 0, status: "belum_bayar", metode_bayar: null, tanggal_bayar: null, catatan: null, nota_number: null, created_at: new Date().toISOString() });
+      toast.success("Penyewa berhasil ditambahkan!");
+      setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1"); setDeposit("");
+      return;
+    }
+    if (!activeProperty) return;
     const { data: tenant, error } = await supabase.from("tenants").insert({ property_id: activeProperty.id, room_id: roomId, nama, no_hp: noHp || null, gender, tanggal_masuk: tanggalMasuk, tanggal_keluar: keluar.toISOString().split("T")[0] } as any).select().single() as any;
     if (error) { toast.error(error.message); return; }
     await supabase.from("rooms").update({ status: "terisi" } as any).eq("id", roomId);
@@ -140,8 +151,13 @@ export default function PenyewaPage() {
 
   const handleEditTenant = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowEdit(null); return; }
     if (!showEdit) return;
+    if (demo.isDemo) {
+      demo.updateTenant(showEdit.id, { nama, no_hp: noHp || null, gender: gender as "L" | "P" });
+      toast.success("Data penyewa diperbarui!");
+      setShowEdit(null);
+      return;
+    }
     const { error } = await supabase.from("tenants").update({ nama, no_hp: noHp || null, gender } as any).eq("id", showEdit.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Data penyewa diperbarui!");
@@ -150,7 +166,13 @@ export default function PenyewaPage() {
   };
 
   const handleDeleteTenant = async (id: string) => {
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    if (demo.isDemo) {
+      const tenant = tenants.find(t => t.id === id);
+      if (tenant?.room_id) demo.updateRoom(tenant.room_id, { status: "kosong" });
+      demo.deleteTenant(id);
+      toast.success("Penyewa dihapus");
+      return;
+    }
     const tenant = tenants.find(t => t.id === id);
     if (tenant?.room_id) {
       await supabase.from("rooms").update({ status: "kosong" } as any).eq("id", tenant.room_id);
@@ -162,7 +184,12 @@ export default function PenyewaPage() {
   };
 
   const handleEndContract = async (tenant: Tenant) => {
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    if (demo.isDemo) {
+      demo.updateTenant(tenant.id, { status: "keluar", tanggal_keluar: new Date().toISOString().split("T")[0] });
+      if (tenant.room_id) demo.updateRoom(tenant.room_id, { status: "kosong" });
+      toast.success("Kontrak berakhir, penyewa dikeluarkan");
+      return;
+    }
     setShowEndContract(tenant);
     setDeductionNote("");
     const { data } = await supabase.from("deposits").select("*").eq("tenant_id", tenant.id).eq("status", "ditahan").single() as any;

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
 // ─── Types ───
 export interface DemoProperty {
@@ -75,18 +75,15 @@ const ROOM_TYPES: DemoRoomType[] = [
 ];
 
 const ROOMS: DemoRoom[] = [
-  // Standar rooms
   { id: "rm-1", room_type_id: "rt-1", nomor: "A1", lantai: 1, status: "terisi" },
   { id: "rm-2", room_type_id: "rt-1", nomor: "A2", lantai: 1, status: "terisi" },
   { id: "rm-3", room_type_id: "rt-1", nomor: "A3", lantai: 1, status: "kosong" },
   { id: "rm-4", room_type_id: "rt-1", nomor: "A4", lantai: 1, status: "terisi" },
   { id: "rm-5", room_type_id: "rt-1", nomor: "A5", lantai: 1, status: "kosong" },
-  // Deluxe rooms
   { id: "rm-6", room_type_id: "rt-2", nomor: "B1", lantai: 2, status: "terisi" },
   { id: "rm-7", room_type_id: "rt-2", nomor: "B2", lantai: 2, status: "terisi" },
   { id: "rm-8", room_type_id: "rt-2", nomor: "B3", lantai: 2, status: "kosong" },
   { id: "rm-9", room_type_id: "rt-2", nomor: "B4", lantai: 2, status: "terisi" },
-  // Suite rooms
   { id: "rm-10", room_type_id: "rt-3", nomor: "C1", lantai: 3, status: "terisi" },
   { id: "rm-11", room_type_id: "rt-3", nomor: "C2", lantai: 3, status: "terisi" },
   { id: "rm-12", room_type_id: "rt-3", nomor: "C3", lantai: 3, status: "kosong" },
@@ -111,7 +108,6 @@ const bulanLalu = bulanIni === 1 ? 12 : bulanIni - 1;
 const tahunLalu = bulanIni === 1 ? tahunIni - 1 : tahunIni;
 
 const TRANSACTIONS: DemoTransaction[] = [
-  // Bulan ini
   { id: "tx-1", tenant_id: "tn-1", property_id: "prop-1", periode_bulan: bulanIni, periode_tahun: tahunIni, total_tagihan: 1200000, jumlah_dibayar: 1200000, status: "lunas", metode_bayar: "transfer", tanggal_bayar: `${tahunIni}-${String(bulanIni).padStart(2,"0")}-05`, catatan: null, nota_number: `NOTA-${tahunIni}${String(bulanIni).padStart(2,"0")}-0001`, created_at: `${tahunIni}-${String(bulanIni).padStart(2,"0")}-01` },
   { id: "tx-2", tenant_id: "tn-2", property_id: "prop-1", periode_bulan: bulanIni, periode_tahun: tahunIni, total_tagihan: 1200000, jumlah_dibayar: 600000, status: "belum_lunas", metode_bayar: "tunai", tanggal_bayar: `${tahunIni}-${String(bulanIni).padStart(2,"0")}-10`, catatan: "Bayar setengah dulu", nota_number: null, created_at: `${tahunIni}-${String(bulanIni).padStart(2,"0")}-01` },
   { id: "tx-3", tenant_id: "tn-3", property_id: "prop-1", periode_bulan: bulanIni, periode_tahun: tahunIni, total_tagihan: 1200000, jumlah_dibayar: 1200000, status: "lunas", metode_bayar: "qris", tanggal_bayar: `${tahunIni}-${String(bulanIni).padStart(2,"0")}-03`, catatan: null, nota_number: `NOTA-${tahunIni}${String(bulanIni).padStart(2,"0")}-0002`, created_at: `${tahunIni}-${String(bulanIni).padStart(2,"0")}-01` },
@@ -120,7 +116,6 @@ const TRANSACTIONS: DemoTransaction[] = [
   { id: "tx-6", tenant_id: "tn-6", property_id: "prop-1", periode_bulan: bulanIni, periode_tahun: tahunIni, total_tagihan: 1800000, jumlah_dibayar: 1800000, status: "lunas", metode_bayar: "tunai", tanggal_bayar: `${tahunIni}-${String(bulanIni).padStart(2,"0")}-01`, catatan: null, nota_number: `NOTA-${tahunIni}${String(bulanIni).padStart(2,"0")}-0004`, created_at: `${tahunIni}-${String(bulanIni).padStart(2,"0")}-01` },
   { id: "tx-7", tenant_id: "tn-7", property_id: "prop-1", periode_bulan: bulanIni, periode_tahun: tahunIni, total_tagihan: 2500000, jumlah_dibayar: 2500000, status: "lunas", metode_bayar: "transfer", tanggal_bayar: `${tahunIni}-${String(bulanIni).padStart(2,"0")}-04`, catatan: null, nota_number: `NOTA-${tahunIni}${String(bulanIni).padStart(2,"0")}-0005`, created_at: `${tahunIni}-${String(bulanIni).padStart(2,"0")}-01` },
   { id: "tx-8", tenant_id: "tn-8", property_id: "prop-1", periode_bulan: bulanIni, periode_tahun: tahunIni, total_tagihan: 2500000, jumlah_dibayar: 0, status: "belum_bayar", metode_bayar: null, tanggal_bayar: null, catatan: null, nota_number: null, created_at: `${tahunIni}-${String(bulanIni).padStart(2,"0")}-01` },
-  // Bulan lalu
   { id: "tx-9", tenant_id: "tn-1", property_id: "prop-1", periode_bulan: bulanLalu, periode_tahun: tahunLalu, total_tagihan: 1200000, jumlah_dibayar: 1200000, status: "lunas", metode_bayar: "transfer", tanggal_bayar: `${tahunLalu}-${String(bulanLalu).padStart(2,"0")}-05`, catatan: null, nota_number: "NOTA-001", created_at: `${tahunLalu}-${String(bulanLalu).padStart(2,"0")}-01` },
   { id: "tx-10", tenant_id: "tn-4", property_id: "prop-1", periode_bulan: bulanLalu, periode_tahun: tahunLalu, total_tagihan: 1800000, jumlah_dibayar: 1800000, status: "lunas", metode_bayar: "transfer", tanggal_bayar: `${tahunLalu}-${String(bulanLalu).padStart(2,"0")}-03`, catatan: null, nota_number: "NOTA-002", created_at: `${tahunLalu}-${String(bulanLalu).padStart(2,"0")}-01` },
   { id: "tx-11", tenant_id: "tn-7", property_id: "prop-1", periode_bulan: bulanLalu, periode_tahun: tahunLalu, total_tagihan: 2500000, jumlah_dibayar: 2500000, status: "lunas", metode_bayar: "qris", tanggal_bayar: `${tahunLalu}-${String(bulanLalu).padStart(2,"0")}-02`, catatan: null, nota_number: "NOTA-003", created_at: `${tahunLalu}-${String(bulanLalu).padStart(2,"0")}-01` },
@@ -136,6 +131,9 @@ const EXPENSES: DemoExpense[] = [
   { id: "exp-6", property_id: "prop-1", judul: "Keamanan Bulanan", kategori: "Keamanan", jumlah: 300000, tanggal: `${tahunIni}-${m}-01`, is_recurring: true },
 ];
 
+let _demoIdCounter = 100;
+const genId = (prefix: string) => `${prefix}-${++_demoIdCounter}`;
+
 // ─── Context ───
 interface DemoContextType {
   isDemo: boolean;
@@ -146,6 +144,22 @@ interface DemoContextType {
   tenants: DemoTenant[];
   transactions: DemoTransaction[];
   expenses: DemoExpense[];
+  // Mutations
+  addTenant: (t: Omit<DemoTenant, "id">) => string;
+  updateTenant: (id: string, updates: Partial<DemoTenant>) => void;
+  deleteTenant: (id: string) => void;
+  addRoom: (r: Omit<DemoRoom, "id">) => void;
+  updateRoom: (id: string, updates: Partial<DemoRoom>) => void;
+  deleteRoom: (id: string) => void;
+  addRoomType: (rt: Omit<DemoRoomType, "id">) => void;
+  updateRoomType: (id: string, updates: Partial<DemoRoomType>) => void;
+  deleteRoomType: (id: string) => void;
+  addTransaction: (tx: Omit<DemoTransaction, "id">) => void;
+  updateTransaction: (id: string, updates: Partial<DemoTransaction>) => void;
+  deleteTransaction: (id: string) => void;
+  addExpense: (e: Omit<DemoExpense, "id">) => string;
+  updateExpense: (id: string, updates: Partial<DemoExpense>) => void;
+  deleteExpense: (id: string) => void;
 }
 
 const DemoContext = createContext<DemoContextType>({
@@ -157,23 +171,107 @@ const DemoContext = createContext<DemoContextType>({
   tenants: TENANTS,
   transactions: TRANSACTIONS,
   expenses: EXPENSES,
+  addTenant: () => "",
+  updateTenant: () => {},
+  deleteTenant: () => {},
+  addRoom: () => {},
+  updateRoom: () => {},
+  deleteRoom: () => {},
+  addRoomType: () => {},
+  updateRoomType: () => {},
+  deleteRoomType: () => {},
+  addTransaction: () => {},
+  updateTransaction: () => {},
+  deleteTransaction: () => {},
+  addExpense: () => "",
+  updateExpense: () => {},
+  deleteExpense: () => {},
 });
 
 export const useDemo = () => useContext(DemoContext);
 
 export function DemoProvider({ children }: { children: ReactNode }) {
   const [isDemo, setIsDemo] = useState(false);
+  const [tenants, setTenants] = useState<DemoTenant[]>(TENANTS);
+  const [rooms, setRooms] = useState<DemoRoom[]>(ROOMS);
+  const [roomTypes, setRoomTypes] = useState<DemoRoomType[]>(ROOM_TYPES);
+  const [transactions, setTransactions] = useState<DemoTransaction[]>(TRANSACTIONS);
+  const [expenses, setExpenses] = useState<DemoExpense[]>(EXPENSES);
+
+  // Tenant mutations
+  const addTenant = useCallback((t: Omit<DemoTenant, "id">) => {
+    const id = genId("tn");
+    setTenants(prev => [{ ...t, id }, ...prev]);
+    return id;
+  }, []);
+  const updateTenant = useCallback((id: string, updates: Partial<DemoTenant>) => {
+    setTenants(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+  }, []);
+  const deleteTenant = useCallback((id: string) => {
+    setTenants(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  // Room mutations
+  const addRoom = useCallback((r: Omit<DemoRoom, "id">) => {
+    setRooms(prev => [...prev, { ...r, id: genId("rm") }]);
+  }, []);
+  const updateRoom = useCallback((id: string, updates: Partial<DemoRoom>) => {
+    setRooms(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+  }, []);
+  const deleteRoom = useCallback((id: string) => {
+    setRooms(prev => prev.filter(r => r.id !== id));
+  }, []);
+
+  // Room type mutations
+  const addRoomType = useCallback((rt: Omit<DemoRoomType, "id">) => {
+    setRoomTypes(prev => [...prev, { ...rt, id: genId("rt") }]);
+  }, []);
+  const updateRoomType = useCallback((id: string, updates: Partial<DemoRoomType>) => {
+    setRoomTypes(prev => prev.map(rt => rt.id === id ? { ...rt, ...updates } : rt));
+  }, []);
+  const deleteRoomType = useCallback((id: string) => {
+    setRoomTypes(prev => prev.filter(rt => rt.id !== id));
+  }, []);
+
+  // Transaction mutations
+  const addTransaction = useCallback((tx: Omit<DemoTransaction, "id">) => {
+    setTransactions(prev => [{ ...tx, id: genId("tx") }, ...prev]);
+  }, []);
+  const updateTransaction = useCallback((id: string, updates: Partial<DemoTransaction>) => {
+    setTransactions(prev => prev.map(tx => tx.id === id ? { ...tx, ...updates } : tx));
+  }, []);
+  const deleteTransaction = useCallback((id: string) => {
+    setTransactions(prev => prev.filter(tx => tx.id !== id));
+  }, []);
+
+  // Expense mutations
+  const addExpense = useCallback((e: Omit<DemoExpense, "id">) => {
+    const id = genId("exp");
+    setExpenses(prev => [{ ...e, id }, ...prev]);
+    return id;
+  }, []);
+  const updateExpense = useCallback((id: string, updates: Partial<DemoExpense>) => {
+    setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
+  }, []);
+  const deleteExpense = useCallback((id: string) => {
+    setExpenses(prev => prev.filter(e => e.id !== id));
+  }, []);
 
   return (
     <DemoContext.Provider value={{
       isDemo,
       setIsDemo,
       property: PROPERTY,
-      roomTypes: ROOM_TYPES,
-      rooms: ROOMS,
-      tenants: TENANTS,
-      transactions: TRANSACTIONS,
-      expenses: EXPENSES,
+      roomTypes,
+      rooms,
+      tenants,
+      transactions,
+      expenses,
+      addTenant, updateTenant, deleteTenant,
+      addRoom, updateRoom, deleteRoom,
+      addRoomType, updateRoomType, deleteRoomType,
+      addTransaction, updateTransaction, deleteTransaction,
+      addExpense, updateExpense, deleteExpense,
     }}>
       {children}
     </DemoContext.Provider>

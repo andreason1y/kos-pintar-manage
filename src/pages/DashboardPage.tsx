@@ -60,8 +60,9 @@ export default function DashboardPage() {
   const { data: tenantData, isLoading: tenantsLoading } = useTenants();
   const { data: txData, isLoading: txLoading } = useTransactions();
   const { data: expData, isLoading: expLoading } = useExpenses(bulanIni, tahunIni);
+  const { data: expLastData, isLoading: expLastLoading } = useExpenses(bulanLalu, tahunLalu);
 
-  const loading = !demo.isDemo && (roomsLoading || tenantsLoading || txLoading || expLoading);
+  const loading = !demo.isDemo && (roomsLoading || tenantsLoading || txLoading || expLoading || expLastLoading);
 
   const { stats, unpaidTenants } = useMemo(() => {
     if (demo.isDemo) {
@@ -140,13 +141,13 @@ export default function DashboardPage() {
         pemasukanBulanIni: pemasukan,
         pengeluaranBulanIni: pengeluaran,
         pemasukanBulanLalu: txLastMonth.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0),
-        pengeluaranBulanLalu: 0,
+        pengeluaranBulanLalu: (expLastData || []).reduce((s: number, e: any) => s + (e.jumlah || 0), 0),
         totalTxBulanIni: txThisMonth.length,
         lunasBulanIni: txThisMonth.filter((t: any) => t.status === "lunas").length,
       } as DashboardStats,
       unpaidTenants: unpaid,
     };
-  }, [demo.isDemo, roomData, tenantData, txData, expData]);
+  }, [demo.isDemo, roomData, tenantData, txData, expData, expLastData]);
 
   const quickActions = [
     { icon: UserPlus, label: "Tambah Penyewa", action: () => navigate("/penyewa"), color: "bg-primary/10 text-primary" },
