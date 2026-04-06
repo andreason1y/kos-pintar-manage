@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Bell, AlertTriangle, Clock, MessageCircle } from "lucide-react";
+import { Bell, AlertTriangle, Clock, MessageCircle, Megaphone } from "lucide-react";
 import { useDemo } from "@/lib/demo-context";
 import { useProperty } from "@/lib/property-context";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +9,7 @@ import { Button } from "./ui/button";
 
 interface Notification {
   id: string;
-  type: "expiring" | "overdue" | "reminder";
+  type: "expiring" | "overdue" | "reminder" | "broadcast";
   title: string;
   subtitle: string;
   waLink?: string | null;
@@ -110,8 +110,33 @@ export default function NotificationBell() {
     fetchReminders();
   }, [activeProperty, demo.isDemo]);
 
+  const [broadcasts, setBroadcasts] = useState<Notification[]>([]);
+
+  // Fetch broadcasts
+  useEffect(() => {
+    if (demo.isDemo) return;
+    const fetchBroadcasts = async () => {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const { data } = await supabase
+        .from("broadcasts")
+        .select("id, message, created_at")
+        .gte("created_at", sevenDaysAgo.toISOString())
+        .order("created_at", { ascending: false }) as any;
+      if (data) {
+        setBroadcasts(data.map((b: any) => ({
+          id: `bc-${b.id}`,
+          type: "broadcast" as const,
+          title: "Pengumuman",
+          subtitle: b.message,
+        })));
+      }
+    };
+    fetchBroadcasts();
+  }, [demo.isDemo]);
+
   const notifications = demo.isDemo ? demoNotifications : [
-    // Combine real reminders + real expiring/overdue (could add later)
+    ...broadcasts,
     ...reminders,
   ];
 
@@ -120,12 +145,14 @@ export default function NotificationBell() {
   const iconForType = (type: string) => {
     if (type === "expiring") return <Clock size={16} className="text-[hsl(38,92%,50%)]" />;
     if (type === "reminder") return <MessageCircle size={16} className="text-primary" />;
+    if (type === "broadcast") return <Megaphone size={16} className="text-accent" />;
     return <AlertTriangle size={16} className="text-destructive" />;
   };
 
   const bgForType = (type: string) => {
     if (type === "expiring") return "bg-[hsl(38,92%,50%)]/20";
     if (type === "reminder") return "bg-primary/20";
+    if (type === "broadcast") return "bg-accent/20";
     return "bg-destructive/20";
   };
 
