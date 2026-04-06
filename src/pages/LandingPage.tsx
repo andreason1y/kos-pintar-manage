@@ -272,7 +272,7 @@ export default function LandingPage() {
           <FadeIn delay={0.2}>
             <div className="mt-6 flex gap-3">
               <Button size="lg" className="flex-1 font-bold" onClick={handleRegister}>
-                Mulai Gratis 14 Hari
+                Daftar Sekarang
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
               <Button size="lg" variant="outline" className="flex-1 font-bold" onClick={handleDemo}>
