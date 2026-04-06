@@ -14,7 +14,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Building2, LogOut, User, Info, Crown, Sparkles, Pencil, Loader2 } from "lucide-react";
+import { Building2, LogOut, User, Info, Crown, Sparkles, Pencil, Loader2, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
