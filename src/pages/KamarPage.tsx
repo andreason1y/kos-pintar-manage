@@ -54,6 +54,7 @@ export default function KamarPage() {
   const [nama, setNama] = useState("");
   const [harga, setHarga] = useState("");
   const [fasilitas, setFasilitas] = useState<string[]>([]);
+  const [customFasilitas, setCustomFasilitas] = useState("");
   const [prefix, setPrefix] = useState("");
   const [startNum, setStartNum] = useState("1");
   const [count, setCount] = useState("5");
@@ -69,6 +70,7 @@ export default function KamarPage() {
   const [tenantGender, setTenantGender] = useState("L");
   const [tenantTanggalMasuk, setTenantTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
   const [tenantDurasi, setTenantDurasi] = useState("1");
+  const [tenantDeposit, setTenantDeposit] = useState("");
 
   const fetchData = async () => {
     if (demo.isDemo) {
