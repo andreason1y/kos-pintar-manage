@@ -48,6 +48,7 @@ export default function KeuanganPage() {
   const [pieData, setPieData] = useState<{ name: string; value: number }[]>([]);
   const [unpaidList, setUnpaidList] = useState<UnpaidItem[]>([]);
   const [totalUnpaid, setTotalUnpaid] = useState(0);
+  const [totalDeposit, setTotalDeposit] = useState(0);
 
   const now = new Date();
   const [bulan, setBulan] = useState(now.getMonth() + 1);
