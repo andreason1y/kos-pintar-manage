@@ -7,9 +7,6 @@ import { motion } from "framer-motion";
 import { Building2, Play } from "lucide-react";
 import { toast } from "sonner";
 import { useDemo } from "@/lib/demo-context";
-import { motion } from "framer-motion";
-import { Building2 } from "lucide-react";
-import { toast } from "sonner";
 
 export default function AuthPage() {
   const { setIsDemo } = useDemo();
