@@ -90,7 +90,7 @@ export default function NotificationBell() {
 
       if (data) {
         // Get tenant names
-        const tids = [...new Set(data.map((r: any) => r.tenant_id))];
+        const tids = [...new Set(data.map((r: any) => r.tenant_id))] as string[];
         let tenantMap: Record<string, string> = {};
         if (tids.length > 0) {
           const { data: td } = await supabase.from("tenants").select("id, nama").in("id", tids) as any;
