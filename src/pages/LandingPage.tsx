@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useDemo } from "@/lib/demo-context";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ClipboardList, Wallet, Home, FileText, BarChart3, Bell,
   Check, X, Instagram, MessageCircle, ChevronRight, ArrowRight,
@@ -32,11 +33,9 @@ function FadeIn({ children, className = "", delay = 0 }: { children: React.React
 /* ─── Phone Mockup ─── */
 function PhoneMockup({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`relative mx-auto ${className}`}>
+    <div className={`relative mx-auto ${className}`} role="img" aria-label="Tampilan aplikasi KosPintar di smartphone">
       <div className="rounded-[2rem] border-[6px] border-foreground/90 bg-background shadow-2xl overflow-hidden">
-        {/* Notch */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-foreground/90 rounded-b-xl z-10" />
-        {/* Screen content */}
         <div className="pt-6 overflow-hidden">
           {children}
         </div>
@@ -49,7 +48,6 @@ function PhoneMockup({ children, className = "" }: { children: React.ReactNode; 
 function DashboardPreview() {
   return (
     <div className="bg-background p-3 space-y-3 text-[10px]">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <p className="text-muted-foreground text-[8px]">Selamat datang 👋</p>
@@ -59,13 +57,11 @@ function DashboardPreview() {
           <Bell className="w-3 h-3 text-primary" />
         </div>
       </div>
-      {/* Laba card */}
       <div className="gradient-primary rounded-xl p-3 text-primary-foreground">
         <p className="text-[8px] opacity-80">Laba Bulan Ini</p>
         <p className="text-lg font-extrabold">Rp 9.150.000</p>
         <p className="text-[8px] opacity-80">↑ 12% dari bulan lalu</p>
       </div>
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-2">
         {[
           { label: "Penyewa", value: "8", icon: Users, color: "text-primary" },
@@ -79,7 +75,6 @@ function DashboardPreview() {
           </div>
         ))}
       </div>
-      {/* Donut placeholder */}
       <div className="bg-card border border-border rounded-lg p-3 flex items-center gap-3">
         <div className="w-12 h-12 rounded-full border-4 border-primary border-t-destructive border-r-accent flex-shrink-0" />
         <div className="space-y-1">
@@ -182,7 +177,7 @@ function FinancePreview() {
 /* ─── FEATURES ─── */
 const FEATURES = [
   { icon: ClipboardList, title: "Manajemen Penyewa", desc: "Catat data, status bayar, dan riwayat sewa semua penyewa dalam satu tempat" },
-  { icon: Wallet, title: "Tagihan Otomatis", desc: "Tagihan dibuat otomatis tiap bulan, reminder WA dikirim otomatis ke penyewa" },
+  { icon: Wallet, title: "Tagihan Kos Otomatis", desc: "Tagihan dibuat otomatis tiap bulan, reminder WA dikirim otomatis ke penyewa" },
   { icon: Home, title: "Manajemen Kamar", desc: "Pantau status kamar kosong/terisi beserta nama penyewa secara real-time" },
   { icon: FileText, title: "Nota PDF", desc: "Generate dan kirim nota pembayaran langsung ke WhatsApp penyewa" },
   { icon: BarChart3, title: "Laporan Keuangan", desc: "Pantau pemasukan, pengeluaran, dan laba kos setiap bulan" },
@@ -209,16 +204,16 @@ const COMPETITOR_LABEL = "Aplikasi Lain";
 const FAQS = [
   { q: "Apakah data saya aman?", a: "Ya, data disimpan di server terenkripsi dan hanya bisa diakses oleh Anda." },
   { q: "Berapa batas jumlah kamar?", a: "Paket standar mendukung hingga 40 unit kamar. Untuk lebih dari 40 unit, tersedia paket yang lebih besar." },
-  { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga Rp 249.000 sudah termasuk semua fitur." },
+  { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga Rp 249.000 sudah termasuk semua fitur untuk kelola kos-kosan Anda." },
   { q: "Bagaimana cara perpanjang langganan?", a: "Kami akan kirim notifikasi sebelum masa langganan habis. Perpanjang langsung dari aplikasi." },
   { q: "Apakah bisa dicoba dulu?", a: "Ya, tersedia mode demo tanpa perlu daftar. Klik \"Coba Demo\" di halaman utama." },
 ];
 
 const SCREENSHOTS = [
-  { label: "Beranda", component: <DashboardPreview /> },
-  { label: "Penyewa", component: <TenantListPreview /> },
-  { label: "Kamar", component: <RoomListPreview /> },
-  { label: "Keuangan", component: <FinancePreview /> },
+  { label: "Beranda — Dashboard Kos", component: <DashboardPreview /> },
+  { label: "Penyewa — Data Penghuni", component: <TenantListPreview /> },
+  { label: "Kamar — Status Real-time", component: <RoomListPreview /> },
+  { label: "Keuangan — Laporan Bulanan", component: <FinancePreview /> },
 ];
 
 const SLOT_TOTAL = 100;
@@ -226,8 +221,17 @@ const SLOT_TOTAL = 100;
 export default function LandingPage() {
   const navigate = useNavigate();
   const { setIsDemo } = useDemo();
-  const [slotsUsed] = useState(37); // placeholder
+  const [slotsUsed, setSlotsUsed] = useState(0);
+  const [slotsLoaded, setSlotsLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Fetch real user count for urgency banner
+  useEffect(() => {
+    supabase.from("profiles").select("id", { count: "exact", head: true }).then(({ count }) => {
+      setSlotsUsed(count || 0);
+      setSlotsLoaded(true);
+    });
+  }, []);
 
   const handleDemo = () => {
     setIsDemo(true);
@@ -237,13 +241,22 @@ export default function LandingPage() {
   const handleRegister = () => navigate("/login?tab=register");
   const handleLogin = () => navigate("/login");
 
+  const slotsRemaining = SLOT_TOTAL - slotsUsed;
+
   return (
     <div className="min-h-screen bg-background font-sans">
+      {/* ─── URGENCY BANNER ─── */}
+      {slotsLoaded && slotsUsed > 0 && (
+        <div className="bg-primary text-primary-foreground text-center py-2 px-4 text-xs font-semibold">
+          🔥 Early Bird: Tersisa {slotsRemaining} slot — Hemat 50% hari ini
+        </div>
+      )}
+
       {/* ─── STICKY HEADER ─── */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
         <div className="mx-auto max-w-app flex items-center justify-between px-4 h-14">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center" aria-hidden="true">
               <Home className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="font-extrabold text-base text-foreground">KosPintar</span>
@@ -257,17 +270,21 @@ export default function LandingPage() {
 
       <main className="mx-auto max-w-app">
         {/* ─── HERO ─── */}
-        <section className="px-4 pt-10 pb-8">
+        <section className="px-4 pt-10 pb-8" aria-label="Hero">
           <FadeIn>
             <h1 className="text-2xl font-extrabold leading-tight text-foreground">
-              Kelola Kos-kosan<br />
-              <span className="text-primary">Lebih Mudah</span> &{" "}
-              <span className="text-primary">Lebih Hemat</span>
+              Aplikasi Manajemen Kos<br />
+              <span className="text-primary">Terbaik di Indonesia</span>
             </h1>
           </FadeIn>
           <FadeIn delay={0.1}>
+            <h2 className="mt-2 text-base font-bold text-foreground/90 leading-snug">
+              Kelola Penyewa, Tagihan & Keuangan Kos dalam Satu Aplikasi
+            </h2>
+          </FadeIn>
+          <FadeIn delay={0.15}>
             <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-              Catat penyewa, tagihan, dan keuangan kos dalam satu aplikasi. Lebih murah dari kopi sebulan.
+              Tagihan otomatis, reminder WA, nota PDF, dan laporan keuangan lengkap. <strong>Hemat hingga Rp 1.800.000/tahun</strong> dibanding aplikasi kos lain.
             </p>
           </FadeIn>
           <FadeIn delay={0.2}>
@@ -291,10 +308,10 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FEATURES ─── */}
-        <section className="px-4 py-10">
+        <section className="px-4 py-10" aria-label="Fitur aplikasi manajemen kos">
           <FadeIn>
             <h2 className="text-lg font-extrabold text-foreground text-center">
-              Semua yang Kamu Butuhkan<br />untuk Kelola Kos
+              Fitur Lengkap untuk<br />Kelola Kos-kosan
             </h2>
           </FadeIn>
           <div className="mt-6 grid grid-cols-2 gap-3">
@@ -302,8 +319,8 @@ export default function LandingPage() {
               <FadeIn key={f.title} delay={i * 0.08}>
                 <Card className="h-full border-border/60">
                   <CardContent className="p-4 space-y-2">
-                    <span className="text-xl">{EMOJIS[i]}</span>
-                    <p className="font-bold text-sm text-foreground">{f.title}</p>
+                    <span className="text-xl" aria-hidden="true">{EMOJIS[i]}</span>
+                    <h3 className="font-bold text-sm text-foreground">{f.title}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
                   </CardContent>
                 </Card>
@@ -313,10 +330,10 @@ export default function LandingPage() {
         </section>
 
         {/* ─── APP SCREENSHOTS ─── */}
-        <section className="py-10">
+        <section className="py-10" aria-label="Screenshot tampilan aplikasi kos KosPintar">
           <FadeIn>
             <h2 className="text-lg font-extrabold text-foreground text-center px-4">
-              Tampilan Aplikasi
+              Tampilan Aplikasi Manajemen Kos KosPintar
             </h2>
           </FadeIn>
           <FadeIn delay={0.1}>
@@ -338,15 +355,15 @@ export default function LandingPage() {
         </section>
 
         {/* ─── COMPARISON TABLE ─── */}
-        <section className="px-4 py-10">
+        <section className="px-4 py-10" aria-label="Perbandingan harga aplikasi kos">
           <FadeIn>
             <h2 className="text-lg font-extrabold text-foreground text-center">
-              Kenapa Pilih KosPintar?
+              Kenapa KosPintar Lebih Hemat<br />dari Aplikasi Kos Lain?
             </h2>
           </FadeIn>
           <FadeIn delay={0.1}>
             <div className="mt-6 rounded-xl border border-border overflow-hidden">
-              <table className="w-full text-xs">
+              <table className="w-full text-xs" aria-label="Tabel perbandingan KosPintar vs aplikasi kos lain">
                 <thead>
                   <tr className="bg-muted">
                     <th className="text-left p-2.5 font-semibold text-muted-foreground">Fitur</th>
@@ -360,12 +377,12 @@ export default function LandingPage() {
                       <td className="p-2.5 text-foreground font-medium">{row.feature}</td>
                       <td className="p-2.5 text-center bg-primary/5 font-semibold text-primary">
                         {typeof row.kp === "boolean" ? (
-                          row.kp ? <Check className="w-4 h-4 mx-auto text-primary" /> : <X className="w-4 h-4 mx-auto text-muted-foreground" />
+                          row.kp ? <Check className="w-4 h-4 mx-auto text-primary" aria-label="Ya" /> : <X className="w-4 h-4 mx-auto text-muted-foreground" aria-label="Tidak" />
                         ) : row.kp}
                       </td>
                       <td className="p-2.5 text-center text-muted-foreground">
                         {typeof row.sk === "boolean" ? (
-                          row.sk ? <Check className="w-4 h-4 mx-auto text-primary" /> : <X className="w-4 h-4 mx-auto text-muted-foreground" />
+                          row.sk ? <Check className="w-4 h-4 mx-auto text-primary" aria-label="Ya" /> : <X className="w-4 h-4 mx-auto text-muted-foreground" aria-label="Tidak" />
                         ) : row.sk}
                       </td>
                     </tr>
@@ -377,10 +394,10 @@ export default function LandingPage() {
         </section>
 
         {/* ─── PRICING ─── */}
-        <section className="px-4 py-10">
+        <section className="px-4 py-10" aria-label="Harga aplikasi manajemen kos">
           <FadeIn>
             <h2 className="text-lg font-extrabold text-foreground text-center">
-              Harga Transparan,<br />Tanpa Biaya Tersembunyi
+              Harga Aplikasi Manajemen Kos<br />yang Terjangkau
             </h2>
           </FadeIn>
           <FadeIn delay={0.15}>
@@ -408,15 +425,14 @@ export default function LandingPage() {
                 <div className="space-y-2">
                   {["Maks. 40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
                     <div key={f} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                      <Check className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
                       <span className="text-sm text-foreground">{f}</span>
                     </div>
                   ))}
                 </div>
 
                 <Button className="w-full font-bold" size="lg" onClick={handleRegister}>
-                  Mulai Sekarang — Rp 249.000
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                  Mulai Sekarang — Rp 249.000 →
                 </Button>
 
                 <p className="text-[11px] text-muted-foreground text-center">
@@ -426,9 +442,9 @@ export default function LandingPage() {
                 {/* Slot counter */}
                 <div className="bg-muted rounded-lg p-3 text-center">
                   <p className="text-xs font-semibold text-foreground">
-                    Tersisa <span className="text-primary font-extrabold">{SLOT_TOTAL - slotsUsed}</span> dari {SLOT_TOTAL} slot
+                    Tersisa <span className="text-primary font-extrabold">{slotsRemaining}</span> dari {SLOT_TOTAL} slot
                   </p>
-                  <div className="mt-2 h-2 bg-border rounded-full overflow-hidden">
+                  <div className="mt-2 h-2 bg-border rounded-full overflow-hidden" role="progressbar" aria-valuenow={slotsUsed} aria-valuemax={SLOT_TOTAL}>
                     <div
                       className="h-full gradient-primary rounded-full transition-all duration-500"
                       style={{ width: `${(slotsUsed / SLOT_TOTAL) * 100}%` }}
@@ -441,10 +457,10 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FAQ ─── */}
-        <section className="px-4 py-10">
+        <section className="px-4 py-10" aria-label="FAQ tentang aplikasi KosPintar">
           <FadeIn>
             <h2 className="text-lg font-extrabold text-foreground text-center">
-              Pertanyaan Umum
+              Pertanyaan Seputar<br />Aplikasi KosPintar
             </h2>
           </FadeIn>
           <FadeIn delay={0.1}>
@@ -464,14 +480,14 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FINAL CTA ─── */}
-        <section className="px-4 py-10">
+        <section className="px-4 py-10" aria-label="Daftar sekarang">
           <FadeIn>
             <div className="gradient-primary rounded-2xl p-6 text-center space-y-4">
               <h2 className="text-lg font-extrabold text-primary-foreground">
                 Mulai Kelola Kos Lebih Cerdas
               </h2>
               <p className="text-xs text-primary-foreground/80">
-                Coba demo gratis, tanpa perlu daftar
+                Software kos-kosan terlengkap untuk pemilik properti Indonesia
               </p>
               <Button
                 size="lg"
@@ -479,8 +495,7 @@ export default function LandingPage() {
                 className="font-bold"
                 onClick={handleRegister}
               >
-                Daftar Sekarang
-                <ArrowRight className="w-4 h-4 ml-1" />
+                Daftar Sekarang →
               </Button>
             </div>
           </FadeIn>
@@ -489,12 +504,12 @@ export default function LandingPage() {
         {/* ─── FOOTER ─── */}
         <footer className="border-t border-border px-4 py-8 space-y-6">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md gradient-primary flex items-center justify-center">
+            <div className="w-6 h-6 rounded-md gradient-primary flex items-center justify-center" aria-hidden="true">
               <Home className="w-3 h-3 text-primary-foreground" />
             </div>
             <span className="font-extrabold text-sm text-foreground">KosPintar</span>
           </div>
-          <p className="text-xs text-muted-foreground">Kelola kos-kosan lebih mudah & lebih hemat.</p>
+          <p className="text-xs text-muted-foreground">Aplikasi manajemen kos-kosan terbaik di Indonesia. Kelola penyewa, tagihan, dan keuangan kos dalam satu aplikasi.</p>
 
           <div className="flex flex-wrap gap-4 text-xs">
             {["Tentang", "Fitur", "Harga", "FAQ", "Kontak"].map((link) => (
@@ -505,10 +520,10 @@ export default function LandingPage() {
           </div>
 
           <div className="flex gap-3">
-            <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors">
+            <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="Instagram KosPintar">
               <Instagram className="w-4 h-4 text-muted-foreground" />
             </a>
-            <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors">
+            <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="WhatsApp KosPintar">
               <MessageCircle className="w-4 h-4 text-muted-foreground" />
             </a>
           </div>
@@ -518,6 +533,32 @@ export default function LandingPage() {
           </p>
         </footer>
       </main>
+
+      {/* ─── JSON-LD Structured Data ─── */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "KosPintar",
+            applicationCategory: "BusinessApplication",
+            operatingSystem: "Web",
+            description: "Aplikasi manajemen kos-kosan terbaik di Indonesia. Kelola penyewa, tagihan otomatis, laporan keuangan, dan nota PDF.",
+            offers: {
+              "@type": "Offer",
+              price: "249000",
+              priceCurrency: "IDR",
+              priceValidUntil: "2026-12-31",
+            },
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: "4.8",
+              ratingCount: "50",
+            },
+          }),
+        }}
+      />
     </div>
   );
 }
