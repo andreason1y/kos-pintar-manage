@@ -123,6 +123,7 @@ function RoomListPreview() {
   const rooms = [
     { type: "Standar", price: "1.2jt", rooms: [{ no: "A1", tenant: "Budi S.", filled: true }, { no: "A2", tenant: "Siti R.", filled: true }, { no: "A3", tenant: null, filled: false }] },
     { type: "Deluxe", price: "1.8jt", rooms: [{ no: "B1", tenant: "Dewi L.", filled: true }, { no: "B2", tenant: "Rizky P.", filled: true }] },
+    { type: "Suite", price: "2.5jt", rooms: [{ no: "C1", tenant: "Fajar R.", filled: true }, { no: "C2", tenant: null, filled: false }] },
   ];
   return (
     <div className="bg-background p-3 space-y-2 text-[10px]">
