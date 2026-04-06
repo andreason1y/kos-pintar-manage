@@ -270,6 +270,11 @@ export default function PenyewaPage() {
                             }}>
                               <Pencil size={14} className="mr-2" /> Edit
                             </DropdownMenuItem>
+                            {t.status === "aktif" && (
+                              <DropdownMenuItem onClick={() => handleEndContract(t)}>
+                                <Trash2 size={14} className="mr-2" /> Akhiri Sewa
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTenant(t.id)}>
                               <Trash2 size={14} className="mr-2" /> Hapus
                             </DropdownMenuItem>
