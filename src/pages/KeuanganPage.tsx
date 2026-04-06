@@ -329,6 +329,18 @@ export default function KeuanganPage() {
               </motion.div>
             )}
 
+            {/* Deposit card */}
+            {totalDeposit > 0 && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield size={16} className="text-primary" />
+                  <p className="text-sm font-semibold text-foreground">Deposit Ditahan</p>
+                </div>
+                <p className="text-lg font-bold text-primary">{formatRupiah(totalDeposit)}</p>
+                <p className="text-xs text-muted-foreground mt-1">Total deposit dari semua penyewa aktif (bukan termasuk pemasukan)</p>
+              </motion.div>
+            )}
+
             <div className="flex justify-between items-center">
               <h2 className="text-sm font-semibold text-foreground">Transaksi</h2>
               <Button size="sm" onClick={() => setShowAdd(true)}><Plus size={14} className="mr-1" /> Pengeluaran</Button>
