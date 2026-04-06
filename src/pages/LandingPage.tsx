@@ -350,7 +350,7 @@ export default function LandingPage() {
                   <tr className="bg-muted">
                     <th className="text-left p-2.5 font-semibold text-muted-foreground">Fitur</th>
                     <th className="p-2.5 font-bold text-primary bg-primary/10 text-center">KosPintar</th>
-                    <th className="p-2.5 font-semibold text-muted-foreground text-center">SuperKos</th>
+                    <th className="p-2.5 font-semibold text-muted-foreground text-center">{COMPETITOR_LABEL}</th>
                   </tr>
                 </thead>
                 <tbody>
