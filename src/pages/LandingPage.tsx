@@ -399,8 +399,13 @@ export default function LandingPage() {
                   <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
                 </div>
 
+                <div className="bg-accent/10 rounded-lg p-3 text-center">
+                  <p className="text-xs font-semibold text-accent">Maks. 40 unit kamar</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Di atas 40 unit: Rp 349.000/tahun <span className="line-through">Rp 699.000</span></p>
+                </div>
+
                 <div className="space-y-2">
-                  {["Unlimited kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
+                  {["Maks. 40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
                     <div key={f} className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-primary flex-shrink-0" />
                       <span className="text-sm text-foreground">{f}</span>
