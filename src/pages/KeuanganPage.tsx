@@ -348,7 +348,7 @@ export default function KeuanganPage() {
                     <span className={`text-sm font-semibold flex-shrink-0 text-right ${item.type === "income" ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>
                       {item.type === "income" ? "+" : "-"}{formatRupiah(item.amount)}
                     </span>
-                    <div className="w-10 flex-shrink-0 flex justify-end">
+                    <div className="w-8 flex-shrink-0 flex justify-center">
                       {item.type === "expense" ? (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
