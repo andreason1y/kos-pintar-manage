@@ -25,8 +25,12 @@ export default function ProfilPage() {
 
   const [profileData, setProfileData] = useState<{ nama: string | null; no_hp: string | null }>({ nama: null, no_hp: null });
   const [showEdit, setShowEdit] = useState(false);
+  const [showEditProperty, setShowEditProperty] = useState(false);
   const [editNama, setEditNama] = useState("");
   const [editHp, setEditHp] = useState("");
+  const [editKosName, setEditKosName] = useState("");
+  const [editKosAlamat, setEditKosAlamat] = useState("");
+  const [editPropertyId, setEditPropertyId] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
