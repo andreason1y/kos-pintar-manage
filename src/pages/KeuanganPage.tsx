@@ -382,7 +382,7 @@ export default function KeuanganPage() {
                             setTanggal(item.date);
                             setIsRecurring(item.is_recurring || false);
                           }}
-                          onDelete={() => handleDeleteExpense(item.id)}
+                          onDelete={() => setDeleteTarget({ id: item.id, name: item.label })}
                         >
                           {rowContent}
                         </SwipeableRow>
