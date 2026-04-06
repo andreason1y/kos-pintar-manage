@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { formatRupiah, getMonthName, generateNotaNumber, waTagihanLink } from "@/lib/helpers";
+import type { DemoTransaction } from "@/lib/demo-context";
 import { downloadNota, getNotaWhatsAppLink } from "@/lib/nota-generator";
 import { useTenants, useTransactions, useRoomTypesAndRooms, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
