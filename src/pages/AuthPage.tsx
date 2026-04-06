@@ -11,7 +11,9 @@ import { useDemo } from "@/lib/demo-context";
 
 export default function AuthPage() {
   const { setIsDemo } = useDemo();
-  const [isLogin, setIsLogin] = useState(true);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [isLogin, setIsLogin] = useState(!searchParams.get("tab") || searchParams.get("tab") !== "register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
