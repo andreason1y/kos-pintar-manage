@@ -114,6 +114,7 @@ export default function KeuanganPage() {
       });
       setUnpaidList(unpaid);
       setTotalUnpaid(unpaid.reduce((s, u) => s + u.sisa, 0));
+      setTotalDeposit(1500000); // demo deposit
 
       const combined = [
         ...txData.filter(t => t.jumlah_dibayar > 0).map(t => ({ id: t.id, type: "income", amount: t.jumlah_dibayar, label: `Sewa ${getMonthName(t.periode_bulan)}`, date: t.tanggal_bayar || t.created_at })),
