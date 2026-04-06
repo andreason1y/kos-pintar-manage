@@ -366,6 +366,16 @@ export default function PenyewaPage() {
           </div>
         )}
       </BottomSheet>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) handleDeleteTenant(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        itemName={deleteTarget?.name || ""}
+      />
     </AppShell>
   );
 }

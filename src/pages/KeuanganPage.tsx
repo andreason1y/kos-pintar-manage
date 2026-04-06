@@ -433,6 +433,16 @@ export default function KeuanganPage() {
           <Button type="submit" className="w-full">Simpan Perubahan</Button>
         </form>
       </BottomSheet>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) handleDeleteExpense(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        itemName={deleteTarget?.name || ""}
+      />
     </AppShell>
   );
 }

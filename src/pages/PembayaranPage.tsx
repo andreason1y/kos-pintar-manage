@@ -236,7 +236,7 @@ export default function PembayaranPage() {
                       }}>
                         <Pencil size={14} className="mr-2" /> Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTx(p.id)}>
+                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ id: p.id, name: `transaksi ${p.tenant_nama}` })}>
                         <Trash2 size={14} className="mr-2" /> Hapus
                       </DropdownMenuItem>
                     </DropdownMenuContent>
