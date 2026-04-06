@@ -147,7 +147,7 @@ export default function DashboardPage() {
       } as DashboardStats,
       unpaidTenants: unpaid,
     };
-  }, [demo.isDemo, roomData, tenantData, txData, expData]);
+  }, [demo.isDemo, roomData, tenantData, txData, expData, expLastData]);
 
   const quickActions = [
     { icon: UserPlus, label: "Tambah Penyewa", action: () => navigate("/penyewa"), color: "bg-primary/10 text-primary" },
