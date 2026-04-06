@@ -58,9 +58,6 @@ export default function KeuanganPage() {
   const loading = !demo.isDemo && (txLoading || expLoading || depLoading || expLastLoading);
 
   const computed = useMemo(() => {
-    const bulanLalu = bulan === 1 ? 12 : bulan - 1;
-    const tahunLalu = bulan === 1 ? tahun - 1 : tahun;
-
     if (demo.isDemo) {
       const txAll = demo.transactions;
       const txMonth = txAll.filter(t => t.periode_bulan === bulan && t.periode_tahun === tahun);
