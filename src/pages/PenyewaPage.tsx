@@ -50,7 +50,12 @@ export default function PenyewaPage() {
   const [roomId, setRoomId] = useState("");
   const [tanggalMasuk, setTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
   const [durasi, setDurasi] = useState("1");
+  const [deposit, setDeposit] = useState("");
   const [emptyRooms, setEmptyRooms] = useState<any[]>([]);
+  const [showEndContract, setShowEndContract] = useState<Tenant | null>(null);
+  const [depositInfo, setDepositInfo] = useState<any>(null);
+  const [returnAmount, setReturnAmount] = useState("");
+  const [deductionNote, setDeductionNote] = useState("");
 
   const now = new Date();
   const bulanIni = now.getMonth() + 1;
