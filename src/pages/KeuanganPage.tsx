@@ -171,7 +171,11 @@ export default function KeuanganPage() {
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    if (demo.isDemo) {
+      demo.addExpense({ property_id: "prop-1", judul, kategori, jumlah: parseInt(jumlah) || 0, tanggal, is_recurring: isRecurring });
+      toast.success("Pengeluaran ditambahkan!"); setShowAdd(false); setJudul(""); setJumlah("");
+      return;
+    }
     if (!activeProperty) return;
     const { error } = await supabase.from("expenses").insert({ property_id: activeProperty.id, judul, kategori, jumlah: parseInt(jumlah) || 0, tanggal, is_recurring: isRecurring } as any);
     if (error) toast.error(error.message);
@@ -180,15 +184,23 @@ export default function KeuanganPage() {
 
   const handleEditExpense = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowEdit(null); return; }
     if (!showEdit) return;
+    if (demo.isDemo) {
+      demo.updateExpense(showEdit.id, { judul, kategori, jumlah: parseInt(jumlah) || 0, tanggal, is_recurring: isRecurring });
+      toast.success("Pengeluaran diperbarui!"); setShowEdit(null);
+      return;
+    }
     const { error } = await supabase.from("expenses").update({ judul, kategori, jumlah: parseInt(jumlah) || 0, tanggal, is_recurring: isRecurring } as any).eq("id", showEdit.id);
     if (error) toast.error(error.message);
     else { toast.success("Pengeluaran diperbarui!"); setShowEdit(null); refetch(); }
   };
 
   const handleDeleteExpense = async (id: string) => {
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    if (demo.isDemo) {
+      demo.deleteExpense(id);
+      toast.success("Pengeluaran dihapus");
+      return;
+    }
     const { error } = await supabase.from("expenses").delete().eq("id", id) as any;
     if (error) toast.error(error.message);
     else { toast.success("Pengeluaran dihapus"); refetch(); }
