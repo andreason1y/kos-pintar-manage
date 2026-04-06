@@ -359,6 +359,16 @@ export default function PembayaranPage() {
           </div>
         )}
       </BottomSheet>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) handleDeleteTx(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        itemName={deleteTarget?.name || ""}
+      />
     </AppShell>
   );
 }
