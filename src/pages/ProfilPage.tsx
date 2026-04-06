@@ -66,7 +66,7 @@ export default function ProfilPage() {
   const displayEmail = demo.isDemo ? "demo@kospintar.id" : (user?.email || "");
   const displayPhone = demo.isDemo ? null : (profile?.no_hp || null);
   const initials = displayName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
-  const avatarColor = getAvatarColor(displayName);
+  const avatarColors = getAvatarColor(displayName);
 
   return (
     <AppShell>
