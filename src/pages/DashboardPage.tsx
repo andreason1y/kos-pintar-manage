@@ -6,6 +6,7 @@ import { useDemo } from "@/lib/demo-context";
 import { formatRupiah, getMonthName } from "@/lib/helpers";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
+import NotificationBell from "@/components/NotificationBell";
 import SkeletonCard from "@/components/SkeletonCard";
 import {
   Users, DoorOpen, DoorClosed, AlertTriangle,
@@ -13,6 +14,7 @@ import {
   TrendingUp, TrendingDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
 interface DashboardStats {
   totalPenyewa: number;
@@ -23,6 +25,8 @@ interface DashboardStats {
   pengeluaranBulanIni: number;
   pemasukanBulanLalu: number;
   pengeluaranBulanLalu: number;
+  totalTxBulanIni: number;
+  lunasBulanIni: number;
 }
 
 const now = new Date();
@@ -61,6 +65,8 @@ export default function DashboardPage() {
         pengeluaranBulanIni: pengeluaran,
         pemasukanBulanLalu: pemasukanLalu,
         pengeluaranBulanLalu: pengeluaran * 0.9,
+        totalTxBulanIni: txBulanIni.length,
+        lunasBulanIni: txBulanIni.filter(t => t.status === "lunas").length,
       });
       setLoading(false);
       return;
@@ -107,6 +113,8 @@ export default function DashboardPage() {
         pengeluaranBulanIni: pengeluaran,
         pemasukanBulanLalu: txLastData.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0),
         pengeluaranBulanLalu: 0,
+        totalTxBulanIni: txData.length,
+        lunasBulanIni: txData.filter((t: any) => t.status === "lunas").length,
       });
       setLoading(false);
     };
@@ -114,12 +122,12 @@ export default function DashboardPage() {
   }, [activeProperty, demo.isDemo]);
 
   const quickActions = [
-    { icon: UserPlus, label: "Tambah Penyewa", path: "/penyewa" },
-    { icon: CreditCard, label: "Pembayaran", path: "/pembayaran" },
-    { icon: Send, label: "Kirim Tagihan", path: "/penyewa" },
-    { icon: Receipt, label: "Pengeluaran", path: "/keuangan" },
-    { icon: LayoutGrid, label: "Daftar Kamar", path: "/kamar" },
-    { icon: FileText, label: "Laporan", path: "/keuangan" },
+    { icon: UserPlus, label: "Tambah Penyewa", path: "/penyewa", color: "bg-primary/10 text-primary" },
+    { icon: CreditCard, label: "Pembayaran", path: "/pembayaran", color: "bg-[hsl(142,71%,45%)]/10 text-[hsl(142,71%,45%)]" },
+    { icon: Send, label: "Kirim Tagihan", path: "/penyewa", color: "bg-accent/10 text-accent" },
+    { icon: Receipt, label: "Pengeluaran", path: "/keuangan", color: "bg-destructive/10 text-destructive" },
+    { icon: LayoutGrid, label: "Daftar Kamar", path: "/kamar", color: "bg-[hsl(262,52%,47%)]/10 text-[hsl(262,52%,47%)]" },
+    { icon: FileText, label: "Laporan", path: "/keuangan", color: "bg-[hsl(199,89%,48%)]/10 text-[hsl(199,89%,48%)]" },
   ];
 
   const laba = stats ? stats.pemasukanBulanIni - stats.pengeluaranBulanIni : 0;
@@ -128,11 +136,20 @@ export default function DashboardPage() {
 
   const propertyName = demo.isDemo ? demo.property.nama_kos : activeProperty?.nama_kos || "Dashboard";
 
+  // Donut chart data
+  const lunasPct = stats && stats.totalTxBulanIni > 0 ? Math.round((stats.lunasBulanIni / stats.totalTxBulanIni) * 100) : 0;
+  const donutData = stats ? [
+    { name: "Lunas", value: stats.lunasBulanIni },
+    { name: "Belum", value: stats.totalTxBulanIni - stats.lunasBulanIni },
+  ] : [];
+  const DONUT_COLORS = ["hsl(142, 71%, 45%)", "hsl(220, 13%, 91%)"];
+
   return (
     <AppShell>
       <PageHeader
         title={propertyName}
         subtitle={`${getMonthName(bulanIni)} ${tahunIni}`}
+        action={<NotificationBell />}
       />
 
       <div className="px-4 space-y-4">
@@ -152,7 +169,7 @@ export default function DashboardPage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="gradient-primary rounded-xl p-5 text-primary-foreground"
+              className="gradient-primary rounded-xl p-5 text-primary-foreground shadow-lg"
             >
               <p className="text-sm opacity-80">Laba Bulan Ini</p>
               <p className="text-2xl font-bold mt-1">{formatRupiah(laba)}</p>
@@ -166,16 +183,16 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 gap-3">
               {[
                 { icon: Users, label: "Total Penyewa", value: stats.totalPenyewa, color: "text-primary" },
-                { icon: DoorOpen, label: "Kamar Terisi", value: stats.kamarTerisi, color: "text-success" },
+                { icon: DoorOpen, label: "Kamar Terisi", value: stats.kamarTerisi, color: "text-[hsl(142,71%,45%)]" },
                 { icon: DoorClosed, label: "Kamar Kosong", value: stats.kamarKosong, color: "text-muted-foreground" },
-                { icon: AlertTriangle, label: "Belum Lunas", value: stats.tagihanBelumLunas, color: "text-warning" },
+                { icon: AlertTriangle, label: "Belum Lunas", value: stats.tagihanBelumLunas, color: "text-[hsl(38,92%,50%)]" },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="bg-card rounded-xl p-4 border border-border"
+                  className="bg-card rounded-xl p-4 border border-border shadow-sm"
                 >
                   <stat.icon size={20} className={stat.color} />
                   <p className="text-2xl font-bold text-foreground mt-2">{stat.value}</p>
@@ -183,6 +200,55 @@ export default function DashboardPage() {
                 </motion.div>
               ))}
             </div>
+
+            {/* Donut Chart */}
+            {stats.totalTxBulanIni > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-card rounded-xl border border-border p-4 shadow-sm"
+              >
+                <p className="text-sm font-semibold text-foreground mb-3">Pembayaran Bulan Ini</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-24 h-24 relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={donutData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={28}
+                          outerRadius={42}
+                          paddingAngle={3}
+                          dataKey="value"
+                          startAngle={90}
+                          endAngle={-270}
+                          strokeWidth={0}
+                        >
+                          {donutData.map((_, idx) => (
+                            <Cell key={idx} fill={DONUT_COLORS[idx]} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-lg font-bold text-foreground">{lunasPct}%</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ background: DONUT_COLORS[0] }} />
+                      <span className="text-xs text-muted-foreground">Lunas ({stats.lunasBulanIni})</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ background: DONUT_COLORS[1] }} />
+                      <span className="text-xs text-muted-foreground">Belum ({stats.totalTxBulanIni - stats.lunasBulanIni})</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* Quick Actions */}
             <div>
@@ -192,10 +258,10 @@ export default function DashboardPage() {
                   <button
                     key={action.label}
                     onClick={() => navigate(action.path)}
-                    className="bg-card border border-border rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-muted transition-colors"
+                    className="bg-card border border-border rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-muted transition-colors shadow-sm"
                   >
-                    <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-                      <action.icon size={18} className="text-primary" />
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${action.color}`}>
+                      <action.icon size={18} />
                     </div>
                     <span className="text-[11px] font-medium text-foreground text-center leading-tight">{action.label}</span>
                   </button>

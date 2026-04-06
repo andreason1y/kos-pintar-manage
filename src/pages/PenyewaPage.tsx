@@ -2,15 +2,16 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
+import { getInitials, getAvatarColor } from "@/lib/avatar-colors";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import SkeletonCard from "@/components/SkeletonCard";
 import EmptyState from "@/components/EmptyState";
 import BottomSheet from "@/components/BottomSheet";
+import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -60,12 +61,7 @@ export default function PenyewaPage() {
         const rt = room ? demo.roomTypes.find(rr => rr.id === room.room_type_id) : null;
         const tx = demo.transactions.find(tx => tx.tenant_id === t.id && tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni);
         const sisaHari = t.tanggal_keluar ? Math.ceil((new Date(t.tanggal_keluar).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : undefined;
-        return {
-          ...t,
-          roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-",
-          latestTxStatus: tx?.status,
-          sisaHari,
-        };
+        return { ...t, roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-", latestTxStatus: tx?.status, sisaHari };
       });
       setTenants(mapped);
       setEmptyRooms(demo.rooms.filter(r => r.status === "kosong").map(r => {
@@ -134,13 +130,6 @@ export default function PenyewaPage() {
     fetchData();
   };
 
-  const getPaymentBadge = (status?: string) => {
-    if (!status) return <Badge variant="outline">-</Badge>;
-    if (status === "lunas") return <Badge className="bg-success text-success-foreground">Lunas</Badge>;
-    if (status === "belum_lunas") return <Badge className="bg-warning text-warning-foreground">Belum Lunas</Badge>;
-    return <Badge variant="destructive">Belum Bayar</Badge>;
-  };
-
   return (
     <AppShell>
       <PageHeader title="Penyewa" subtitle={`${tenants.filter(t => t.status === "aktif").length} penyewa aktif`} action={
@@ -163,32 +152,46 @@ export default function PenyewaPage() {
         ) : filtered.length === 0 ? (
           <EmptyState title="Tidak ada penyewa" description="Tambahkan penyewa pertama Anda" />
         ) : (
-          filtered.map((t, i) => (
-            <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-              className="bg-card rounded-xl border border-border p-4"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-semibold text-foreground">{t.nama}</p>
-                  <p className="text-sm text-muted-foreground">{t.roomLabel}</p>
-                  {t.sisaHari !== undefined && t.status === "aktif" && (
-                    <p className={`text-xs mt-1 ${t.sisaHari <= 30 ? "text-warning" : "text-muted-foreground"}`}>
-                      {t.sisaHari > 0 ? `${t.sisaHari} hari lagi` : "Kontrak habis"}
-                    </p>
-                  )}
+          filtered.map((t, i) => {
+            const initials = getInitials(t.nama);
+            const avatarColor = getAvatarColor(t.nama);
+            return (
+              <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+                className="bg-card rounded-xl border border-border p-4 shadow-sm"
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold"
+                    style={{ background: avatarColor.bg, color: avatarColor.fg }}
+                  >
+                    {initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold text-foreground">{t.nama}</p>
+                        <p className="text-sm text-muted-foreground">{t.roomLabel}</p>
+                        {t.sisaHari !== undefined && t.status === "aktif" && (
+                          <p className={`text-xs mt-1 ${t.sisaHari <= 30 ? "text-[hsl(38,92%,50%)]" : "text-muted-foreground"}`}>
+                            {t.sisaHari > 0 ? `${t.sisaHari} hari lagi` : "Kontrak habis"}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <StatusBadge status={t.latestTxStatus} />
+                        {t.no_hp && (
+                          <a href={`https://wa.me/${t.no_hp.replace(/^0/, "62")}`} target="_blank" rel="noreferrer"
+                            className="w-8 h-8 rounded-full bg-[hsl(142,71%,45%)]/10 flex items-center justify-center">
+                            <MessageCircle size={16} className="text-[hsl(142,71%,45%)]" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {getPaymentBadge(t.latestTxStatus)}
-                  {t.no_hp && (
-                    <a href={`https://wa.me/${t.no_hp.replace(/^0/, "62")}`} target="_blank" rel="noreferrer"
-                      className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
-                      <MessageCircle size={16} className="text-success" />
-                    </a>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          ))
+              </motion.div>
+            );
+          })
         )}
       </div>
 

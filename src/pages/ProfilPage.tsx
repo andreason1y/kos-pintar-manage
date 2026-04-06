@@ -3,11 +3,13 @@ import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
-import BottomSheet from "@/components/BottomSheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Building2, LogOut, User, Info } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Building2, LogOut, User, Info, Crown, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function ProfilPage() {
@@ -31,7 +33,7 @@ export default function ProfilPage() {
       <PageHeader title="Profil" />
       <div className="px-4 space-y-4">
         {/* User Info */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl border border-border p-4">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
               <User size={24} className="text-primary-foreground" />
@@ -50,13 +52,32 @@ export default function ProfilPage() {
           )}
         </motion.div>
 
+        {/* Subscription Status */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          className="bg-card rounded-xl border border-border p-4 shadow-sm"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center">
+              <Crown size={20} className="text-accent" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-foreground">Early Bird</p>
+                <span className="px-2 py-0.5 rounded-full bg-[hsl(142,71%,45%)]/15 text-[hsl(142,71%,45%)] text-[10px] font-bold">AKTIF</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Aktif hingga 31 Desember 2026</p>
+            </div>
+            <Sparkles size={16} className="text-accent" />
+          </div>
+        </motion.div>
+
         {/* Properties */}
         <div>
           <h2 className="text-sm font-semibold text-foreground mb-3">Properti</h2>
           <div className="space-y-2">
             {displayProperties.map(p => (
               <button key={p.id} onClick={() => !demo.isDemo && setActiveProperty(p as any)}
-                className={`w-full text-left p-3 rounded-xl border transition-colors ${displayActive?.id === p.id ? "border-primary bg-secondary" : "border-border bg-card"}`}
+                className={`w-full text-left p-3 rounded-xl border transition-colors shadow-sm ${displayActive?.id === p.id ? "border-primary bg-secondary" : "border-border bg-card"}`}
               >
                 <div className="flex items-center gap-2">
                   <Building2 size={18} className={displayActive?.id === p.id ? "text-primary" : "text-muted-foreground"} />
@@ -70,9 +91,34 @@ export default function ProfilPage() {
           </div>
         </div>
 
-        <Button variant="outline" onClick={handleLogout} className="w-full text-destructive border-destructive/30">
-          <LogOut size={16} className="mr-2" /> {demo.isDemo ? "Keluar Demo" : "Keluar"}
-        </Button>
+        {/* Logout */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" className="w-full text-destructive border-destructive/30">
+              <LogOut size={16} className="mr-2" /> {demo.isDemo ? "Keluar Demo" : "Keluar"}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Konfirmasi Keluar</AlertDialogTitle>
+              <AlertDialogDescription>
+                {demo.isDemo
+                  ? "Anda akan keluar dari mode demo. Lanjutkan?"
+                  : "Anda akan keluar dari akun. Lanjutkan?"
+                }
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Batal</AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Keluar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* App Version */}
+        <p className="text-center text-[10px] text-muted-foreground pb-4">KosPintar v1.0.0</p>
       </div>
     </AppShell>
   );

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
 const FASILITAS_OPTIONS = ["AC", "TV", "Lemari", "Kamar Mandi Dalam", "WiFi", "Air Panas", "Parkir Motor"];
@@ -118,7 +118,7 @@ export default function KamarPage() {
             const terisi = rt.rooms.filter(r => r.status === "terisi").length;
             const isExpanded = expanded === rt.id;
             return (
-              <motion.div key={rt.id} layout className="bg-card rounded-xl border border-border overflow-hidden">
+              <motion.div key={rt.id} layout className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
                 <button className="w-full p-4 flex items-center justify-between" onClick={() => setExpanded(isExpanded ? null : rt.id)}>
                   <div className="text-left">
                     <p className="font-semibold text-foreground">{rt.nama}</p>
@@ -128,28 +128,52 @@ export default function KamarPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-foreground">{terisi}/{rt.rooms.length}</span>
-                    {isExpanded ? <ChevronUp size={18} className="text-muted-foreground" /> : <ChevronDown size={18} className="text-muted-foreground" />}
+                    <div className="text-right">
+                      <span className="text-sm font-medium text-foreground">{terisi}/{rt.rooms.length}</span>
+                      <p className="text-[10px] text-muted-foreground">terisi</p>
+                    </div>
+                    <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                      <ChevronDown size={18} className="text-muted-foreground" />
+                    </motion.div>
                   </div>
                 </button>
                 <AnimatePresence>
                   {isExpanded && (
-                    <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
-                      <div className="px-4 pb-4 space-y-2">
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4 space-y-2 border-t border-border pt-3">
                         {rt.rooms.length === 0 ? (
                           <p className="text-sm text-muted-foreground text-center py-2">Belum ada kamar</p>
                         ) : rt.rooms.map((room) => (
-                          <div key={room.id} className="flex items-center justify-between bg-muted rounded-lg px-3 py-2">
-                            <div>
-                              <span className="text-sm font-medium text-foreground">No. {room.nomor}</span>
-                              <span className="text-xs text-muted-foreground ml-2">Lt. {room.lantai}</span>
+                          <div key={room.id} className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2.5">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
+                                room.status === "terisi"
+                                  ? "bg-[hsl(142,71%,45%)]/15 text-[hsl(142,71%,45%)]"
+                                  : "bg-muted text-muted-foreground"
+                              }`}>
+                                {room.nomor}
+                              </div>
+                              <div>
+                                <span className="text-sm font-medium text-foreground">Kamar {room.nomor}</span>
+                                <p className="text-[10px] text-muted-foreground">Lantai {room.lantai}</p>
+                              </div>
                             </div>
-                            <Badge variant={room.status === "terisi" ? "default" : "secondary"}>
+                            <Badge className={`text-[10px] border-0 ${
+                              room.status === "terisi"
+                                ? "bg-[hsl(142,71%,45%)] text-white"
+                                : "bg-muted text-muted-foreground"
+                            }`}>
                               {room.status === "terisi" ? "Terisi" : "Kosong"}
                             </Badge>
                           </div>
                         ))}
-                        <Button variant="outline" size="sm" className="w-full" onClick={() => setShowAddRooms(rt.id)}>
+                        <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => setShowAddRooms(rt.id)}>
                           <Plus size={14} className="mr-1" /> Tambah Kamar
                         </Button>
                       </div>
