@@ -60,6 +60,7 @@ export default function KeuanganPage() {
   const [jumlah, setJumlah] = useState("");
   const [tanggal, setTanggal] = useState(now.toISOString().split("T")[0]);
   const [isRecurring, setIsRecurring] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const PIE_COLORS = [
     "hsl(171, 77%, 32%)", "hsl(38, 92%, 50%)", "hsl(262, 52%, 47%)",
