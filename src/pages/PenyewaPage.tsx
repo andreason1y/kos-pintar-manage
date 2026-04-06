@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
-import { formatRupiah, getMonthName, waTagihanLink } from "@/lib/helpers";
+import { useDemo } from "@/lib/demo-context";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import SkeletonCard from "@/components/SkeletonCard";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, MessageCircle, Phone } from "lucide-react";
+import { Plus, Search, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -25,22 +25,22 @@ interface Tenant {
   tanggal_keluar: string | null;
   status: string;
   room_id: string | null;
-  room?: { nomor: string; room_type?: { nama: string; harga_per_bulan: number } };
-  latestTx?: { status: string };
+  roomLabel?: string;
+  latestTxStatus?: string;
   sisaHari?: number;
 }
 
-const tabs = ["Semua", "Aktif", "Jatuh Tempo", "Keluar"];
+const tabsList = ["Semua", "Aktif", "Jatuh Tempo", "Keluar"];
 
 export default function PenyewaPage() {
   const { activeProperty } = useProperty();
+  const demo = useDemo();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("Semua");
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
 
-  // Form
   const [nama, setNama] = useState("");
   const [noHp, setNoHp] = useState("");
   const [gender, setGender] = useState("L");
@@ -49,16 +49,36 @@ export default function PenyewaPage() {
   const [durasi, setDurasi] = useState("1");
   const [emptyRooms, setEmptyRooms] = useState<any[]>([]);
 
+  const now = new Date();
+  const bulanIni = now.getMonth() + 1;
+  const tahunIni = now.getFullYear();
+
   const fetchData = async () => {
+    if (demo.isDemo) {
+      const mapped: Tenant[] = demo.tenants.map(t => {
+        const room = demo.rooms.find(r => r.id === t.room_id);
+        const rt = room ? demo.roomTypes.find(rr => rr.id === room.room_type_id) : null;
+        const tx = demo.transactions.find(tx => tx.tenant_id === t.id && tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni);
+        const sisaHari = t.tanggal_keluar ? Math.ceil((new Date(t.tanggal_keluar).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : undefined;
+        return {
+          ...t,
+          roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-",
+          latestTxStatus: tx?.status,
+          sisaHari,
+        };
+      });
+      setTenants(mapped);
+      setEmptyRooms(demo.rooms.filter(r => r.status === "kosong").map(r => {
+        const rt = demo.roomTypes.find(rr => rr.id === r.room_type_id);
+        return { ...r, room_type: rt };
+      }));
+      setLoading(false);
+      return;
+    }
+
     if (!activeProperty) return;
     setLoading(true);
-    const { data: tenantData } = await supabase
-      .from("tenants")
-      .select("*")
-      .eq("property_id", activeProperty.id)
-      .order("created_at", { ascending: false }) as any;
-
-    // Fetch rooms for display
+    const { data: tenantData } = await supabase.from("tenants").select("*").eq("property_id", activeProperty.id).order("created_at", { ascending: false }) as any;
     const { data: roomTypes } = await supabase.from("room_types").select("id, nama, harga_per_bulan").eq("property_id", activeProperty.id) as any;
     const rtIds = (roomTypes || []).map((rt: any) => rt.id);
     let rooms: any[] = [];
@@ -66,43 +86,25 @@ export default function PenyewaPage() {
       const { data } = await supabase.from("rooms").select("*").in("room_type_id", rtIds) as any;
       rooms = data || [];
     }
-
-    // Get latest transactions
-    const now = new Date();
-    const bulan = now.getMonth() + 1;
-    const tahun = now.getFullYear();
-
     const tenantIds = (tenantData || []).map((t: any) => t.id);
     let transactions: any[] = [];
     if (tenantIds.length > 0) {
-      const { data } = await supabase.from("transactions").select("tenant_id, status")
-        .in("tenant_id", tenantIds).eq("periode_bulan", bulan).eq("periode_tahun", tahun) as any;
+      const { data } = await supabase.from("transactions").select("tenant_id, status").in("tenant_id", tenantIds).eq("periode_bulan", bulanIni).eq("periode_tahun", tahunIni) as any;
       transactions = data || [];
     }
-
     const mapped: Tenant[] = (tenantData || []).map((t: any) => {
       const room = rooms.find((r: any) => r.id === t.room_id);
       const rt = room ? (roomTypes || []).find((rr: any) => rr.id === room.room_type_id) : null;
       const tx = transactions.find((tx: any) => tx.tenant_id === t.id);
-      const sisaHari = t.tanggal_keluar ? Math.ceil((new Date(t.tanggal_keluar).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
-
-      return {
-        ...t,
-        room: room ? { nomor: room.nomor, room_type: rt ? { nama: rt.nama, harga_per_bulan: rt.harga_per_bulan } : undefined } : undefined,
-        latestTx: tx,
-        sisaHari: sisaHari ?? undefined,
-      };
+      const sisaHari = t.tanggal_keluar ? Math.ceil((new Date(t.tanggal_keluar).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : undefined;
+      return { ...t, roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-", latestTxStatus: tx?.status, sisaHari };
     });
-
     setTenants(mapped);
-    setEmptyRooms(rooms.filter((r: any) => r.status === "kosong").map((r: any) => ({
-      ...r,
-      room_type: (roomTypes || []).find((rt: any) => rt.id === r.room_type_id),
-    })));
+    setEmptyRooms(rooms.filter((r: any) => r.status === "kosong").map((r: any) => ({ ...r, room_type: (roomTypes || []).find((rt: any) => rt.id === r.room_type_id) })));
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [activeProperty]);
+  useEffect(() => { fetchData(); }, [activeProperty, demo.isDemo]);
 
   const filtered = useMemo(() => {
     let list = tenants;
@@ -115,49 +117,27 @@ export default function PenyewaPage() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
     if (!activeProperty || !roomId) return;
-
     const d = parseInt(durasi);
     const masuk = new Date(tanggalMasuk);
     const keluar = new Date(masuk);
     keluar.setMonth(keluar.getMonth() + d);
-
-    const { data: tenant, error } = await supabase.from("tenants").insert({
-      property_id: activeProperty.id,
-      room_id: roomId,
-      nama,
-      no_hp: noHp || null,
-      gender,
-      tanggal_masuk: tanggalMasuk,
-      tanggal_keluar: keluar.toISOString().split("T")[0],
-    } as any).select().single() as any;
-
+    const { data: tenant, error } = await supabase.from("tenants").insert({ property_id: activeProperty.id, room_id: roomId, nama, no_hp: noHp || null, gender, tanggal_masuk: tanggalMasuk, tanggal_keluar: keluar.toISOString().split("T")[0] } as any).select().single() as any;
     if (error) { toast.error(error.message); return; }
-
-    // Update room status
     await supabase.from("rooms").update({ status: "terisi" } as any).eq("id", roomId);
-
-    // Auto create first transaction
     const selectedRoom = emptyRooms.find(r => r.id === roomId);
     const harga = selectedRoom?.room_type?.harga_per_bulan || 0;
-    await supabase.from("transactions").insert({
-      tenant_id: tenant.id,
-      property_id: activeProperty.id,
-      periode_bulan: masuk.getMonth() + 1,
-      periode_tahun: masuk.getFullYear(),
-      total_tagihan: harga,
-    } as any);
-
+    await supabase.from("transactions").insert({ tenant_id: tenant.id, property_id: activeProperty.id, periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(), total_tagihan: harga } as any);
     toast.success("Penyewa berhasil ditambahkan!");
-    setShowAdd(false);
-    setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1");
+    setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1");
     fetchData();
   };
 
-  const getPaymentBadge = (t: Tenant) => {
-    if (!t.latestTx) return <Badge variant="outline">-</Badge>;
-    if (t.latestTx.status === "lunas") return <Badge className="bg-success text-success-foreground">Lunas</Badge>;
-    if (t.latestTx.status === "belum_lunas") return <Badge className="bg-warning text-warning-foreground">Belum Lunas</Badge>;
+  const getPaymentBadge = (status?: string) => {
+    if (!status) return <Badge variant="outline">-</Badge>;
+    if (status === "lunas") return <Badge className="bg-success text-success-foreground">Lunas</Badge>;
+    if (status === "belum_lunas") return <Badge className="bg-warning text-warning-foreground">Belum Lunas</Badge>;
     return <Badge variant="destructive">Belum Bayar</Badge>;
   };
 
@@ -167,23 +147,17 @@ export default function PenyewaPage() {
         <Button size="sm" onClick={() => setShowAdd(true)}><Plus size={16} className="mr-1" /> Tambah</Button>
       } />
       <div className="px-4 space-y-3">
-        {/* Search */}
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari penyewa..." className="pl-9" />
         </div>
-
-        {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          {tabs.map(tab => (
+        <div className="flex gap-2 overflow-x-auto">
+          {tabsList.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                activeTab === tab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-              }`}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${activeTab === tab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
             >{tab}</button>
           ))}
         </div>
-
         {loading ? (
           <div className="space-y-3"><SkeletonCard /><SkeletonCard /><SkeletonCard /></div>
         ) : filtered.length === 0 ? (
@@ -196,7 +170,7 @@ export default function PenyewaPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-semibold text-foreground">{t.nama}</p>
-                  <p className="text-sm text-muted-foreground">{t.room ? `${t.room.room_type?.nama} - No. ${t.room.nomor}` : "-"}</p>
+                  <p className="text-sm text-muted-foreground">{t.roomLabel}</p>
                   {t.sisaHari !== undefined && t.status === "aktif" && (
                     <p className={`text-xs mt-1 ${t.sisaHari <= 30 ? "text-warning" : "text-muted-foreground"}`}>
                       {t.sisaHari > 0 ? `${t.sisaHari} hari lagi` : "Kontrak habis"}
@@ -204,7 +178,7 @@ export default function PenyewaPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {getPaymentBadge(t)}
+                  {getPaymentBadge(t.latestTxStatus)}
                   {t.no_hp && (
                     <a href={`https://wa.me/${t.no_hp.replace(/^0/, "62")}`} target="_blank" rel="noreferrer"
                       className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
@@ -218,51 +192,24 @@ export default function PenyewaPage() {
         )}
       </div>
 
-      {/* Add Tenant Sheet */}
       <BottomSheet open={showAdd} onClose={() => setShowAdd(false)} title="Tambah Penyewa">
         <form onSubmit={handleAdd} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Nama</Label>
-            <Input value={nama} onChange={e => setNama(e.target.value)} required />
+          <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
+          <div className="space-y-2"><Label>No. HP</Label><Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" /></div>
+          <div className="space-y-2"><Label>Gender</Label>
+            <Select value={gender} onValueChange={setGender}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="L">Laki-laki</SelectItem><SelectItem value="P">Perempuan</SelectItem></SelectContent></Select>
           </div>
-          <div className="space-y-2">
-            <Label>No. HP</Label>
-            <Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" />
-          </div>
-          <div className="space-y-2">
-            <Label>Gender</Label>
-            <Select value={gender} onValueChange={setGender}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="L">Laki-laki</SelectItem>
-                <SelectItem value="P">Perempuan</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Kamar</Label>
-            <Select value={roomId} onValueChange={setRoomId}>
-              <SelectTrigger><SelectValue placeholder="Pilih kamar kosong" /></SelectTrigger>
-              <SelectContent>
-                {emptyRooms.map(r => (
-                  <SelectItem key={r.id} value={r.id}>{r.room_type?.nama} - No. {r.nomor} (Lt. {r.lantai})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-2"><Label>Kamar</Label>
+            <Select value={roomId} onValueChange={setRoomId}><SelectTrigger><SelectValue placeholder="Pilih kamar kosong" /></SelectTrigger><SelectContent>
+              {emptyRooms.map(r => <SelectItem key={r.id} value={r.id}>{r.room_type?.nama} - No. {r.nomor} (Lt. {r.lantai})</SelectItem>)}
+            </SelectContent></Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Tanggal Masuk</Label>
-              <Input type="date" value={tanggalMasuk} onChange={e => setTanggalMasuk(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Durasi (bulan)</Label>
-              <Select value={durasi} onValueChange={setDurasi}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {[1, 3, 6, 12].map(d => <SelectItem key={d} value={String(d)}>{d} bulan</SelectItem>)}
-                </SelectContent>
-              </Select>
+            <div className="space-y-2"><Label>Tanggal Masuk</Label><Input type="date" value={tanggalMasuk} onChange={e => setTanggalMasuk(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Durasi (bulan)</Label>
+              <Select value={durasi} onValueChange={setDurasi}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
+                {[1, 3, 6, 12].map(d => <SelectItem key={d} value={String(d)}>{d} bulan</SelectItem>)}
+              </SelectContent></Select>
             </div>
           </div>
           <Button type="submit" className="w-full">Simpan</Button>
