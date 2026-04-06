@@ -18,7 +18,7 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-foreground/50 z-50"
+            className="fixed inset-0 bg-foreground/50 z-[60]"
             onClick={onClose}
           />
           <motion.div
@@ -26,7 +26,7 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-2xl max-h-[85vh] overflow-auto mx-auto max-w-app"
+            className="fixed bottom-0 left-0 right-0 z-[60] mx-auto flex max-h-[calc(100dvh-1rem)] max-w-app flex-col rounded-t-2xl bg-card shadow-2xl"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-card z-10">
               <h2 className="text-base font-semibold text-foreground">{title}</h2>
@@ -34,7 +34,7 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
                 <X size={20} className="text-muted-foreground" />
               </button>
             </div>
-            <div className="p-4">{children}</div>
+            <div className="bottom-sheet-scroll flex-1 overflow-y-auto p-4 safe-bottom">{children}</div>
           </motion.div>
         </>
       )}
