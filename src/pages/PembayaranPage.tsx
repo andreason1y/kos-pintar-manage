@@ -142,8 +142,17 @@ export default function PembayaranPage() {
 
   const handleEditTx = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); setShowEdit(null); return; }
     if (!showEdit) return;
+    if (demo.isDemo) {
+      demo.updateTransaction(showEdit.id, {
+        jumlah_dibayar: parseInt(editJumlah) || 0,
+        status: editStatus as DemoTransaction["status"],
+        metode_bayar: editMetode,
+      });
+      toast.success("Transaksi diperbarui");
+      setShowEdit(null);
+      return;
+    }
     const { error } = await supabase.from("transactions").update({ jumlah_dibayar: parseInt(editJumlah) || 0, status: editStatus, metode_bayar: editMetode } as any).eq("id", showEdit.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Transaksi diperbarui");
@@ -152,7 +161,11 @@ export default function PembayaranPage() {
   };
 
   const handleDeleteTx = async (id: string) => {
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    if (demo.isDemo) {
+      demo.deleteTransaction(id);
+      toast.success("Transaksi dihapus");
+      return;
+    }
     const { error } = await supabase.from("transactions").delete().eq("id", id) as any;
     if (error) { toast.error(error.message); return; }
     toast.success("Transaksi dihapus");

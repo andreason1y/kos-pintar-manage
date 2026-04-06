@@ -184,7 +184,12 @@ export default function PenyewaPage() {
   };
 
   const handleEndContract = async (tenant: Tenant) => {
-    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    if (demo.isDemo) {
+      demo.updateTenant(tenant.id, { status: "keluar", tanggal_keluar: new Date().toISOString().split("T")[0] });
+      if (tenant.room_id) demo.updateRoom(tenant.room_id, { status: "kosong" });
+      toast.success("Kontrak berakhir, penyewa dikeluarkan");
+      return;
+    }
     setShowEndContract(tenant);
     setDeductionNote("");
     const { data } = await supabase.from("deposits").select("*").eq("tenant_id", tenant.id).eq("status", "ditahan").single() as any;
