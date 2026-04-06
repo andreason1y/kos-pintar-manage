@@ -74,8 +74,7 @@ export default function ProfilPage() {
     else {
       toast.success("Properti diperbarui!");
       setShowEditProperty(false);
-      // refetch properties
-      const { refetch } = useProperty as any;
+      refetchProperties();
     }
     setSaving(false);
   };
