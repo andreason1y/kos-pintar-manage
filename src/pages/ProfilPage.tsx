@@ -233,6 +233,33 @@ export default function ProfilPage() {
           </div>
         </form>
       </BottomSheet>
+
+      {/* Edit Property */}
+      <BottomSheet open={showEditProperty} onClose={() => setShowEditProperty(false)} title="Edit Properti">
+        <form onSubmit={handleSaveProperty} className="bottom-sheet-form">
+          <div className="bottom-sheet-body">
+            <div className="space-y-2">
+              <Label>Nama Kos</Label>
+              <div className="relative">
+                <Building2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input value={editKosName} onChange={e => setEditKosName(e.target.value)} className="pl-9" required />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Alamat</Label>
+              <div className="relative">
+                <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input value={editKosAlamat} onChange={e => setEditKosAlamat(e.target.value)} className="pl-9" placeholder="Jl. Contoh No. 123" />
+              </div>
+            </div>
+          </div>
+          <div className="bottom-sheet-footer">
+            <Button type="submit" className="w-full" disabled={saving}>
+              {saving ? <><Loader2 size={16} className="mr-2 animate-spin" /> Menyimpan...</> : "Simpan Properti"}
+            </Button>
+          </div>
+        </form>
+      </BottomSheet>
     </AppShell>
   );
 }
