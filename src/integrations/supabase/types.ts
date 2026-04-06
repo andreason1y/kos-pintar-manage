@@ -14,7 +14,279 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      expenses: {
+        Row: {
+          created_at: string
+          id: string
+          is_recurring: boolean
+          judul: string
+          jumlah: number
+          kategori: string
+          property_id: string
+          tanggal: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_recurring?: boolean
+          judul: string
+          jumlah?: number
+          kategori?: string
+          property_id: string
+          tanggal?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_recurring?: boolean
+          judul?: string
+          jumlah?: number
+          kategori?: string
+          property_id?: string
+          tanggal?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          nama: string | null
+          no_hp: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          nama?: string | null
+          no_hp?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nama?: string | null
+          no_hp?: string | null
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          alamat: string | null
+          created_at: string
+          id: string
+          nama_kos: string
+          user_id: string
+        }
+        Insert: {
+          alamat?: string | null
+          created_at?: string
+          id?: string
+          nama_kos: string
+          user_id: string
+        }
+        Update: {
+          alamat?: string | null
+          created_at?: string
+          id?: string
+          nama_kos?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      room_types: {
+        Row: {
+          created_at: string
+          fasilitas: string[] | null
+          harga_per_bulan: number
+          id: string
+          nama: string
+          property_id: string
+        }
+        Insert: {
+          created_at?: string
+          fasilitas?: string[] | null
+          harga_per_bulan?: number
+          id?: string
+          nama: string
+          property_id: string
+        }
+        Update: {
+          created_at?: string
+          fasilitas?: string[] | null
+          harga_per_bulan?: number
+          id?: string
+          nama?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_types_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          id: string
+          lantai: number
+          nomor: string
+          room_type_id: string
+          status: Database["public"]["Enums"]["room_status"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lantai?: number
+          nomor: string
+          room_type_id: string
+          status?: Database["public"]["Enums"]["room_status"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lantai?: number
+          nomor?: string
+          room_type_id?: string
+          status?: Database["public"]["Enums"]["room_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          created_at: string
+          gender: Database["public"]["Enums"]["gender_type"]
+          id: string
+          nama: string
+          no_hp: string | null
+          property_id: string
+          room_id: string | null
+          status: Database["public"]["Enums"]["tenant_status"]
+          tanggal_keluar: string | null
+          tanggal_masuk: string
+        }
+        Insert: {
+          created_at?: string
+          gender?: Database["public"]["Enums"]["gender_type"]
+          id?: string
+          nama: string
+          no_hp?: string | null
+          property_id: string
+          room_id?: string | null
+          status?: Database["public"]["Enums"]["tenant_status"]
+          tanggal_keluar?: string | null
+          tanggal_masuk?: string
+        }
+        Update: {
+          created_at?: string
+          gender?: Database["public"]["Enums"]["gender_type"]
+          id?: string
+          nama?: string
+          no_hp?: string | null
+          property_id?: string
+          room_id?: string | null
+          status?: Database["public"]["Enums"]["tenant_status"]
+          tanggal_keluar?: string | null
+          tanggal_masuk?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenants_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          catatan: string | null
+          created_at: string
+          id: string
+          jumlah_dibayar: number
+          metode_bayar: Database["public"]["Enums"]["payment_method"] | null
+          nota_number: string | null
+          periode_bulan: number
+          periode_tahun: number
+          property_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+          tanggal_bayar: string | null
+          tenant_id: string
+          total_tagihan: number
+        }
+        Insert: {
+          catatan?: string | null
+          created_at?: string
+          id?: string
+          jumlah_dibayar?: number
+          metode_bayar?: Database["public"]["Enums"]["payment_method"] | null
+          nota_number?: string | null
+          periode_bulan: number
+          periode_tahun: number
+          property_id: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          tanggal_bayar?: string | null
+          tenant_id: string
+          total_tagihan?: number
+        }
+        Update: {
+          catatan?: string | null
+          created_at?: string
+          id?: string
+          jumlah_dibayar?: number
+          metode_bayar?: Database["public"]["Enums"]["payment_method"] | null
+          nota_number?: string | null
+          periode_bulan?: number
+          periode_tahun?: number
+          property_id?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          tanggal_bayar?: string | null
+          tenant_id?: string
+          total_tagihan?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -33,7 +305,11 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      gender_type: "L" | "P"
+      payment_method: "tunai" | "transfer" | "qris"
+      payment_status: "belum_bayar" | "belum_lunas" | "lunas"
+      room_status: "kosong" | "terisi"
+      tenant_status: "aktif" | "keluar"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -160,6 +436,12 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      gender_type: ["L", "P"],
+      payment_method: ["tunai", "transfer", "qris"],
+      payment_status: ["belum_bayar", "belum_lunas", "lunas"],
+      room_status: ["kosong", "terisi"],
+      tenant_status: ["aktif", "keluar"],
+    },
   },
 } as const
