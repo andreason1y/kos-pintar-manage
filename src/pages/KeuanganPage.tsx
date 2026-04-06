@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import SwipeableRow from "@/components/SwipeableRow";
-import { Plus, TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Minus, AlertTriangle, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -48,6 +48,7 @@ export default function KeuanganPage() {
   const [pieData, setPieData] = useState<{ name: string; value: number }[]>([]);
   const [unpaidList, setUnpaidList] = useState<UnpaidItem[]>([]);
   const [totalUnpaid, setTotalUnpaid] = useState(0);
+  const [totalDeposit, setTotalDeposit] = useState(0);
 
   const now = new Date();
   const [bulan, setBulan] = useState(now.getMonth() + 1);
@@ -113,6 +114,7 @@ export default function KeuanganPage() {
       });
       setUnpaidList(unpaid);
       setTotalUnpaid(unpaid.reduce((s, u) => s + u.sisa, 0));
+      setTotalDeposit(1500000); // demo deposit
 
       const combined = [
         ...txData.filter(t => t.jumlah_dibayar > 0).map(t => ({ id: t.id, type: "income", amount: t.jumlah_dibayar, label: `Sewa ${getMonthName(t.periode_bulan)}`, date: t.tanggal_bayar || t.created_at })),
@@ -165,6 +167,10 @@ export default function KeuanganPage() {
     });
     setUnpaidList(unpaid);
     setTotalUnpaid(unpaid.reduce((s: number, u: any) => s + u.sisa, 0));
+
+    // Fetch total deposits held
+    const { data: depData } = await supabase.from("deposits").select("jumlah").eq("property_id", pid).eq("status", "ditahan") as any;
+    setTotalDeposit((depData || []).reduce((s: number, d: any) => s + (d.jumlah || 0), 0));
 
     const combined = [
       ...txData.filter((t: any) => t.jumlah_dibayar > 0).map((t: any) => ({ id: t.id, type: "income", amount: t.jumlah_dibayar, label: `Sewa ${getMonthName(t.periode_bulan)}`, date: t.tanggal_bayar || t.created_at })),
@@ -320,6 +326,18 @@ export default function KeuanganPage() {
                     </div>
                   ))}
                 </div>
+              </motion.div>
+            )}
+
+            {/* Deposit card */}
+            {totalDeposit > 0 && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield size={16} className="text-primary" />
+                  <p className="text-sm font-semibold text-foreground">Deposit Ditahan</p>
+                </div>
+                <p className="text-lg font-bold text-primary">{formatRupiah(totalDeposit)}</p>
+                <p className="text-xs text-muted-foreground mt-1">Total deposit dari semua penyewa aktif (bukan termasuk pemasukan)</p>
               </motion.div>
             )}
 

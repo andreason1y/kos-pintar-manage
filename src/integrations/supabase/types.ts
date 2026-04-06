@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      deposits: {
+        Row: {
+          catatan_potongan: string | null
+          created_at: string
+          id: string
+          jumlah: number
+          jumlah_dikembalikan: number
+          property_id: string
+          status: string
+          tanggal_kembali: string | null
+          tenant_id: string
+        }
+        Insert: {
+          catatan_potongan?: string | null
+          created_at?: string
+          id?: string
+          jumlah?: number
+          jumlah_dikembalikan?: number
+          property_id: string
+          status?: string
+          tanggal_kembali?: string | null
+          tenant_id: string
+        }
+        Update: {
+          catatan_potongan?: string | null
+          created_at?: string
+          id?: string
+          jumlah?: number
+          jumlah_dikembalikan?: number
+          property_id?: string
+          status?: string
+          tanggal_kembali?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deposits_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deposits_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           created_at: string

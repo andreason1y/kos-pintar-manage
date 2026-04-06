@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { getInitials, getAvatarColor } from "@/lib/avatar-colors";
+import { formatRupiah } from "@/lib/helpers";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import SkeletonCard from "@/components/SkeletonCard";
@@ -50,7 +51,12 @@ export default function PenyewaPage() {
   const [roomId, setRoomId] = useState("");
   const [tanggalMasuk, setTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
   const [durasi, setDurasi] = useState("1");
+  const [deposit, setDeposit] = useState("");
   const [emptyRooms, setEmptyRooms] = useState<any[]>([]);
+  const [showEndContract, setShowEndContract] = useState<Tenant | null>(null);
+  const [depositInfo, setDepositInfo] = useState<any>(null);
+  const [returnAmount, setReturnAmount] = useState("");
+  const [deductionNote, setDeductionNote] = useState("");
 
   const now = new Date();
   const bulanIni = now.getMonth() + 1;
@@ -127,8 +133,12 @@ export default function PenyewaPage() {
     const selectedRoom = emptyRooms.find(r => r.id === roomId);
     const harga = selectedRoom?.room_type?.harga_per_bulan || 0;
     await supabase.from("transactions").insert({ tenant_id: tenant.id, property_id: activeProperty.id, periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(), total_tagihan: harga } as any);
+    const depositAmt = parseInt(deposit) || 0;
+    if (depositAmt > 0) {
+      await supabase.from("deposits").insert({ tenant_id: tenant.id, property_id: activeProperty.id, jumlah: depositAmt } as any);
+    }
     toast.success("Penyewa berhasil ditambahkan!");
-    setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1");
+    setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1"); setDeposit("");
     fetchData();
   };
 
@@ -152,6 +162,42 @@ export default function PenyewaPage() {
     const { error } = await supabase.from("tenants").delete().eq("id", id) as any;
     if (error) { toast.error(error.message); return; }
     toast.success("Penyewa dihapus");
+    fetchData();
+  };
+
+  const handleEndContract = async (tenant: Tenant) => {
+    if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
+    setShowEndContract(tenant);
+    setDeductionNote("");
+    // Fetch deposit info
+    const { data } = await supabase.from("deposits").select("*").eq("tenant_id", tenant.id).eq("status", "ditahan").single() as any;
+    if (data) {
+      setDepositInfo(data);
+      setReturnAmount(String(data.jumlah));
+    } else {
+      setDepositInfo(null);
+      setReturnAmount("0");
+    }
+  };
+
+  const handleConfirmEndContract = async () => {
+    if (!showEndContract) return;
+    // Update tenant status
+    await supabase.from("tenants").update({ status: "keluar", tanggal_keluar: new Date().toISOString().split("T")[0] } as any).eq("id", showEndContract.id);
+    if (showEndContract.room_id) {
+      await supabase.from("rooms").update({ status: "kosong" } as any).eq("id", showEndContract.room_id);
+    }
+    // Return deposit if exists
+    if (depositInfo) {
+      await supabase.from("deposits").update({
+        status: "dikembalikan",
+        jumlah_dikembalikan: parseInt(returnAmount) || 0,
+        catatan_potongan: deductionNote || null,
+        tanggal_kembali: new Date().toISOString().split("T")[0],
+      } as any).eq("id", depositInfo.id);
+    }
+    toast.success("Kontrak berakhir, penyewa dikeluarkan");
+    setShowEndContract(null); setDepositInfo(null);
     fetchData();
   };
 
@@ -225,6 +271,11 @@ export default function PenyewaPage() {
                             }}>
                               <Pencil size={14} className="mr-2" /> Edit
                             </DropdownMenuItem>
+                            {t.status === "aktif" && (
+                              <DropdownMenuItem onClick={() => handleEndContract(t)}>
+                                <Trash2 size={14} className="mr-2" /> Akhiri Sewa
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTenant(t.id)}>
                               <Trash2 size={14} className="mr-2" /> Hapus
                             </DropdownMenuItem>
@@ -261,6 +312,7 @@ export default function PenyewaPage() {
               </SelectContent></Select>
             </div>
           </div>
+          <div className="space-y-2"><Label>Deposit (Rp)</Label><Input type="number" value={deposit} onChange={e => setDeposit(e.target.value)} placeholder="0 (opsional)" /></div>
           <Button type="submit" className="w-full">Simpan</Button>
         </form>
       </BottomSheet>
@@ -276,6 +328,40 @@ export default function PenyewaPage() {
             </div>
             <Button type="submit" className="w-full">Simpan Perubahan</Button>
           </form>
+        )}
+      </BottomSheet>
+
+      {/* End contract / deposit return */}
+      <BottomSheet open={!!showEndContract} onClose={() => setShowEndContract(null)} title="Akhiri Sewa">
+        {showEndContract && (
+          <div className="space-y-4">
+            <div className="bg-muted rounded-lg p-3">
+              <p className="text-sm font-semibold text-foreground">{showEndContract.nama}</p>
+              <p className="text-xs text-muted-foreground">{showEndContract.roomLabel}</p>
+            </div>
+            {depositInfo ? (
+              <>
+                <div className="bg-[hsl(38,92%,50%)]/10 border border-[hsl(38,92%,50%)]/30 rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground">Deposit Ditahan</p>
+                  <p className="text-lg font-bold text-foreground">{formatRupiah(depositInfo.jumlah)}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Jumlah Dikembalikan (Rp)</Label>
+                  <Input type="number" value={returnAmount} onChange={e => setReturnAmount(e.target.value)} />
+                </div>
+                {parseInt(returnAmount) < depositInfo.jumlah && (
+                  <div className="space-y-2">
+                    <Label>Alasan Potongan</Label>
+                    <Input value={deductionNote} onChange={e => setDeductionNote(e.target.value)} placeholder="Kerusakan fasilitas, dll." />
+                    <p className="text-xs text-muted-foreground">Potongan: {formatRupiah(depositInfo.jumlah - (parseInt(returnAmount) || 0))}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Tidak ada deposit untuk penyewa ini.</p>
+            )}
+            <Button onClick={handleConfirmEndContract} className="w-full" variant="destructive">Konfirmasi Akhiri Sewa</Button>
+          </div>
         )}
       </BottomSheet>
     </AppShell>

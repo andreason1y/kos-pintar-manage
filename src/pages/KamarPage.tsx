@@ -19,7 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Plus, ChevronDown, UserPlus, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-const FASILITAS_OPTIONS = ["AC", "TV", "Lemari", "Kamar Mandi Dalam", "WiFi", "Air Panas", "Parkir Motor"];
+const FASILITAS_OPTIONS = ["AC", "TV", "Lemari", "Kamar Mandi Dalam", "WiFi", "Air Panas", "Parkir Motor", "Kasur", "Meja & Kursi", "Dapur Bersama", "Mesin Cuci", "Kulkas", "CCTV", "Parkir Mobil", "Kamar Mandi Luar"];
 
 interface RoomType {
   id: string;
@@ -54,6 +54,7 @@ export default function KamarPage() {
   const [nama, setNama] = useState("");
   const [harga, setHarga] = useState("");
   const [fasilitas, setFasilitas] = useState<string[]>([]);
+  const [customFasilitas, setCustomFasilitas] = useState("");
   const [prefix, setPrefix] = useState("");
   const [startNum, setStartNum] = useState("1");
   const [count, setCount] = useState("5");
@@ -69,6 +70,7 @@ export default function KamarPage() {
   const [tenantGender, setTenantGender] = useState("L");
   const [tenantTanggalMasuk, setTenantTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
   const [tenantDurasi, setTenantDurasi] = useState("1");
+  const [tenantDeposit, setTenantDeposit] = useState("");
 
   const fetchData = async () => {
     if (demo.isDemo) {
@@ -120,7 +122,7 @@ export default function KamarPage() {
     if (!activeProperty) return;
     const { error } = await supabase.from("room_types").insert({ property_id: activeProperty.id, nama, harga_per_bulan: parseInt(harga) || 0, fasilitas } as any);
     if (error) toast.error(error.message);
-    else { toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); setFasilitas([]); fetchData(); }
+    else { toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); setFasilitas([]); setCustomFasilitas(""); fetchData(); }
   };
 
   const handleEditType = async (e: React.FormEvent) => {
@@ -193,8 +195,15 @@ export default function KamarPage() {
       periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(),
       total_tagihan: hargaSewa,
     } as any);
+    // Create deposit if specified
+    const depositAmount = parseInt(tenantDeposit) || 0;
+    if (depositAmount > 0) {
+      await supabase.from("deposits").insert({
+        tenant_id: tenant.id, property_id: activeProperty.id, jumlah: depositAmount,
+      } as any);
+    }
     toast.success("Penyewa berhasil ditambahkan!");
-    setShowAddTenant(null); setTenantNama(""); setTenantHp(""); setTenantGender("L"); setTenantDurasi("1");
+    setShowAddTenant(null); setTenantNama(""); setTenantHp(""); setTenantGender("L"); setTenantDurasi("1"); setTenantDeposit("");
     fetchData();
   };
 
@@ -369,6 +378,18 @@ export default function KamarPage() {
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${fasilitas.includes(f) ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}
                 >{f}</button>
               ))}
+              {fasilitas.filter(f => !FASILITAS_OPTIONS.includes(f)).map(f => (
+                <button key={f} type="button" onClick={() => setFasilitas(prev => prev.filter(x => x !== f))}
+                  className="px-3 py-1.5 rounded-full text-xs font-medium border bg-primary text-primary-foreground border-primary"
+                >{f} ✕</button>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-1">
+              <Input value={customFasilitas} onChange={e => setCustomFasilitas(e.target.value)} placeholder="Fasilitas lainnya..." className="text-sm" />
+              <Button type="button" variant="outline" size="sm" onClick={() => {
+                const val = customFasilitas.trim();
+                if (val && !fasilitas.includes(val)) { setFasilitas(prev => [...prev, val]); setCustomFasilitas(""); }
+              }}>Tambah</Button>
             </div>
           </div>
           <Button type="submit" className="w-full">Simpan</Button>
@@ -388,6 +409,18 @@ export default function KamarPage() {
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${fasilitas.includes(f) ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}
                 >{f}</button>
               ))}
+              {fasilitas.filter(f => !FASILITAS_OPTIONS.includes(f)).map(f => (
+                <button key={f} type="button" onClick={() => setFasilitas(prev => prev.filter(x => x !== f))}
+                  className="px-3 py-1.5 rounded-full text-xs font-medium border bg-primary text-primary-foreground border-primary"
+                >{f} ✕</button>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-1">
+              <Input value={customFasilitas} onChange={e => setCustomFasilitas(e.target.value)} placeholder="Fasilitas lainnya..." className="text-sm" />
+              <Button type="button" variant="outline" size="sm" onClick={() => {
+                const val = customFasilitas.trim();
+                if (val && !fasilitas.includes(val)) { setFasilitas(prev => [...prev, val]); setCustomFasilitas(""); }
+              }}>Tambah</Button>
             </div>
           </div>
           <Button type="submit" className="w-full">Simpan Perubahan</Button>
@@ -449,6 +482,10 @@ export default function KamarPage() {
                 ))}
               </div>
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Deposit (Rp)</Label>
+            <Input type="number" value={tenantDeposit} onChange={e => setTenantDeposit(e.target.value)} placeholder="0 (opsional)" />
           </div>
           <Button type="submit" className="w-full">Simpan Penyewa</Button>
         </form>
