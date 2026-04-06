@@ -195,8 +195,15 @@ export default function KamarPage() {
       periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(),
       total_tagihan: hargaSewa,
     } as any);
+    // Create deposit if specified
+    const depositAmount = parseInt(tenantDeposit) || 0;
+    if (depositAmount > 0) {
+      await supabase.from("deposits").insert({
+        tenant_id: tenant.id, property_id: activeProperty.id, jumlah: depositAmount,
+      } as any);
+    }
     toast.success("Penyewa berhasil ditambahkan!");
-    setShowAddTenant(null); setTenantNama(""); setTenantHp(""); setTenantGender("L"); setTenantDurasi("1");
+    setShowAddTenant(null); setTenantNama(""); setTenantHp(""); setTenantGender("L"); setTenantDurasi("1"); setTenantDeposit("");
     fetchData();
   };
 
