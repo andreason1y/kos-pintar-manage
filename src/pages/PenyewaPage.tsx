@@ -329,6 +329,40 @@ export default function PenyewaPage() {
           </form>
         )}
       </BottomSheet>
+
+      {/* End contract / deposit return */}
+      <BottomSheet open={!!showEndContract} onClose={() => setShowEndContract(null)} title="Akhiri Sewa">
+        {showEndContract && (
+          <div className="space-y-4">
+            <div className="bg-muted rounded-lg p-3">
+              <p className="text-sm font-semibold text-foreground">{showEndContract.nama}</p>
+              <p className="text-xs text-muted-foreground">{showEndContract.roomLabel}</p>
+            </div>
+            {depositInfo ? (
+              <>
+                <div className="bg-[hsl(38,92%,50%)]/10 border border-[hsl(38,92%,50%)]/30 rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground">Deposit Ditahan</p>
+                  <p className="text-lg font-bold text-foreground">{formatRupiah(depositInfo.jumlah)}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Jumlah Dikembalikan (Rp)</Label>
+                  <Input type="number" value={returnAmount} onChange={e => setReturnAmount(e.target.value)} />
+                </div>
+                {parseInt(returnAmount) < depositInfo.jumlah && (
+                  <div className="space-y-2">
+                    <Label>Alasan Potongan</Label>
+                    <Input value={deductionNote} onChange={e => setDeductionNote(e.target.value)} placeholder="Kerusakan fasilitas, dll." />
+                    <p className="text-xs text-muted-foreground">Potongan: {formatRupiah(depositInfo.jumlah - (parseInt(returnAmount) || 0))}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Tidak ada deposit untuk penyewa ini.</p>
+            )}
+            <Button onClick={handleConfirmEndContract} className="w-full" variant="destructive">Konfirmasi Akhiri Sewa</Button>
+          </div>
+        )}
+      </BottomSheet>
     </AppShell>
   );
 }
