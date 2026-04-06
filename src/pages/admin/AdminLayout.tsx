@@ -19,7 +19,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { navigate("/"); return; }
+    if (!user) { navigate("/beranda"); return; }
     const check = async () => {
       const { data } = await supabase.rpc("is_admin") as any;
       if (!data) { navigate("/"); return; }
