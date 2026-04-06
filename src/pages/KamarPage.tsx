@@ -492,6 +492,17 @@ export default function KamarPage() {
           <Button type="submit" className="w-full">Simpan Penyewa</Button>
         </form>
       </BottomSheet>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget?.type === "room_type") handleDeleteType(deleteTarget.id);
+          else if (deleteTarget?.type === "room") handleDeleteRoom(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        itemName={deleteTarget?.name || ""}
+      />
     </AppShell>
   );
 }
