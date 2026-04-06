@@ -51,6 +51,7 @@ export default function KamarPage() {
   const [showAddTenant, setShowAddTenant] = useState<string | null>(null);
   const [showEditType, setShowEditType] = useState<RoomType | null>(null);
   const [showEditRoom, setShowEditRoom] = useState<Room | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: "room_type" | "room"; id: string; name: string } | null>(null);
 
   const [nama, setNama] = useState("");
   const [harga, setHarga] = useState("");
