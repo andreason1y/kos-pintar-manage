@@ -175,23 +175,27 @@ export default function ProfilPage() {
 
       {/* Edit Profile */}
       <BottomSheet open={showEdit} onClose={() => setShowEdit(false)} title="Edit Profil">
-        <form onSubmit={handleSaveProfile} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Nama Lengkap</Label>
-            <Input value={editNama} onChange={e => setEditNama(e.target.value)} required />
+        <form onSubmit={handleSaveProfile} className="bottom-sheet-form">
+          <div className="bottom-sheet-body">
+            <div className="space-y-2">
+              <Label>Nama Lengkap</Label>
+              <Input value={editNama} onChange={e => setEditNama(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input value={user?.email || ""} disabled className="bg-muted" />
+              <p className="text-[10px] text-muted-foreground">Email tidak dapat diubah</p>
+            </div>
+            <div className="space-y-2">
+              <Label>No. HP</Label>
+              <Input value={editHp} onChange={e => setEditHp(e.target.value)} placeholder="08123456789" />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input value={user?.email || ""} disabled className="bg-muted" />
-            <p className="text-[10px] text-muted-foreground">Email tidak dapat diubah</p>
+          <div className="bottom-sheet-footer">
+            <Button type="submit" className="w-full" disabled={saving}>
+              {saving ? <><Loader2 size={16} className="mr-2 animate-spin" /> Menyimpan...</> : "Simpan Profil"}
+            </Button>
           </div>
-          <div className="space-y-2">
-            <Label>No. HP</Label>
-            <Input value={editHp} onChange={e => setEditHp(e.target.value)} placeholder="08123456789" />
-          </div>
-          <Button type="submit" className="w-full" disabled={saving}>
-            {saving ? <><Loader2 size={16} className="mr-2 animate-spin" /> Menyimpan...</> : "Simpan Profil"}
-          </Button>
         </form>
       </BottomSheet>
     </AppShell>

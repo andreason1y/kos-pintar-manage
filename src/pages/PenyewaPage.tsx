@@ -295,10 +295,11 @@ export default function PenyewaPage() {
 
       {/* Add tenant */}
       <BottomSheet open={showAdd} onClose={() => setShowAdd(false)} title="Tambah Penyewa">
-        <form onSubmit={handleAdd} className="space-y-4">
-          <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
-          <div className="space-y-2"><Label>No. HP</Label><Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" /></div>
-          <div className="space-y-2"><Label>Gender</Label>
+        <form onSubmit={handleAdd} className="bottom-sheet-form">
+          <div className="bottom-sheet-body">
+            <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
+            <div className="space-y-2"><Label>No. HP</Label><Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" /></div>
+            <div className="space-y-2"><Label>Gender</Label>
             <Select value={gender} onValueChange={setGender}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="L">Laki-laki</SelectItem><SelectItem value="P">Perempuan</SelectItem></SelectContent></Select>
           </div>
           <div className="space-y-2"><Label>Kamar</Label>
@@ -315,20 +316,27 @@ export default function PenyewaPage() {
             </div>
           </div>
           <div className="space-y-2"><Label>Deposit (Rp)</Label><Input type="number" value={deposit} onChange={e => setDeposit(e.target.value)} placeholder="0 (opsional)" /></div>
-          <Button type="submit" className="w-full">Simpan</Button>
+          </div>
+          <div className="bottom-sheet-footer">
+            <Button type="submit" className="w-full">Tambah Penyewa</Button>
+          </div>
         </form>
       </BottomSheet>
 
       {/* Edit tenant */}
       <BottomSheet open={!!showEdit} onClose={() => setShowEdit(null)} title="Edit Penyewa">
         {showEdit && (
-          <form onSubmit={handleEditTenant} className="space-y-4">
-            <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
-            <div className="space-y-2"><Label>No. HP</Label><Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" /></div>
-            <div className="space-y-2"><Label>Gender</Label>
+          <form onSubmit={handleEditTenant} className="bottom-sheet-form">
+            <div className="bottom-sheet-body">
+              <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
+              <div className="space-y-2"><Label>No. HP</Label><Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" /></div>
+              <div className="space-y-2"><Label>Gender</Label>
               <Select value={gender} onValueChange={setGender}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="L">Laki-laki</SelectItem><SelectItem value="P">Perempuan</SelectItem></SelectContent></Select>
             </div>
-            <Button type="submit" className="w-full">Simpan Perubahan</Button>
+            </div>
+            <div className="bottom-sheet-footer">
+              <Button type="submit" className="w-full">Simpan Penyewa</Button>
+            </div>
           </form>
         )}
       </BottomSheet>
