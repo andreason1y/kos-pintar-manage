@@ -132,8 +132,12 @@ export default function PenyewaPage() {
     const selectedRoom = emptyRooms.find(r => r.id === roomId);
     const harga = selectedRoom?.room_type?.harga_per_bulan || 0;
     await supabase.from("transactions").insert({ tenant_id: tenant.id, property_id: activeProperty.id, periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(), total_tagihan: harga } as any);
+    const depositAmt = parseInt(deposit) || 0;
+    if (depositAmt > 0) {
+      await supabase.from("deposits").insert({ tenant_id: tenant.id, property_id: activeProperty.id, jumlah: depositAmt } as any);
+    }
     toast.success("Penyewa berhasil ditambahkan!");
-    setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1");
+    setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1"); setDeposit("");
     fetchData();
   };
 
