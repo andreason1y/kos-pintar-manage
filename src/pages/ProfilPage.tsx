@@ -146,17 +146,34 @@ export default function ProfilPage() {
           <h2 className="text-sm font-semibold text-foreground mb-3">Properti</h2>
           <div className="space-y-2">
             {displayProperties.map(p => (
-              <button key={p.id} onClick={() => !demo.isDemo && setActiveProperty(p as any)}
-                className={`w-full text-left p-3 rounded-xl border transition-colors shadow-sm ${displayActive?.id === p.id ? "border-primary bg-secondary" : "border-border bg-card"}`}
-              >
-                <div className="flex items-center gap-2">
-                  <Building2 size={18} className={displayActive?.id === p.id ? "text-primary" : "text-muted-foreground"} />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{p.nama_kos}</p>
-                    {p.alamat && <p className="text-xs text-muted-foreground">{p.alamat}</p>}
+              <div key={p.id} className="relative">
+                <button onClick={() => !demo.isDemo && setActiveProperty(p as any)}
+                  className={`w-full text-left p-3 rounded-xl border transition-colors shadow-sm ${displayActive?.id === p.id ? "border-primary bg-secondary" : "border-border bg-card"}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Building2 size={18} className={displayActive?.id === p.id ? "text-primary" : "text-muted-foreground"} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{p.nama_kos}</p>
+                      {p.alamat && <p className="text-xs text-muted-foreground">{p.alamat}</p>}
+                    </div>
+                    {!demo.isDemo && (
+                      <div
+                        role="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditPropertyId(p.id);
+                          setEditKosName(p.nama_kos);
+                          setEditKosAlamat(p.alamat || "");
+                          setShowEditProperty(true);
+                        }}
+                        className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted"
+                      >
+                        <Pencil size={14} className="text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
-                </div>
-              </button>
+                </button>
+              </div>
             ))}
           </div>
         </div>
