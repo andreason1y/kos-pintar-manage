@@ -3,15 +3,17 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
-import { formatRupiah, getMonthName } from "@/lib/helpers";
+import { formatRupiah, getMonthName, waTagihanLink } from "@/lib/helpers";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import NotificationBell from "@/components/NotificationBell";
 import SkeletonCard from "@/components/SkeletonCard";
+import BottomSheet from "@/components/BottomSheet";
+import { Button } from "@/components/ui/button";
 import {
   Users, DoorOpen, DoorClosed, AlertTriangle,
   UserPlus, CreditCard, Send, Receipt, LayoutGrid, FileText,
-  TrendingUp, TrendingDown,
+  TrendingUp, TrendingDown, MessageCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
@@ -29,6 +31,14 @@ interface DashboardStats {
   lunasBulanIni: number;
 }
 
+interface UnpaidTenant {
+  nama: string;
+  no_hp: string | null;
+  kamar: string;
+  sisa: number;
+  periodLabel: string;
+}
+
 const now = new Date();
 const bulanIni = now.getMonth() + 1;
 const tahunIni = now.getFullYear();
@@ -38,6 +48,8 @@ export default function DashboardPage() {
   const demo = useDemo();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showTagihan, setShowTagihan] = useState(false);
+  const [unpaidTenants, setUnpaidTenants] = useState<UnpaidTenant[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,6 +67,22 @@ export default function DashboardPage() {
       const pemasukan = txBulanIni.reduce((s, t) => s + t.jumlah_dibayar, 0);
       const pengeluaran = expBulanIni.reduce((s, e) => s + e.jumlah, 0);
       const pemasukanLalu = txBulanLalu.reduce((s, t) => s + t.jumlah_dibayar, 0);
+
+      // Build unpaid tenants list
+      const unpaid: UnpaidTenant[] = txBulanIni
+        .filter(tx => tx.status !== "lunas")
+        .map(tx => {
+          const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
+          const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
+          return {
+            nama: tenant?.nama || "-",
+            no_hp: tenant?.no_hp || null,
+            kamar: room?.nomor || "-",
+            sisa: tx.total_tagihan - tx.jumlah_dibayar,
+            periodLabel: `${getMonthName(tx.periode_bulan)} ${tx.periode_tahun}`,
+          };
+        });
+      setUnpaidTenants(unpaid);
 
       setStats({
         totalPenyewa: activeTenants.length,
@@ -81,12 +109,12 @@ export default function DashboardPage() {
       const rtIds = (roomTypes || []).map((rt: any) => rt.id);
       let allRooms: any[] = [];
       if (rtIds.length > 0) {
-        const { data } = await supabase.from("rooms").select("id, status").in("room_type_id", rtIds) as any;
+        const { data } = await supabase.from("rooms").select("id, status, nomor").in("room_type_id", rtIds) as any;
         allRooms = data || [];
       }
 
       const [tenants, txThisMonth, txLastMonth, expenses] = await Promise.all([
-        supabase.from("tenants").select("id, status").eq("property_id", pid) as any,
+        supabase.from("tenants").select("id, nama, no_hp, status, room_id").eq("property_id", pid) as any,
         supabase.from("transactions").select("*").eq("property_id", pid).eq("periode_bulan", bulanIni).eq("periode_tahun", tahunIni) as any,
         supabase.from("transactions").select("jumlah_dibayar").eq("property_id", pid)
           .eq("periode_bulan", bulanIni === 1 ? 12 : bulanIni - 1)
@@ -103,6 +131,22 @@ export default function DashboardPage() {
 
       const pemasukan = txData.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
       const pengeluaran = expData.reduce((s: number, e: any) => s + (e.jumlah || 0), 0);
+
+      // Build unpaid tenants
+      const unpaid: UnpaidTenant[] = txData
+        .filter((tx: any) => tx.status !== "lunas")
+        .map((tx: any) => {
+          const tenant = tenantData.find((t: any) => t.id === tx.tenant_id);
+          const room = tenant?.room_id ? allRooms.find((r: any) => r.id === tenant.room_id) : null;
+          return {
+            nama: tenant?.nama || "-",
+            no_hp: tenant?.no_hp || null,
+            kamar: room?.nomor || "-",
+            sisa: tx.total_tagihan - tx.jumlah_dibayar,
+            periodLabel: `${getMonthName(tx.periode_bulan)} ${tx.periode_tahun}`,
+          };
+        });
+      setUnpaidTenants(unpaid);
 
       setStats({
         totalPenyewa: tenantData.filter((t: any) => t.status === "aktif").length,
@@ -121,13 +165,17 @@ export default function DashboardPage() {
     fetchStats();
   }, [activeProperty, demo.isDemo]);
 
+  const handleKirimTagihan = () => {
+    setShowTagihan(true);
+  };
+
   const quickActions = [
-    { icon: UserPlus, label: "Tambah Penyewa", path: "/penyewa", color: "bg-primary/10 text-primary" },
-    { icon: CreditCard, label: "Pembayaran", path: "/pembayaran", color: "bg-[hsl(142,71%,45%)]/10 text-[hsl(142,71%,45%)]" },
-    { icon: Send, label: "Kirim Tagihan", path: "/penyewa", color: "bg-accent/10 text-accent" },
-    { icon: Receipt, label: "Pengeluaran", path: "/keuangan", color: "bg-destructive/10 text-destructive" },
-    { icon: LayoutGrid, label: "Daftar Kamar", path: "/kamar", color: "bg-[hsl(262,52%,47%)]/10 text-[hsl(262,52%,47%)]" },
-    { icon: FileText, label: "Laporan", path: "/keuangan", color: "bg-[hsl(199,89%,48%)]/10 text-[hsl(199,89%,48%)]" },
+    { icon: UserPlus, label: "Tambah Penyewa", action: () => navigate("/penyewa"), color: "bg-primary/10 text-primary" },
+    { icon: CreditCard, label: "Pembayaran", action: () => navigate("/pembayaran"), color: "bg-[hsl(142,71%,45%)]/10 text-[hsl(142,71%,45%)]" },
+    { icon: Send, label: "Kirim Tagihan", action: handleKirimTagihan, color: "bg-accent/10 text-accent" },
+    { icon: Receipt, label: "Pengeluaran", action: () => navigate("/keuangan"), color: "bg-destructive/10 text-destructive" },
+    { icon: LayoutGrid, label: "Daftar Kamar", action: () => navigate("/kamar"), color: "bg-[hsl(262,52%,47%)]/10 text-[hsl(262,52%,47%)]" },
+    { icon: FileText, label: "Laporan", action: () => navigate("/keuangan"), color: "bg-[hsl(199,89%,48%)]/10 text-[hsl(199,89%,48%)]" },
   ];
 
   const laba = stats ? stats.pemasukanBulanIni - stats.pengeluaranBulanIni : 0;
@@ -136,7 +184,6 @@ export default function DashboardPage() {
 
   const propertyName = demo.isDemo ? demo.property.nama_kos : activeProperty?.nama_kos || "Dashboard";
 
-  // Donut chart data
   const lunasPct = stats && stats.totalTxBulanIni > 0 ? Math.round((stats.lunasBulanIni / stats.totalTxBulanIni) * 100) : 0;
   const donutData = stats ? [
     { name: "Lunas", value: stats.lunasBulanIni },
@@ -257,7 +304,7 @@ export default function DashboardPage() {
                 {quickActions.map((action) => (
                   <button
                     key={action.label}
-                    onClick={() => navigate(action.path)}
+                    onClick={action.action}
                     className="bg-card border border-border rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-muted transition-colors shadow-sm"
                   >
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${action.color}`}>
@@ -271,6 +318,40 @@ export default function DashboardPage() {
           </>
         ) : null}
       </div>
+
+      {/* Kirim Tagihan Bottom Sheet */}
+      <BottomSheet open={showTagihan} onClose={() => setShowTagihan(false)} title="Kirim Tagihan">
+        <div className="space-y-3">
+          {unpaidTenants.length === 0 ? (
+            <div className="text-center py-6">
+              <p className="text-sm text-muted-foreground">Semua tagihan sudah lunas! 🎉</p>
+            </div>
+          ) : (
+            unpaidTenants.map((t, i) => (
+              <div key={i} className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{t.nama}</p>
+                  <p className="text-xs text-muted-foreground">Kamar {t.kamar} · {t.periodLabel}</p>
+                  <p className="text-xs font-medium text-destructive mt-0.5">Sisa: {formatRupiah(t.sisa)}</p>
+                </div>
+                {t.no_hp ? (
+                  <a
+                    href={waTagihanLink(t.nama, t.kamar, t.periodLabel.split(" ")[0], t.periodLabel, t.sisa, t.no_hp)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Button size="sm" variant="outline" className="gap-1">
+                      <MessageCircle size={14} /> WA
+                    </Button>
+                  </a>
+                ) : (
+                  <span className="text-xs text-muted-foreground">No HP kosong</span>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </BottomSheet>
     </AppShell>
   );
 }
