@@ -122,7 +122,7 @@ export default function KamarPage() {
     if (!activeProperty) return;
     const { error } = await supabase.from("room_types").insert({ property_id: activeProperty.id, nama, harga_per_bulan: parseInt(harga) || 0, fasilitas } as any);
     if (error) toast.error(error.message);
-    else { toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); setFasilitas([]); fetchData(); }
+    else { toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); setFasilitas([]); setCustomFasilitas(""); fetchData(); }
   };
 
   const handleEditType = async (e: React.FormEvent) => {
