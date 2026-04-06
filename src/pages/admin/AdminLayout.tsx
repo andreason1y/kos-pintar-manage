@@ -22,7 +22,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     if (!user) { navigate("/beranda"); return; }
     const check = async () => {
       const { data } = await supabase.rpc("is_admin") as any;
-      if (!data) { navigate("/"); return; }
+      if (!data) { navigate("/beranda"); return; }
       setIsAdmin(true);
     };
     check();
