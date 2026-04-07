@@ -61,7 +61,18 @@ export interface DemoExpense {
   is_recurring: boolean;
 }
 
-// ─── Seed Data (mirrors real DB for andreassina9a@gmail.com / Kos Lawyer) ───
+export interface DemoDeposit {
+  id: string;
+  tenant_id: string;
+  property_id: string;
+  jumlah: number;
+  jumlah_dikembalikan: number;
+  status: "ditahan" | "dikembalikan";
+  catatan_potongan: string | null;
+  tanggal_kembali: string | null;
+}
+
+// ─── Seed Data ───
 const PID = "prop-1";
 
 const PROPERTY: DemoProperty = {
@@ -112,7 +123,6 @@ const mm = String(bulanIni).padStart(2, "0");
 const mmL = String(bulanLalu).padStart(2, "0");
 
 const TRANSACTIONS: DemoTransaction[] = [
-  // Current month — 8 tenants
   { id: "tx-1", tenant_id: "tn-1", property_id: PID, periode_bulan: bulanIni, periode_tahun: tahunIni, total_tagihan: 1200000, jumlah_dibayar: 1200000, status: "lunas", metode_bayar: "transfer", tanggal_bayar: `${tahunIni}-${mm}-05`, catatan: null, nota_number: `NOTA-${tahunIni}${mm}-0001`, created_at: `${tahunIni}-${mm}-01` },
   { id: "tx-2", tenant_id: "tn-2", property_id: PID, periode_bulan: bulanIni, periode_tahun: tahunIni, total_tagihan: 1200000, jumlah_dibayar: 600000, status: "belum_lunas", metode_bayar: "tunai", tanggal_bayar: `${tahunIni}-${mm}-10`, catatan: "Bayar setengah dulu", nota_number: null, created_at: `${tahunIni}-${mm}-01` },
   { id: "tx-3", tenant_id: "tn-3", property_id: PID, periode_bulan: bulanIni, periode_tahun: tahunIni, total_tagihan: 1200000, jumlah_dibayar: 1200000, status: "lunas", metode_bayar: "qris", tanggal_bayar: `${tahunIni}-${mm}-03`, catatan: null, nota_number: `NOTA-${tahunIni}${mm}-0002`, created_at: `${tahunIni}-${mm}-01` },
@@ -121,7 +131,6 @@ const TRANSACTIONS: DemoTransaction[] = [
   { id: "tx-6", tenant_id: "tn-6", property_id: PID, periode_bulan: bulanIni, periode_tahun: tahunIni, total_tagihan: 1800000, jumlah_dibayar: 1800000, status: "lunas", metode_bayar: "tunai", tanggal_bayar: `${tahunIni}-${mm}-01`, catatan: null, nota_number: `NOTA-${tahunIni}${mm}-0004`, created_at: `${tahunIni}-${mm}-01` },
   { id: "tx-7", tenant_id: "tn-7", property_id: PID, periode_bulan: bulanIni, periode_tahun: tahunIni, total_tagihan: 2500000, jumlah_dibayar: 2500000, status: "lunas", metode_bayar: "transfer", tanggal_bayar: `${tahunIni}-${mm}-04`, catatan: null, nota_number: `NOTA-${tahunIni}${mm}-0005`, created_at: `${tahunIni}-${mm}-01` },
   { id: "tx-8", tenant_id: "tn-8", property_id: PID, periode_bulan: bulanIni, periode_tahun: tahunIni, total_tagihan: 2500000, jumlah_dibayar: 0, status: "belum_bayar", metode_bayar: null, tanggal_bayar: null, catatan: null, nota_number: null, created_at: `${tahunIni}-${mm}-01` },
-  // Last month — 3 tenants
   { id: "tx-9", tenant_id: "tn-1", property_id: PID, periode_bulan: bulanLalu, periode_tahun: tahunLalu, total_tagihan: 1200000, jumlah_dibayar: 1200000, status: "lunas", metode_bayar: "transfer", tanggal_bayar: `${tahunLalu}-${mmL}-05`, catatan: null, nota_number: "NOTA-001", created_at: `${tahunLalu}-${mmL}-01` },
   { id: "tx-10", tenant_id: "tn-4", property_id: PID, periode_bulan: bulanLalu, periode_tahun: tahunLalu, total_tagihan: 1800000, jumlah_dibayar: 1800000, status: "lunas", metode_bayar: "transfer", tanggal_bayar: `${tahunLalu}-${mmL}-03`, catatan: null, nota_number: "NOTA-002", created_at: `${tahunLalu}-${mmL}-01` },
   { id: "tx-11", tenant_id: "tn-7", property_id: PID, periode_bulan: bulanLalu, periode_tahun: tahunLalu, total_tagihan: 2500000, jumlah_dibayar: 2500000, status: "lunas", metode_bayar: "qris", tanggal_bayar: `${tahunLalu}-${mmL}-02`, catatan: null, nota_number: "NOTA-003", created_at: `${tahunLalu}-${mmL}-01` },
@@ -134,6 +143,18 @@ const EXPENSES: DemoExpense[] = [
   { id: "exp-4", property_id: PID, judul: "Gaji Kebersihan", kategori: "Kebersihan", jumlah: 600000, tanggal: `${tahunIni}-${mm}-01`, is_recurring: true },
   { id: "exp-5", property_id: PID, judul: "Perbaikan Pipa Kamar B3", kategori: "Perbaikan/Renovasi", jumlah: 250000, tanggal: `${tahunIni}-${mm}-12`, is_recurring: false },
   { id: "exp-6", property_id: PID, judul: "Keamanan Bulanan", kategori: "Keamanan", jumlah: 300000, tanggal: `${tahunIni}-${mm}-01`, is_recurring: true },
+];
+
+const DEPOSITS: DemoDeposit[] = [
+  { id: "dep-1", tenant_id: "tn-1", property_id: PID, jumlah: 1200000, jumlah_dikembalikan: 0, status: "ditahan", catatan_potongan: null, tanggal_kembali: null },
+  { id: "dep-2", tenant_id: "tn-2", property_id: PID, jumlah: 1200000, jumlah_dikembalikan: 0, status: "ditahan", catatan_potongan: null, tanggal_kembali: null },
+  { id: "dep-3", tenant_id: "tn-3", property_id: PID, jumlah: 1200000, jumlah_dikembalikan: 0, status: "ditahan", catatan_potongan: null, tanggal_kembali: null },
+  { id: "dep-4", tenant_id: "tn-4", property_id: PID, jumlah: 1800000, jumlah_dikembalikan: 0, status: "ditahan", catatan_potongan: null, tanggal_kembali: null },
+  { id: "dep-5", tenant_id: "tn-5", property_id: PID, jumlah: 1800000, jumlah_dikembalikan: 0, status: "ditahan", catatan_potongan: null, tanggal_kembali: null },
+  { id: "dep-6", tenant_id: "tn-6", property_id: PID, jumlah: 1800000, jumlah_dikembalikan: 0, status: "ditahan", catatan_potongan: null, tanggal_kembali: null },
+  { id: "dep-7", tenant_id: "tn-7", property_id: PID, jumlah: 2500000, jumlah_dikembalikan: 0, status: "ditahan", catatan_potongan: null, tanggal_kembali: null },
+  { id: "dep-8", tenant_id: "tn-8", property_id: PID, jumlah: 2500000, jumlah_dikembalikan: 0, status: "ditahan", catatan_potongan: null, tanggal_kembali: null },
+  { id: "dep-9", tenant_id: "tn-9", property_id: PID, jumlah: 1200000, jumlah_dikembalikan: 1200000, status: "dikembalikan", catatan_potongan: null, tanggal_kembali: "2025-09-01" },
 ];
 
 let _demoIdCounter = 100;
@@ -149,6 +170,7 @@ interface DemoContextType {
   tenants: DemoTenant[];
   transactions: DemoTransaction[];
   expenses: DemoExpense[];
+  deposits: DemoDeposit[];
   addTenant: (t: Omit<DemoTenant, "id">) => string;
   updateTenant: (id: string, updates: Partial<DemoTenant>) => void;
   deleteTenant: (id: string) => void;
@@ -164,33 +186,29 @@ interface DemoContextType {
   addExpense: (e: Omit<DemoExpense, "id">) => string;
   updateExpense: (id: string, updates: Partial<DemoExpense>) => void;
   deleteExpense: (id: string) => void;
+  addDeposit: (d: Omit<DemoDeposit, "id">) => string;
+  updateDeposit: (id: string, updates: Partial<DemoDeposit>) => void;
+  deleteDeposit: (id: string) => void;
+  // Atomic helpers (mirror RPCs)
+  demoAddTenantAtomic: (params: {
+    roomId: string;
+    nama: string;
+    noHp: string | null;
+    gender: "L" | "P";
+    tanggalMasuk: string;
+    tanggalKeluar: string;
+    depositAmount: number;
+  }) => string;
+  demoEndContractAtomic: (params: {
+    tenantId: string;
+    depositAction: "full" | "partial" | "forfeit" | "none";
+    returnAmount: number;
+    deductionNote: string;
+  }) => void;
+  demoDeleteTenantAtomic: (tenantId: string) => void;
 }
 
-const DemoContext = createContext<DemoContextType>({
-  isDemo: false,
-  setIsDemo: () => {},
-  property: PROPERTY,
-  roomTypes: ROOM_TYPES,
-  rooms: ROOMS,
-  tenants: TENANTS,
-  transactions: TRANSACTIONS,
-  expenses: EXPENSES,
-  addTenant: () => "",
-  updateTenant: () => {},
-  deleteTenant: () => {},
-  addRoom: () => {},
-  updateRoom: () => {},
-  deleteRoom: () => {},
-  addRoomType: () => {},
-  updateRoomType: () => {},
-  deleteRoomType: () => {},
-  addTransaction: () => {},
-  updateTransaction: () => {},
-  deleteTransaction: () => {},
-  addExpense: () => "",
-  updateExpense: () => {},
-  deleteExpense: () => {},
-});
+const DemoContext = createContext<DemoContextType>({} as DemoContextType);
 
 export const useDemo = () => useContext(DemoContext);
 
@@ -201,18 +219,18 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   const setIsDemo = useCallback((v: boolean) => {
     setIsDemoState(v);
-    if (v) {
-      sessionStorage.setItem("kospintar_demo", "true");
-    } else {
-      sessionStorage.removeItem("kospintar_demo");
-    }
+    if (v) sessionStorage.setItem("kospintar_demo", "true");
+    else sessionStorage.removeItem("kospintar_demo");
   }, []);
+
   const [tenants, setTenants] = useState<DemoTenant[]>(TENANTS);
   const [rooms, setRooms] = useState<DemoRoom[]>(ROOMS);
   const [roomTypes, setRoomTypes] = useState<DemoRoomType[]>(ROOM_TYPES);
   const [transactions, setTransactions] = useState<DemoTransaction[]>(TRANSACTIONS);
   const [expenses, setExpenses] = useState<DemoExpense[]>(EXPENSES);
+  const [deposits, setDeposits] = useState<DemoDeposit[]>(DEPOSITS);
 
+  // --- Basic CRUD ---
   const addTenant = useCallback((t: Omit<DemoTenant, "id">) => {
     const id = genId("tn");
     setTenants(prev => [{ ...t, id }, ...prev]);
@@ -267,21 +285,114 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     setExpenses(prev => prev.filter(e => e.id !== id));
   }, []);
 
+  const addDeposit = useCallback((d: Omit<DemoDeposit, "id">) => {
+    const id = genId("dep");
+    setDeposits(prev => [...prev, { ...d, id }]);
+    return id;
+  }, []);
+  const updateDeposit = useCallback((id: string, updates: Partial<DemoDeposit>) => {
+    setDeposits(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
+  }, []);
+  const deleteDeposit = useCallback((id: string) => {
+    setDeposits(prev => prev.filter(d => d.id !== id));
+  }, []);
+
+  // --- Atomic helpers (mirrors DB RPCs) ---
+  const demoAddTenantAtomic = useCallback((params: {
+    roomId: string;
+    nama: string;
+    noHp: string | null;
+    gender: "L" | "P";
+    tanggalMasuk: string;
+    tanggalKeluar: string;
+    depositAmount: number;
+  }) => {
+    const tenantId = genId("tn");
+    const masuk = new Date(params.tanggalMasuk);
+
+    // Find room price
+    const room = rooms.find(r => r.id === params.roomId);
+    const rt = room ? roomTypes.find(t => t.id === room.room_type_id) : null;
+    const harga = rt?.harga_per_bulan || 0;
+
+    // Insert tenant
+    setTenants(prev => [{ id: tenantId, property_id: PID, room_id: params.roomId, nama: params.nama, no_hp: params.noHp, gender: params.gender, tanggal_masuk: params.tanggalMasuk, tanggal_keluar: params.tanggalKeluar, status: "aktif" }, ...prev]);
+
+    // Update room
+    setRooms(prev => prev.map(r => r.id === params.roomId ? { ...r, status: "terisi" as const } : r));
+
+    // Create transaction
+    setTransactions(prev => [{ id: genId("tx"), tenant_id: tenantId, property_id: PID, periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(), total_tagihan: harga, jumlah_dibayar: 0, status: "belum_bayar", metode_bayar: null, tanggal_bayar: null, catatan: null, nota_number: null, created_at: new Date().toISOString() }, ...prev]);
+
+    // Create deposit
+    if (params.depositAmount > 0) {
+      setDeposits(prev => [...prev, { id: genId("dep"), tenant_id: tenantId, property_id: PID, jumlah: params.depositAmount, jumlah_dikembalikan: 0, status: "ditahan", catatan_potongan: null, tanggal_kembali: null }]);
+    }
+
+    return tenantId;
+  }, [rooms, roomTypes]);
+
+  const demoEndContractAtomic = useCallback((params: {
+    tenantId: string;
+    depositAction: "full" | "partial" | "forfeit" | "none";
+    returnAmount: number;
+    deductionNote: string;
+  }) => {
+    const today = new Date().toISOString().split("T")[0];
+    const tenant = tenants.find(t => t.id === params.tenantId);
+    if (!tenant) return;
+
+    // Update tenant
+    setTenants(prev => prev.map(t => t.id === params.tenantId ? { ...t, status: "keluar" as const, tanggal_keluar: today, room_id: null } : t));
+
+    // Free room
+    if (tenant.room_id) {
+      setRooms(prev => prev.map(r => r.id === tenant.room_id ? { ...r, status: "kosong" as const } : r));
+    }
+
+    // Handle deposit
+    const deposit = deposits.find(d => d.tenant_id === params.tenantId && d.status === "ditahan");
+    if (deposit && params.depositAction !== "none") {
+      if (params.depositAction === "full") {
+        setDeposits(prev => prev.map(d => d.id === deposit.id ? { ...d, status: "dikembalikan" as const, jumlah_dikembalikan: deposit.jumlah, tanggal_kembali: today } : d));
+        setExpenses(prev => [{ id: genId("exp"), property_id: PID, judul: `Pengembalian deposit - ${tenant.nama}`, kategori: "Pengembalian Deposit", jumlah: deposit.jumlah, tanggal: today, is_recurring: false }, ...prev]);
+      } else if (params.depositAction === "partial") {
+        setDeposits(prev => prev.map(d => d.id === deposit.id ? { ...d, status: "dikembalikan" as const, jumlah_dikembalikan: params.returnAmount, catatan_potongan: params.deductionNote || null, tanggal_kembali: today } : d));
+        if (params.returnAmount > 0) {
+          setExpenses(prev => [{ id: genId("exp"), property_id: PID, judul: `Pengembalian deposit - ${tenant.nama}`, kategori: "Pengembalian Deposit", jumlah: params.returnAmount, tanggal: today, is_recurring: false }, ...prev]);
+        }
+      } else if (params.depositAction === "forfeit") {
+        setDeposits(prev => prev.map(d => d.id === deposit.id ? { ...d, status: "dikembalikan" as const, jumlah_dikembalikan: 0, catatan_potongan: `Deposit hangus - ${params.deductionNote || "tidak ada alasan"}`, tanggal_kembali: today } : d));
+      }
+    }
+  }, [tenants, deposits]);
+
+  const demoDeleteTenantAtomic = useCallback((tenantId: string) => {
+    const tenant = tenants.find(t => t.id === tenantId);
+
+    // Free room
+    if (tenant?.room_id) {
+      setRooms(prev => prev.map(r => r.id === tenant.room_id ? { ...r, status: "kosong" as const } : r));
+    }
+
+    // Delete related
+    setDeposits(prev => prev.filter(d => d.tenant_id !== tenantId));
+    setTransactions(prev => prev.filter(tx => tx.tenant_id !== tenantId));
+    setTenants(prev => prev.filter(t => t.id !== tenantId));
+  }, [tenants]);
+
   return (
     <DemoContext.Provider value={{
-      isDemo,
-      setIsDemo,
+      isDemo, setIsDemo,
       property: PROPERTY,
-      roomTypes,
-      rooms,
-      tenants,
-      transactions,
-      expenses,
+      roomTypes, rooms, tenants, transactions, expenses, deposits,
       addTenant, updateTenant, deleteTenant,
       addRoom, updateRoom, deleteRoom,
       addRoomType, updateRoomType, deleteRoomType,
       addTransaction, updateTransaction, deleteTransaction,
       addExpense, updateExpense, deleteExpense,
+      addDeposit, updateDeposit, deleteDeposit,
+      demoAddTenantAtomic, demoEndContractAtomic, demoDeleteTenantAtomic,
     }}>
       {children}
     </DemoContext.Provider>
