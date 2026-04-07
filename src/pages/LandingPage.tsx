@@ -277,7 +277,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
         <div className="mx-auto max-w-[1200px] flex items-center justify-between px-4 md:px-8 h-14 md:h-16">
           <div className="flex items-center gap-2">
-            <img src={logoIcon} alt="KosPintar" className="w-8 h-8 md:w-9 md:h-9 rounded-lg object-contain" />
+            <img src={logoIcon} alt="KosPintar" className="h-9 w-9 rounded-lg object-contain" />
             <span className="font-extrabold text-base md:text-lg text-foreground">KosPintar</span>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
