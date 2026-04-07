@@ -191,7 +191,18 @@ const DemoContext = createContext<DemoContextType>({
 export const useDemo = () => useContext(DemoContext);
 
 export function DemoProvider({ children }: { children: ReactNode }) {
-  const [isDemo, setIsDemo] = useState(false);
+  const [isDemo, setIsDemoState] = useState(() => {
+    return sessionStorage.getItem("kospintar_demo") === "true";
+  });
+
+  const setIsDemo = useCallback((v: boolean) => {
+    setIsDemoState(v);
+    if (v) {
+      sessionStorage.setItem("kospintar_demo", "true");
+    } else {
+      sessionStorage.removeItem("kospintar_demo");
+    }
+  }, []);
   const [tenants, setTenants] = useState<DemoTenant[]>(TENANTS);
   const [rooms, setRooms] = useState<DemoRoom[]>(ROOMS);
   const [roomTypes, setRoomTypes] = useState<DemoRoomType[]>(ROOM_TYPES);
