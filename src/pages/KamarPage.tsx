@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,6 +54,15 @@ export default function KamarPage() {
   const [showEditType, setShowEditType] = useState<RoomType | null>(null);
   const [showEditRoom, setShowEditRoom] = useState<Room | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ type: "room_type" | "room"; id: string; name: string } | null>(null);
+
+  // Open add modal via URL param from dashboard quick action
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("action") === "add") {
+      setShowAdd(true);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   const [nama, setNama] = useState("");
   const [harga, setHarga] = useState("");

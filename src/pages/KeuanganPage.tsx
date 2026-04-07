@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
@@ -32,6 +32,20 @@ export default function KeuanganPage() {
   const [showEdit, setShowEdit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [depositOpen, setDepositOpen] = useState(false);
+  const pendingActionRef = useRef<string | null>(null);
+
+  // Handle URL action params from dashboard quick actions
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get("action");
+    if (action) {
+      pendingActionRef.current = action;
+      window.history.replaceState({}, "", window.location.pathname);
+      if (action === "add-expense") {
+        setShowAdd(true);
+      }
+    }
+  }, []);
 
   const now = new Date();
   const [bulan, setBulan] = useState(now.getMonth() + 1);
@@ -409,6 +423,14 @@ export default function KeuanganPage() {
     document.body.removeChild(container);
     toast.success("PDF berhasil diunduh!");
   };
+
+  // Auto-trigger export PDF from dashboard quick action
+  useEffect(() => {
+    if (pendingActionRef.current === "export-pdf" && computed) {
+      pendingActionRef.current = null;
+      handleExportPDF();
+    }
+  }, [computed]);
 
   if (!computed) return <AppShell><PageHeader title="Keuangan" /><div className="px-4 space-y-3"><SkeletonCard lines={2} /><SkeletonCard /><SkeletonCard /></div></AppShell>;
 

@@ -10,8 +10,7 @@ import { useDemo } from "@/lib/demo-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ClipboardList, Wallet, Home, FileText, BarChart3, Bell,
-  Check, X, Instagram, MessageCircle, ArrowRight,
-  Users, DoorOpen, TrendingUp, CreditCard, Star
+  Check, X, Instagram, MessageCircle, ArrowRight, Star
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import logoIcon from "@/assets/logo-icon.png";
@@ -43,136 +42,6 @@ function PhoneMockup({ children, className = "" }: { children: React.ReactNode; 
           {children}
         </div>
       </div>
-    </div>
-  );
-}
-
-/* ─── Mini Dashboard Preview ─── */
-function DashboardPreview() {
-  return (
-    <div className="bg-background p-3 space-y-3 text-[10px]">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-muted-foreground text-[8px]">Selamat datang 👋</p>
-          <p className="font-bold text-[11px] text-foreground">Kos Harmoni</p>
-        </div>
-        <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
-          <Bell className="w-3 h-3 text-primary" />
-        </div>
-      </div>
-      <div className="gradient-primary rounded-xl p-3 text-primary-foreground">
-        <p className="text-[8px] opacity-80">Laba Bulan Ini</p>
-        <p className="text-lg font-extrabold">Rp 9.150.000</p>
-        <p className="text-[8px] opacity-80">↑ 12% dari bulan lalu</p>
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { label: "Penyewa", value: "8", icon: Users, color: "text-primary" },
-          { label: "Kamar Terisi", value: "8/12", icon: DoorOpen, color: "text-accent" },
-          { label: "Belum Bayar", value: "2", icon: CreditCard, color: "text-destructive" },
-        ].map((s) => (
-          <div key={s.label} className="bg-card border border-border rounded-lg p-2 text-center">
-            <s.icon className={`w-3 h-3 mx-auto mb-1 ${s.color}`} />
-            <p className="font-bold text-[11px]">{s.value}</p>
-            <p className="text-muted-foreground text-[7px]">{s.label}</p>
-          </div>
-        ))}
-      </div>
-      <div className="bg-card border border-border rounded-lg p-3 flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full border-4 border-primary border-t-destructive border-r-accent flex-shrink-0" />
-        <div className="space-y-1">
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-primary" /><span className="text-[8px]">Lunas (5)</span></div>
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-accent" /><span className="text-[8px]">Belum Lunas (1)</span></div>
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-destructive" /><span className="text-[8px]">Belum Bayar (2)</span></div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TenantListPreview() {
-  const tenants = [
-    { name: "Budi Santoso", room: "A1 · Standar", status: "lunas", color: "bg-emerald-500" },
-    { name: "Siti Rahayu", room: "A2 · Standar", status: "belum_lunas", color: "bg-amber-500" },
-    { name: "Dewi Lestari", room: "B1 · Deluxe", status: "lunas", color: "bg-emerald-500" },
-    { name: "Rizky Pratama", room: "B2 · Deluxe", status: "belum_bayar", color: "bg-red-500" },
-    { name: "Fajar Ramadhan", room: "C1 · Suite", status: "lunas", color: "bg-emerald-500" },
-  ];
-  return (
-    <div className="bg-background p-3 space-y-2 text-[10px]">
-      <p className="font-bold text-[12px] text-foreground">Penyewa</p>
-      {tenants.map((t) => (
-        <div key={t.name} className="flex items-center gap-2 bg-card border border-border rounded-lg p-2">
-          <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-[10px]">
-            {t.name.split(" ").map(w => w[0]).join("")}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-[10px] truncate">{t.name}</p>
-            <p className="text-muted-foreground text-[8px]">{t.room}</p>
-          </div>
-          <div className={`w-2 h-2 rounded-full ${t.color}`} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function RoomListPreview() {
-  const rooms = [
-    { type: "Standar", price: "1.2jt", rooms: [{ no: "A1", tenant: "Budi S.", filled: true }, { no: "A2", tenant: "Siti R.", filled: true }, { no: "A3", tenant: null, filled: false }] },
-    { type: "Deluxe", price: "1.8jt", rooms: [{ no: "B1", tenant: "Dewi L.", filled: true }, { no: "B2", tenant: "Rizky P.", filled: true }] },
-    { type: "Suite", price: "2.5jt", rooms: [{ no: "C1", tenant: "Fajar R.", filled: true }, { no: "C2", tenant: null, filled: false }] },
-  ];
-  return (
-    <div className="bg-background p-3 space-y-2 text-[10px]">
-      <p className="font-bold text-[12px] text-foreground">Kamar</p>
-      {rooms.map((rt) => (
-        <div key={rt.type} className="bg-card border border-border rounded-lg p-2 space-y-1.5">
-          <div className="flex justify-between">
-            <p className="font-semibold text-[10px]">{rt.type}</p>
-            <p className="text-muted-foreground text-[8px]">Rp {rt.price}/bln</p>
-          </div>
-          {rt.rooms.map((r) => (
-            <div key={r.no} className="flex items-center gap-2 pl-1">
-              <div className={`w-1.5 h-1.5 rounded-full ${r.filled ? "bg-primary" : "bg-muted-foreground/30"}`} />
-              <span className="font-medium">{r.no}</span>
-              <span className="text-muted-foreground text-[8px]">{r.tenant || "Kosong"}</span>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function FinancePreview() {
-  return (
-    <div className="bg-background p-3 space-y-2 text-[10px]">
-      <p className="font-bold text-[12px] text-foreground">Keuangan</p>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="bg-primary/10 rounded-lg p-2">
-          <p className="text-[8px] text-muted-foreground">Pemasukan</p>
-          <p className="font-bold text-primary text-[11px]">Rp 12.0jt</p>
-        </div>
-        <div className="bg-destructive/10 rounded-lg p-2">
-          <p className="text-[8px] text-muted-foreground">Pengeluaran</p>
-          <p className="font-bold text-destructive text-[11px]">Rp 2.85jt</p>
-        </div>
-      </div>
-      {[
-        { title: "Bayar Listrik", cat: "Listrik", amount: "-850rb" },
-        { title: "Bayar Air PDAM", cat: "Air", amount: "-350rb" },
-        { title: "Internet Bulanan", cat: "Internet", amount: "-500rb" },
-        { title: "Gaji Kebersihan", cat: "Kebersihan", amount: "-600rb" },
-      ].map((e) => (
-        <div key={e.title} className="flex items-center justify-between bg-card border border-border rounded-lg p-2">
-          <div>
-            <p className="font-semibold text-[10px]">{e.title}</p>
-            <p className="text-muted-foreground text-[8px]">{e.cat}</p>
-          </div>
-          <p className="text-destructive font-semibold text-[10px]">{e.amount}</p>
-        </div>
-      ))}
     </div>
   );
 }
@@ -222,10 +91,11 @@ const TESTIMONIALS = [
 ];
 
 const SCREENSHOTS = [
-  { label: "Beranda — Dashboard Kos", component: <DashboardPreview /> },
-  { label: "Penyewa — Data Penghuni", component: <TenantListPreview /> },
-  { label: "Kamar — Status Real-time", component: <RoomListPreview /> },
-  { label: "Keuangan — Laporan Bulanan", component: <FinancePreview /> },
+  { label: "Beranda — Dashboard Kos", src: "/screenshots/beranda.png" },
+  { label: "Kamar — Tipe & Unit Kamar", src: "/screenshots/kamar.png" },
+  { label: "Penyewa — Data Penghuni", src: "/screenshots/penyewa.png" },
+  { label: "Keuangan — Laporan Bulanan", src: "/screenshots/keuangan.png" },
+  { label: "Pembayaran — Tagihan Penyewa", src: "/screenshots/pembayaran.png" },
 ];
 
 const SLOT_TOTAL = 100;
@@ -336,7 +206,7 @@ export default function LandingPage() {
             </div>
             <FadeIn delay={0.3} className="mt-8 md:mt-0">
               <PhoneMockup className="w-56 md:w-64 lg:w-72">
-                <DashboardPreview />
+                <img src="/screenshots/beranda.png" alt="Dashboard KosPintar" className="w-full object-cover object-top" />
               </PhoneMockup>
             </FadeIn>
           </div>
@@ -380,18 +250,18 @@ export default function LandingPage() {
               {SCREENSHOTS.map((s) => (
                 <div key={s.label} className="snap-center flex-shrink-0 w-48 space-y-2">
                   <PhoneMockup className="w-full">
-                    {s.component}
+                    <img src={s.src} alt={s.label} className="w-full object-cover object-top" />
                   </PhoneMockup>
                   <p className="text-center text-xs font-semibold text-muted-foreground">{s.label}</p>
                 </div>
               ))}
             </div>
-            {/* Desktop: grid side by side */}
-            <div className="hidden md:grid md:grid-cols-4 gap-6 mt-10 px-8">
+            {/* Desktop: grid */}
+            <div className="hidden md:grid md:grid-cols-5 gap-5 mt-10 px-8">
               {SCREENSHOTS.map((s) => (
                 <div key={s.label} className="space-y-3">
                   <PhoneMockup className="w-full">
-                    {s.component}
+                    <img src={s.src} alt={s.label} className="w-full object-cover object-top" />
                   </PhoneMockup>
                   <p className="text-center text-sm font-semibold text-muted-foreground">{s.label}</p>
                 </div>
@@ -514,16 +384,16 @@ export default function LandingPage() {
             </h2>
           </FadeIn>
 
-          <div className="md:grid md:grid-cols-2 md:gap-6 md:max-w-3xl md:mx-auto md:mt-10">
+          <div className="md:max-w-3xl md:mx-auto md:mt-10 flex flex-col md:flex-row md:items-stretch gap-4 md:gap-6 mt-6">
             {/* Mandiri */}
-            <FadeIn delay={0.1}>
-              <Card className="mt-6 md:mt-0 border-primary/30 shadow-lg overflow-hidden">
+            <FadeIn delay={0.1} className="flex-1 flex">
+              <Card className="border-primary/30 shadow-lg overflow-hidden flex flex-col w-full">
                 <div className="gradient-primary p-2.5 text-center">
                   <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground border-0 font-bold text-xs">
                     🔥 Early Bird
                   </Badge>
                 </div>
-                <CardContent className="p-5 space-y-3">
+                <CardContent className="p-5 flex flex-col flex-1">
                   <div className="text-center">
                     <p className="text-lg font-bold text-foreground">Mandiri</p>
                     <p className="text-sm text-muted-foreground line-through">Rp 499.000/tahun</p>
@@ -533,7 +403,7 @@ export default function LandingPage() {
                     <p className="text-xs text-primary font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
                     <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 mt-3">
                     {["Maks 40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
@@ -541,7 +411,7 @@ export default function LandingPage() {
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full font-bold" size="lg" onClick={handleRegister}>
+                  <Button className="w-full font-bold mt-auto pt-3" size="lg" onClick={handleRegister}>
                     Mulai Sekarang — Rp 249.000 →
                   </Button>
                 </CardContent>
@@ -549,31 +419,31 @@ export default function LandingPage() {
             </FadeIn>
 
             {/* Juragan */}
-            <FadeIn delay={0.2}>
-              <Card className="mt-4 md:mt-0 border-accent/30 shadow-lg overflow-hidden">
-                <div className="bg-accent p-2.5 text-center">
-                  <Badge variant="secondary" className="bg-accent-foreground/20 text-accent-foreground border-0 font-bold text-xs">
-                    Untuk kos besar
+            <FadeIn delay={0.2} className="flex-1 flex">
+              <Card className="border-[#0B7A6E]/30 shadow-lg overflow-hidden flex flex-col w-full">
+                <div className="p-2.5 text-center" style={{ background: "#0B7A6E" }}>
+                  <Badge variant="secondary" className="bg-white/20 text-white border-0 font-bold text-xs">
+                    🔥 Early Bird — Kos Besar
                   </Badge>
                 </div>
-                <CardContent className="p-5 space-y-3">
+                <CardContent className="p-5 flex flex-col flex-1">
                   <div className="text-center">
                     <p className="text-lg font-bold text-foreground">Juragan</p>
                     <p className="text-sm text-muted-foreground line-through">Rp 999.000/tahun</p>
                     <p className="text-3xl font-extrabold text-foreground">
                       Rp 499.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
                     </p>
-                    <p className="text-xs text-accent font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
+                    <p className="text-xs font-semibold mt-1" style={{ color: "#0B7A6E" }}>Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 mt-3">
                     {["Maks 200 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-accent flex-shrink-0" aria-hidden="true" />
+                        <Check className="w-4 h-4 flex-shrink-0" style={{ color: "#0B7A6E" }} aria-hidden="true" />
                         <span className="text-sm text-foreground">{f}</span>
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full font-bold bg-accent hover:bg-accent/90 text-accent-foreground" size="lg" onClick={handleRegister}>
+                  <Button className="w-full font-bold mt-auto pt-3 text-white hover:opacity-90" size="lg" style={{ background: "#0B7A6E" }} onClick={handleRegister}>
                     Mulai Sekarang — Rp 499.000 →
                   </Button>
                 </CardContent>
