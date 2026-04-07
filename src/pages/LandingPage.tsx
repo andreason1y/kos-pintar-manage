@@ -493,7 +493,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── PRICING ─── */}
-        <section className="px-4 md:px-8 py-10 md:py-16" aria-label="Harga aplikasi manajemen kos">
+        <section id="harga" className="px-4 md:px-8 py-10 md:py-16" aria-label="Harga aplikasi manajemen kos">
           <FadeIn>
             <h2 className="text-lg md:text-2xl font-extrabold text-foreground text-center">
               Harga Aplikasi Manajemen Kos yang Terjangkau
