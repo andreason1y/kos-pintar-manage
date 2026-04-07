@@ -651,20 +651,20 @@ export default function LandingPage() {
 
             <div className="mt-6 md:mt-0">
               <div className="flex flex-wrap gap-4 text-xs md:flex-col md:gap-2">
-                {["Tentang", "Fitur", "Harga", "FAQ", "Kontak"].map((link) => (
-                  <button key={link} className="text-muted-foreground hover:text-foreground transition-colors">
-                    {link}
-                  </button>
-                ))}
+                <a href="#fitur" className="text-muted-foreground hover:text-foreground transition-colors">Tentang</a>
+                <a href="#fitur" className="text-muted-foreground hover:text-foreground transition-colors">Fitur</a>
+                <a href="#harga" className="text-muted-foreground hover:text-foreground transition-colors">Harga</a>
+                <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
+                <a href="mailto:halo@kospintar.id" className="text-muted-foreground hover:text-foreground transition-colors">Kontak</a>
               </div>
             </div>
 
             <div className="mt-6 md:mt-0 space-y-4">
               <div className="flex gap-3">
-                <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="Instagram KosPintar">
+                <a href="https://instagram.com/kospintar_id" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="Instagram KosPintar">
                   <Instagram className="w-4 h-4 text-muted-foreground" />
                 </a>
-                <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="WhatsApp KosPintar">
+                <a href="https://wa.me/62818477620" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="WhatsApp KosPintar">
                   <MessageCircle className="w-4 h-4 text-muted-foreground" />
                 </a>
               </div>
