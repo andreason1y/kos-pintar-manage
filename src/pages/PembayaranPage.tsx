@@ -90,7 +90,7 @@ export default function PembayaranPage() {
     return { pending: all.filter(p => p.status !== "lunas"), lunas: all.filter(p => p.status === "lunas") };
   }, [demo.isDemo, txData, tenantData, roomData]);
 
-  const refetch = () => { invalidate.transactions(); invalidate.tenants(); };
+  const refetch = () => { invalidate.all(); };
 
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
