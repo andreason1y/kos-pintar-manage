@@ -1,0 +1,1 @@
+ALTER TABLE public.subscriptions ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'mandiri';
