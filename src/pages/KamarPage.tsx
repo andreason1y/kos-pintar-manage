@@ -45,7 +45,7 @@ export default function KamarPage() {
   const navigate = useNavigate();
   const { activeProperty } = useProperty();
   const demo = useDemo();
-  const { limits, triggerUpgrade } = usePlan();
+  const { plan, limits, triggerUpgrade } = usePlan();
   const invalidate = useInvalidate();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
