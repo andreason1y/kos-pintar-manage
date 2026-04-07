@@ -643,8 +643,8 @@ export default function LandingPage() {
           <div className="md:max-w-[1200px] md:mx-auto md:grid md:grid-cols-3 md:gap-8">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <img src={logoIcon} alt="KosPintar" className="w-7 h-7 rounded-md object-contain" />
-                <span className="font-extrabold text-sm text-foreground">KosPintar</span>
+            <img src={logoIcon} alt="KosPintar" className="h-10 w-10 rounded-lg object-contain" />
+                <span className="font-extrabold text-base text-foreground">KosPintar</span>
               </div>
               <p className="text-xs text-muted-foreground">Aplikasi manajemen kos-kosan terbaik di Indonesia. Kelola penyewa, tagihan, dan keuangan kos dalam satu aplikasi.</p>
             </div>
