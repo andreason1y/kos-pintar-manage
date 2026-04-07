@@ -1,0 +1,80 @@
+
+-- Step 1: Delete all existing data for property 0cd559f1-8d0a-49b8-acd5-efbe94d48d52
+DELETE FROM deposits WHERE property_id = '0cd559f1-8d0a-49b8-acd5-efbe94d48d52';
+DELETE FROM reminders WHERE property_id = '0cd559f1-8d0a-49b8-acd5-efbe94d48d52';
+DELETE FROM transactions WHERE property_id = '0cd559f1-8d0a-49b8-acd5-efbe94d48d52';
+DELETE FROM expenses WHERE property_id = '0cd559f1-8d0a-49b8-acd5-efbe94d48d52';
+DELETE FROM tenants WHERE property_id = '0cd559f1-8d0a-49b8-acd5-efbe94d48d52';
+DELETE FROM rooms WHERE room_type_id IN ('a1000001-0000-0000-0000-000000000001','a1000001-0000-0000-0000-000000000002','a1000001-0000-0000-0000-000000000003');
+DELETE FROM room_types WHERE property_id = '0cd559f1-8d0a-49b8-acd5-efbe94d48d52';
+
+-- Step 2: Insert room types
+INSERT INTO room_types (id, property_id, nama, harga_per_bulan, fasilitas) VALUES
+('a1000001-0000-0000-0000-000000000001', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'Standar', 1200000, '{"WiFi","Lemari","Parkir Motor"}'),
+('a1000001-0000-0000-0000-000000000002', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'Deluxe', 1800000, '{"AC","WiFi","Kamar Mandi Dalam","Lemari","TV"}'),
+('a1000001-0000-0000-0000-000000000003', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'Suite', 2500000, '{"AC","WiFi","Kamar Mandi Dalam","Lemari","TV","Air Panas","Parkir Motor"}');
+
+-- Step 3: Insert rooms (12 total: 8 terisi, 4 kosong)
+INSERT INTO rooms (id, room_type_id, nomor, lantai, status) VALUES
+('b1000001-0000-0000-0000-000000000001', 'a1000001-0000-0000-0000-000000000001', 'A1', 1, 'terisi'),
+('b1000001-0000-0000-0000-000000000002', 'a1000001-0000-0000-0000-000000000001', 'A2', 1, 'terisi'),
+('b1000001-0000-0000-0000-000000000003', 'a1000001-0000-0000-0000-000000000001', 'A3', 1, 'kosong'),
+('b1000001-0000-0000-0000-000000000004', 'a1000001-0000-0000-0000-000000000001', 'A4', 1, 'terisi'),
+('b1000001-0000-0000-0000-000000000005', 'a1000001-0000-0000-0000-000000000001', 'A5', 1, 'kosong'),
+('b1000001-0000-0000-0000-000000000006', 'a1000001-0000-0000-0000-000000000002', 'B1', 2, 'terisi'),
+('b1000001-0000-0000-0000-000000000007', 'a1000001-0000-0000-0000-000000000002', 'B2', 2, 'terisi'),
+('b1000001-0000-0000-0000-000000000008', 'a1000001-0000-0000-0000-000000000002', 'B3', 2, 'kosong'),
+('b1000001-0000-0000-0000-000000000009', 'a1000001-0000-0000-0000-000000000002', 'B4', 2, 'terisi'),
+('b1000001-0000-0000-0000-000000000010', 'a1000001-0000-0000-0000-000000000003', 'C1', 3, 'terisi'),
+('b1000001-0000-0000-0000-000000000011', 'a1000001-0000-0000-0000-000000000003', 'C2', 3, 'terisi'),
+('b1000001-0000-0000-0000-000000000012', 'a1000001-0000-0000-0000-000000000003', 'C3', 3, 'kosong');
+
+-- Step 4: Insert tenants (8 aktif + 1 keluar)
+INSERT INTO tenants (id, property_id, room_id, nama, no_hp, gender, tanggal_masuk, tanggal_keluar, status) VALUES
+('c1000001-0000-0000-0000-000000000001', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'b1000001-0000-0000-0000-000000000001', 'Budi Santoso', '081234567890', 'L', '2025-10-01', '2026-10-01', 'aktif'),
+('c1000001-0000-0000-0000-000000000002', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'b1000001-0000-0000-0000-000000000002', 'Siti Rahayu', '082198765432', 'P', '2025-11-15', '2026-05-15', 'aktif'),
+('c1000001-0000-0000-0000-000000000003', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'b1000001-0000-0000-0000-000000000004', 'Ahmad Fauzi', '085312345678', 'L', '2026-01-01', '2026-07-01', 'aktif'),
+('c1000001-0000-0000-0000-000000000004', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'b1000001-0000-0000-0000-000000000006', 'Dewi Lestari', '087812345678', 'P', '2025-09-01', '2026-09-01', 'aktif'),
+('c1000001-0000-0000-0000-000000000005', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'b1000001-0000-0000-0000-000000000007', 'Rizky Pratama', '081387654321', 'L', '2026-02-01', '2026-08-01', 'aktif'),
+('c1000001-0000-0000-0000-000000000006', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'b1000001-0000-0000-0000-000000000009', 'Nurul Hidayah', '089912345678', 'P', '2025-12-01', '2026-06-01', 'aktif'),
+('c1000001-0000-0000-0000-000000000007', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'b1000001-0000-0000-0000-000000000010', 'Fajar Ramadhan', '081567890123', 'L', '2026-01-15', '2027-01-15', 'aktif'),
+('c1000001-0000-0000-0000-000000000008', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'b1000001-0000-0000-0000-000000000011', 'Anisa Putri', '082345678901', 'P', '2025-08-01', '2026-08-01', 'aktif'),
+('c1000001-0000-0000-0000-000000000009', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', NULL, 'Doni Saputra', '081298765432', 'L', '2025-03-01', '2025-09-01', 'keluar');
+
+-- Step 5: Insert transactions - April 2026 (current month)
+INSERT INTO transactions (id, tenant_id, property_id, periode_bulan, periode_tahun, total_tagihan, jumlah_dibayar, status, metode_bayar, tanggal_bayar, catatan, nota_number, created_at) VALUES
+('d1000001-0000-0000-0000-000000000001', 'c1000001-0000-0000-0000-000000000001', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 4, 2026, 1200000, 1200000, 'lunas', 'transfer', '2026-04-05', NULL, 'NOTA-202604-0001', '2026-04-01'),
+('d1000001-0000-0000-0000-000000000002', 'c1000001-0000-0000-0000-000000000002', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 4, 2026, 1200000, 600000, 'belum_lunas', 'tunai', '2026-04-10', 'Bayar setengah dulu', NULL, '2026-04-01'),
+('d1000001-0000-0000-0000-000000000003', 'c1000001-0000-0000-0000-000000000003', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 4, 2026, 1200000, 1200000, 'lunas', 'qris', '2026-04-03', NULL, 'NOTA-202604-0002', '2026-04-01'),
+('d1000001-0000-0000-0000-000000000004', 'c1000001-0000-0000-0000-000000000004', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 4, 2026, 1800000, 1800000, 'lunas', 'transfer', '2026-04-02', NULL, 'NOTA-202604-0003', '2026-04-01'),
+('d1000001-0000-0000-0000-000000000005', 'c1000001-0000-0000-0000-000000000005', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 4, 2026, 1800000, 0, 'belum_bayar', NULL, NULL, NULL, NULL, '2026-04-01'),
+('d1000001-0000-0000-0000-000000000006', 'c1000001-0000-0000-0000-000000000006', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 4, 2026, 1800000, 1800000, 'lunas', 'tunai', '2026-04-01', NULL, 'NOTA-202604-0004', '2026-04-01'),
+('d1000001-0000-0000-0000-000000000007', 'c1000001-0000-0000-0000-000000000007', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 4, 2026, 2500000, 2500000, 'lunas', 'transfer', '2026-04-04', NULL, 'NOTA-202604-0005', '2026-04-01'),
+('d1000001-0000-0000-0000-000000000008', 'c1000001-0000-0000-0000-000000000008', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 4, 2026, 2500000, 0, 'belum_bayar', NULL, NULL, NULL, NULL, '2026-04-01');
+
+-- Step 6: Insert transactions - March 2026 (last month)
+INSERT INTO transactions (id, tenant_id, property_id, periode_bulan, periode_tahun, total_tagihan, jumlah_dibayar, status, metode_bayar, tanggal_bayar, catatan, nota_number, created_at) VALUES
+('d1000001-0000-0000-0000-000000000009', 'c1000001-0000-0000-0000-000000000001', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 3, 2026, 1200000, 1200000, 'lunas', 'transfer', '2026-03-05', NULL, 'NOTA-001', '2026-03-01'),
+('d1000001-0000-0000-0000-000000000010', 'c1000001-0000-0000-0000-000000000004', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 3, 2026, 1800000, 1800000, 'lunas', 'transfer', '2026-03-03', NULL, 'NOTA-002', '2026-03-01'),
+('d1000001-0000-0000-0000-000000000011', 'c1000001-0000-0000-0000-000000000007', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 3, 2026, 2500000, 2500000, 'lunas', 'qris', '2026-03-02', NULL, 'NOTA-003', '2026-03-01');
+
+-- Step 7: Insert expenses - April 2026
+INSERT INTO expenses (id, property_id, judul, kategori, jumlah, tanggal, is_recurring) VALUES
+('e1000001-0000-0000-0000-000000000001', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'Bayar Listrik', 'Listrik', 850000, '2026-04-08', true),
+('e1000001-0000-0000-0000-000000000002', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'Bayar Air PDAM', 'Air/PDAM', 350000, '2026-04-10', true),
+('e1000001-0000-0000-0000-000000000003', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'Internet Bulanan', 'Internet/WiFi', 500000, '2026-04-05', true),
+('e1000001-0000-0000-0000-000000000004', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'Gaji Kebersihan', 'Kebersihan', 600000, '2026-04-01', true),
+('e1000001-0000-0000-0000-000000000005', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'Perbaikan Pipa Kamar B3', 'Perbaikan/Renovasi', 250000, '2026-04-12', false),
+('e1000001-0000-0000-0000-000000000006', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 'Keamanan Bulanan', 'Keamanan', 300000, '2026-04-01', true);
+
+-- Step 8: Insert deposits (8 aktif tenants + 1 dikembalikan for Doni)
+INSERT INTO deposits (id, tenant_id, property_id, jumlah, jumlah_dikembalikan, status, tanggal_kembali, catatan_potongan) VALUES
+('f1000001-0000-0000-0000-000000000001', 'c1000001-0000-0000-0000-000000000001', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 1200000, 0, 'ditahan', NULL, NULL),
+('f1000001-0000-0000-0000-000000000002', 'c1000001-0000-0000-0000-000000000002', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 1200000, 0, 'ditahan', NULL, NULL),
+('f1000001-0000-0000-0000-000000000003', 'c1000001-0000-0000-0000-000000000003', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 1200000, 0, 'ditahan', NULL, NULL),
+('f1000001-0000-0000-0000-000000000004', 'c1000001-0000-0000-0000-000000000004', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 1800000, 0, 'ditahan', NULL, NULL),
+('f1000001-0000-0000-0000-000000000005', 'c1000001-0000-0000-0000-000000000005', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 1800000, 0, 'ditahan', NULL, NULL),
+('f1000001-0000-0000-0000-000000000006', 'c1000001-0000-0000-0000-000000000006', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 1800000, 0, 'ditahan', NULL, NULL),
+('f1000001-0000-0000-0000-000000000007', 'c1000001-0000-0000-0000-000000000007', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 2500000, 0, 'ditahan', NULL, NULL),
+('f1000001-0000-0000-0000-000000000008', 'c1000001-0000-0000-0000-000000000008', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 2500000, 0, 'ditahan', NULL, NULL),
+('f1000001-0000-0000-0000-000000000009', 'c1000001-0000-0000-0000-000000000009', '0cd559f1-8d0a-49b8-acd5-efbe94d48d52', 1200000, 1200000, 'dikembalikan', '2025-09-01', NULL);
