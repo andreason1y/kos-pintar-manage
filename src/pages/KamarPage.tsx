@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
+import { usePlan } from "@/lib/plan-context";
 import { formatRupiah } from "@/lib/helpers";
 import { getAvatarColor, getInitials } from "@/lib/avatar-colors";
 import { useRoomTypesAndRooms, useTenants, useInvalidate } from "@/hooks/use-queries";
