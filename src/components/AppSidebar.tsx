@@ -39,11 +39,10 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shrink-0">
-            <Home className="w-4 h-4 text-primary-foreground" />
-          </div>
+          <img src={logoIcon} alt="KosPintar" className="w-8 h-8 rounded-lg object-contain shrink-0" />
           <span className="font-extrabold text-lg text-foreground group-data-[collapsible=icon]:hidden">
             KosPintar
+          </span>
           </span>
         </div>
       </SidebarHeader>

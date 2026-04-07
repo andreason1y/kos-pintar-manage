@@ -60,7 +60,7 @@ export default function AuthPage() {
       >
         <div className="text-center mb-8">
           <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
-            <img src="/favicon.png" alt="KosPintar" width={80} height={80} className="w-full h-full object-contain" />
+            <img src={logoIcon} alt="KosPintar" width={80} height={80} className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">KosPintar</h1>
           <p className="text-sm text-muted-foreground mt-1">Kelola kos-kosan lebih mudah</p>
