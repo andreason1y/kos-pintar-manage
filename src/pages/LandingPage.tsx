@@ -207,7 +207,7 @@ export default function LandingPage() {
             </div>
             <FadeIn delay={0.3} className="mt-8 md:mt-0">
               <PhoneMockup className="w-56 md:w-64 lg:w-72">
-                <DashboardPreview />
+                <img src="/screenshots/beranda.png" alt="Dashboard KosPintar" className="w-full object-cover object-top" />
               </PhoneMockup>
             </FadeIn>
           </div>
