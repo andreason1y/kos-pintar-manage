@@ -101,7 +101,10 @@ const App = () => (
         <DemoProvider>
           <AuthProvider>
             <PropertyProvider>
-              <AppRoutes />
+              <PlanProvider>
+                <AppRoutes />
+                <UpgradeModal />
+              </PlanProvider>
             </PropertyProvider>
           </AuthProvider>
         </DemoProvider>
