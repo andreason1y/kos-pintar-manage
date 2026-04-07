@@ -24,6 +24,7 @@ export default function ProfilPage() {
   const { user, signOut } = useAuth();
   const { properties, activeProperty, setActiveProperty, refetch: refetchProperties } = useProperty();
   const demo = useDemo();
+  const { planLabel } = usePlan();
   const invalidate = useInvalidate();
 
   const { data: profileData } = useProfile(user?.id);
