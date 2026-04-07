@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { usePlan } from "@/lib/plan-context";
-import { useProfile, useInvalidate } from "@/hooks/use-queries";
+import { useProfile, useRoomTypesAndRooms, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import BottomSheet from "@/components/BottomSheet";
@@ -16,18 +16,27 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Building2, LogOut, User, Info, Crown, Sparkles, Pencil, Loader2, MapPin } from "lucide-react";
+import { Building2, LogOut, User, Info, Crown, Sparkles, Pencil, Loader2, MapPin, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export default function ProfilPage() {
   const { user, signOut } = useAuth();
-  const { properties, activeProperty, setActiveProperty, refetch: refetchProperties } = useProperty();
+  const { properties, activeProperty, refetch: refetchProperties } = useProperty();
   const demo = useDemo();
-  const { planLabel } = usePlan();
+  const { plan, planLabel, limits } = usePlan();
   const invalidate = useInvalidate();
+  const navigate = useNavigate();
 
   const { data: profileData } = useProfile(user?.id);
+  const { data: roomData } = useRoomTypesAndRooms();
+
+  const roomCount = useMemo(() => {
+    if (demo.isDemo) return demo.rooms.length;
+    if (!roomData) return 0;
+    return roomData.rooms?.length || 0;
+  }, [demo.isDemo, roomData]);
 
   const [showEdit, setShowEdit] = useState(false);
   const [showEditProperty, setShowEditProperty] = useState(false);
@@ -72,8 +81,7 @@ export default function ProfilPage() {
     setSaving(false);
   };
 
-  const displayProperties = demo.isDemo ? [demo.property] : properties;
-  const displayActive = demo.isDemo ? demo.property : activeProperty;
+  const displayProperty = demo.isDemo ? demo.property : activeProperty;
   const displayName = demo.isDemo ? "Demo User" : (profileData?.nama || user?.user_metadata?.nama || user?.email?.split("@")[0] || "Pengguna");
   const displayEmail = demo.isDemo ? "demo@kospintar.id" : (user?.email || "-");
   const displayHp = demo.isDemo ? "-" : (profileData?.no_hp || user?.user_metadata?.no_hp || "-");
@@ -82,6 +90,7 @@ export default function ProfilPage() {
     <AppShell>
       <PageHeader title="Profil" />
       <div className="px-4 space-y-4">
+        {/* User profile card */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
@@ -107,6 +116,7 @@ export default function ProfilPage() {
           )}
         </motion.div>
 
+        {/* Plan + room usage card */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03, duration: 0.15 }}
           className="bg-card rounded-xl border border-border p-4 shadow-sm">
           <div className="flex items-center gap-3">
@@ -118,37 +128,50 @@ export default function ProfilPage() {
                 <p className="font-semibold text-foreground">Paket {planLabel}</p>
                 <span className="px-2 py-0.5 rounded-full bg-[hsl(142,71%,45%)]/15 text-[hsl(142,71%,45%)] text-[10px] font-bold">AKTIF</span>
               </div>
-              <p className="text-xs text-muted-foreground">Aktif hingga 31 Desember 2026</p>
+              <p className="text-xs text-muted-foreground">Kamar: {roomCount}/{limits.maxRooms}</p>
             </div>
             <Sparkles size={16} className="text-accent" />
           </div>
+          {/* Room usage progress bar */}
+          <div className="mt-3 h-2 bg-border rounded-full overflow-hidden">
+            <div
+              className="h-full gradient-primary rounded-full transition-all duration-500"
+              style={{ width: `${Math.min((roomCount / limits.maxRooms) * 100, 100)}%` }}
+            />
+          </div>
+          {plan === "mandiri" && !demo.isDemo && (
+            <button
+              onClick={() => navigate("/#harga")}
+              className="mt-3 text-xs font-semibold text-accent flex items-center gap-1 hover:underline"
+            >
+              Upgrade ke Juragan <ArrowRight size={12} />
+            </button>
+          )}
         </motion.div>
 
-        <div>
-          <h2 className="text-sm font-semibold text-foreground mb-3">Properti</h2>
-          <div className="space-y-2">
-            {displayProperties.map(p => (
-              <div key={p.id} className="relative">
-                <button onClick={() => !demo.isDemo && setActiveProperty(p as any)}
-                  className={`w-full text-left p-3 rounded-xl border transition-colors shadow-sm ${displayActive?.id === p.id ? "border-primary bg-secondary" : "border-border bg-card"}`}>
-                  <div className="flex items-center gap-2">
-                    <Building2 size={18} className={displayActive?.id === p.id ? "text-primary" : "text-muted-foreground"} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">{p.nama_kos}</p>
-                      {p.alamat && <p className="text-xs text-muted-foreground">{p.alamat}</p>}
-                    </div>
-                    {!demo.isDemo && (
-                      <div role="button" onClick={(e) => { e.stopPropagation(); setEditPropertyId(p.id); setEditKosName(p.nama_kos); setEditKosAlamat(p.alamat || ""); setShowEditProperty(true); }}
-                        className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted">
-                        <Pencil size={14} className="text-muted-foreground" />
-                      </div>
-                    )}
+        {/* Single property */}
+        {displayProperty && (
+          <div>
+            <h2 className="text-sm font-semibold text-foreground mb-3">Properti</h2>
+            <div className="relative">
+              <div className="w-full text-left p-3 rounded-xl border border-primary bg-secondary shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Building2 size={18} className="text-primary" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{displayProperty.nama_kos}</p>
+                    {displayProperty.alamat && <p className="text-xs text-muted-foreground">{displayProperty.alamat}</p>}
                   </div>
-                </button>
+                  {!demo.isDemo && (
+                    <div role="button" onClick={() => { setEditPropertyId(displayProperty.id); setEditKosName(displayProperty.nama_kos); setEditKosAlamat(displayProperty.alamat || ""); setShowEditProperty(true); }}
+                      className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted">
+                      <Pencil size={14} className="text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
