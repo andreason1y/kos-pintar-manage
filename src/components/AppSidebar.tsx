@@ -2,6 +2,7 @@ import { DoorOpen, Users, Wallet, UserCircle, Home } from "lucide-react";
 import logoIcon from "@/assets/logo-icon.png";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth-context";
+import { useProfile } from "@/hooks/use-queries";
 import { useDemo } from "@/lib/demo-context";
 import {
   Sidebar,
