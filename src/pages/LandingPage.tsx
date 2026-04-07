@@ -234,8 +234,11 @@ export default function LandingPage() {
   const [slotsLoaded, setSlotsLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch real user count + settings for slot counter
+  // Init Meta Pixel + fetch slot data
   useEffect(() => {
+    initMetaPixel();
+    trackEvent("ViewContent");
+
     Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("settings").select("value").eq("key", "early_bird_slots_taken").single(),
