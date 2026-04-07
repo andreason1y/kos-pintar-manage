@@ -167,7 +167,7 @@ export default function KeuanganPage() {
     };
   }, [demo.isDemo, txData, expData, expLastData, depositData, tenantData, roomData, bulan, tahun]);
 
-  const refetch = () => { invalidate.expenses(); invalidate.transactions(); };
+  const refetch = () => { invalidate.all(); };
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
