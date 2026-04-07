@@ -16,10 +16,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import SwipeableRow from "@/components/SwipeableRow";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
-import { Plus, TrendingUp, TrendingDown, Minus, AlertTriangle, Shield } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Minus, AlertTriangle, Shield, Download, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import logoIcon from "@/assets/logo-icon.png";
 
 const EXPENSE_CATEGORIES = ["Listrik", "Air/PDAM", "Kebersihan", "Perbaikan/Renovasi", "Keamanan", "Internet/WiFi", "Pajak", "Gaji Penjaga", "Pengembalian Deposit", "Lainnya"];
 
@@ -30,6 +31,7 @@ export default function KeuanganPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [depositOpen, setDepositOpen] = useState(false);
 
   const now = new Date();
   const [bulan, setBulan] = useState(now.getMonth() + 1);
@@ -56,6 +58,30 @@ export default function KeuanganPage() {
   const { data: roomData } = useRoomTypesAndRooms();
 
   const loading = !demo.isDemo && (txLoading || expLoading || depLoading || expLastLoading);
+
+  const propertyName = demo.isDemo ? demo.property.nama_kos : activeProperty?.nama_kos || "";
+  const propertyAlamat = demo.isDemo ? demo.property.alamat : activeProperty?.alamat || "";
+
+  // Deposit drawdown list
+  const depositList = useMemo(() => {
+    if (demo.isDemo) {
+      return demo.deposits
+        .filter(d => d.status === "ditahan")
+        .map(d => {
+          const tenant = demo.tenants.find(t => t.id === d.tenant_id);
+          const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
+          return { tenantId: d.tenant_id, nama: tenant?.nama || "-", kamar: room?.nomor || "-", jumlah: d.jumlah };
+        });
+    }
+    if (!depositData || !tenantData || !roomData) return [];
+    return (depositData as any[])
+      .filter((d: any) => d.status === "ditahan")
+      .map((d: any) => {
+        const tenant = (tenantData as any[]).find((t: any) => t.id === d.tenant_id);
+        const room = tenant?.room_id ? (roomData.rooms as any[]).find((r: any) => r.id === tenant.room_id) : null;
+        return { tenantId: d.tenant_id, nama: tenant?.nama || "-", kamar: room?.nomor || "-", jumlah: d.jumlah };
+      });
+  }, [demo.isDemo, depositData, tenantData, roomData, demo.deposits, demo.tenants, demo.rooms]);
 
   const computed = useMemo(() => {
     if (demo.isDemo) {
@@ -94,12 +120,14 @@ export default function KeuanganPage() {
         ...exp.map(e => ({ id: e.id, type: "expense", amount: e.jumlah, label: e.judul, date: e.tanggal, kategori: e.kategori, is_recurring: e.is_recurring })),
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+      const totalDep = demo.deposits.filter(d => d.status === "ditahan").reduce((s, d) => s + d.jumlah, 0);
+
       return {
         pemasukan, pengeluaran, pemasukanLalu, pengeluaranLalu: pengeluaran * 0.9,
         barData: bars,
         pieData: Object.entries(pieMap).filter(([, v]) => v > 0).map(([name, value]) => ({ name, value })),
         unpaidList: unpaid, totalUnpaid: unpaid.reduce((s, u) => s + u.sisa, 0),
-        totalDeposit: 1500000,
+        totalDeposit: totalDep,
         items,
       };
     }
@@ -118,30 +146,27 @@ export default function KeuanganPage() {
     const rooms = roomData?.rooms || [];
     const rTypes = roomData?.roomTypes || [];
     const tenantMap: Record<string, any> = {};
-    tenants.forEach((t: any) => { tenantMap[t.id] = t; });
+    (tenants as any[]).forEach((t: any) => { tenantMap[t.id] = t; });
     const roomMap: Record<string, any> = {};
-    rooms.forEach((r: any) => { roomMap[r.id] = r; });
+    (rooms as any[]).forEach((r: any) => { roomMap[r.id] = r; });
     const rtMap: Record<string, string> = {};
-    rTypes.forEach((rt: any) => { rtMap[rt.id] = rt.nama; });
+    (rTypes as any[]).forEach((rt: any) => { rtMap[rt.id] = rt.nama; });
 
     const unpaid = unpaidTx.map((tx: any) => {
       const t = tenantMap[tx.tenant_id];
       return { nama: t?.nama || "-", kamar: t?.room_id ? roomMap[t.room_id]?.nomor || "-" : "-", sisa: tx.total_tagihan - tx.jumlah_dibayar };
     });
 
-    // Bar chart: 6-month trend
     const bars = [];
     for (let i = 5; i >= 0; i--) {
       let mb = bulan - i, mt = tahun;
       while (mb <= 0) { mb += 12; mt--; }
       const txM = txData.filter((t: any) => t.periode_bulan === mb && t.periode_tahun === mt);
       const inc = txM.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
-      // For current month use actual expenses, for others estimate
       const exp = i === 0 ? pengeluaran : (pengeluaranLalu > 0 ? pengeluaranLalu : pengeluaran);
       bars.push({ bulan: getMonthName(mb).slice(0, 3), pemasukan: inc, pengeluaran: exp });
     }
 
-    // Pie chart: income per room type
     const pieMap: Record<string, number> = {};
     txMonth.forEach((tx: any) => {
       const t = tenantMap[tx.tenant_id];
@@ -206,16 +231,88 @@ export default function KeuanganPage() {
     else { toast.success("Pengeluaran dihapus"); refetch(); }
   };
 
+  const handleExportPDF = async () => {
+    if (!computed) return;
+    const { default: html2pdf } = await import("html2pdf.js");
+
+    const { pemasukan, pengeluaran, totalDeposit, items } = computed;
+    const laba = pemasukan - pengeluaran;
+
+    const incomeItems = items.filter((i: any) => i.type === "income");
+    const expenseItems = items.filter((i: any) => i.type === "expense");
+    const expByKategori: Record<string, any[]> = {};
+    expenseItems.forEach((e: any) => {
+      const k = e.kategori || "Lainnya";
+      if (!expByKategori[k]) expByKategori[k] = [];
+      expByKategori[k].push(e);
+    });
+
+    const html = `
+      <div style="font-family:sans-serif;padding:20px;max-width:600px;margin:0 auto;color:#1a1a1a">
+        <div style="text-align:center;margin-bottom:20px">
+          <h2 style="margin:0;font-size:18px">Laporan Keuangan</h2>
+          <p style="margin:4px 0;font-size:14px;font-weight:bold">${propertyName}</p>
+          ${propertyAlamat ? `<p style="margin:2px 0;font-size:12px;color:#666">${propertyAlamat}</p>` : ""}
+          <p style="margin:2px 0;font-size:12px;color:#666">${getMonthName(bulan)} ${tahun}</p>
+        </div>
+        <hr style="border:1px solid #ddd"/>
+        <h3 style="font-size:14px;margin:16px 0 8px">Ringkasan</h3>
+        <table style="width:100%;font-size:13px;border-collapse:collapse">
+          <tr><td style="padding:4px 0">Pemasukan</td><td style="text-align:right;color:green">${formatRupiah(pemasukan)}</td></tr>
+          <tr><td style="padding:4px 0">Pengeluaran</td><td style="text-align:right;color:red">${formatRupiah(pengeluaran)}</td></tr>
+          <tr style="border-top:1px solid #ddd"><td style="padding:6px 0;font-weight:bold">Laba Bersih</td><td style="text-align:right;font-weight:bold;color:${laba >= 0 ? 'green' : 'red'}">${formatRupiah(laba)}</td></tr>
+          ${totalDeposit > 0 ? `<tr><td style="padding:4px 0;color:#666">Deposit Ditahan</td><td style="text-align:right;color:#666">${formatRupiah(totalDeposit)}</td></tr>` : ""}
+        </table>
+        ${incomeItems.length > 0 ? `
+          <h3 style="font-size:14px;margin:16px 0 8px">Pemasukan</h3>
+          <table style="width:100%;font-size:12px;border-collapse:collapse">
+            ${incomeItems.map((i: any) => `<tr><td style="padding:3px 0">${i.label}</td><td style="text-align:right;color:green">+${formatRupiah(i.amount)}</td></tr>`).join("")}
+          </table>
+        ` : ""}
+        ${Object.keys(expByKategori).length > 0 ? `
+          <h3 style="font-size:14px;margin:16px 0 8px">Pengeluaran</h3>
+          ${Object.entries(expByKategori).map(([k, items]) => `
+            <p style="font-size:12px;font-weight:bold;margin:10px 0 4px;color:#555">${k}</p>
+            <table style="width:100%;font-size:12px;border-collapse:collapse">
+              ${items.map((i: any) => `<tr><td style="padding:3px 0">${i.label}</td><td style="text-align:right;color:red">-${formatRupiah(i.amount)}</td></tr>`).join("")}
+            </table>
+          `).join("")}
+        ` : ""}
+        <hr style="border:1px solid #ddd;margin:16px 0"/>
+        <p style="text-align:center;font-size:10px;color:#999">Dibuat oleh KosPintar · ${new Date().toLocaleDateString("id-ID")}</p>
+      </div>
+    `;
+
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    const sanitizedName = propertyName.replace(/[^a-zA-Z0-9]/g, "-");
+    await html2pdf().set({
+      margin: [10, 10, 10, 10],
+      filename: `Laporan-Keuangan-${sanitizedName}-${getMonthName(bulan)}-${tahun}.pdf`,
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    }).from(container).save();
+
+    document.body.removeChild(container);
+    toast.success("PDF berhasil diunduh!");
+  };
+
   if (!computed) return <AppShell><PageHeader title="Keuangan" /><div className="px-4 space-y-3"><SkeletonCard lines={2} /><SkeletonCard /><SkeletonCard /></div></AppShell>;
 
   const { pemasukan, pengeluaran, pemasukanLalu, pengeluaranLalu, barData, pieData, unpaidList, totalUnpaid, totalDeposit, items } = computed;
   const selisih = pemasukan - pengeluaran;
   const pemasukanDiff = pemasukan - pemasukanLalu;
-  const pengeluaranDiff = pengeluaran - pengeluaranLalu;
+  const pengeluaranDiff = pengeluaran - (pengeluaranLalu as number);
 
   return (
     <AppShell>
-      <PageHeader title="Keuangan" subtitle={`${getMonthName(bulan)} ${tahun}`} />
+      <PageHeader title="Keuangan" subtitle={`${getMonthName(bulan)} ${tahun}`} action={
+        <Button size="sm" variant="outline" onClick={handleExportPDF}>
+          <Download size={14} className="mr-1" /> Export PDF
+        </Button>
+      } />
       <div className="px-4 space-y-4">
         <div className="flex gap-2">
           <Select value={String(bulan)} onValueChange={v => setBulan(parseInt(v))}>
@@ -323,14 +420,49 @@ export default function KeuanganPage() {
               </motion.div>
             )}
 
+            {/* Deposit Ditahan — tappable with drawdown list */}
             {totalDeposit > 0 && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <Shield size={16} className="text-primary" />
-                  <p className="text-sm font-semibold text-foreground">Deposit Ditahan</p>
-                </div>
-                <p className="text-lg font-bold text-primary">{formatRupiah(totalDeposit)}</p>
-                <p className="text-xs text-muted-foreground mt-1">Total deposit dari semua penyewa aktif (bukan termasuk pemasukan)</p>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.15 }}>
+                <button
+                  onClick={() => setDepositOpen(!depositOpen)}
+                  className="w-full bg-card rounded-xl border border-border p-4 shadow-sm text-left"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Shield size={16} className="text-primary" />
+                      <p className="text-sm font-semibold text-foreground">Deposit Ditahan</p>
+                    </div>
+                    {depositOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+                  </div>
+                  <p className="text-lg font-bold text-primary mt-1">{formatRupiah(totalDeposit)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Total deposit dari semua penyewa aktif (bukan termasuk pemasukan)</p>
+                </button>
+                <AnimatePresence>
+                  {depositOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="bg-card rounded-b-xl border border-t-0 border-border px-4 pb-4 shadow-sm overflow-hidden"
+                    >
+                      <div className="space-y-2 pt-2">
+                        {depositList.map((d, i) => (
+                          <div key={i} className="flex justify-between items-center text-sm py-1">
+                            <div>
+                              <p className="font-medium text-foreground">{d.nama}</p>
+                              <p className="text-xs text-muted-foreground">Kamar {d.kamar}</p>
+                            </div>
+                            <span className="font-semibold text-primary">{formatRupiah(d.jumlah)}</span>
+                          </div>
+                        ))}
+                        <div className="border-t border-border pt-2 flex justify-between items-center text-sm">
+                          <span className="font-semibold text-foreground">Total</span>
+                          <span className="font-bold text-primary">{formatRupiah(totalDeposit)}</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             )}
 
