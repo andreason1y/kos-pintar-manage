@@ -46,6 +46,15 @@ export default function PenyewaPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<Tenant | null>(null);
 
+  // Open add modal via URL param from dashboard quick action
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("action") === "add") {
+      setShowAdd(true);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
   const [nama, setNama] = useState("");
   const [noHp, setNoHp] = useState("");
   const [gender, setGender] = useState("L");
