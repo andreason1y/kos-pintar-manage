@@ -8,8 +8,17 @@ import {
 import { Crown } from "lucide-react";
 
 export default function UpgradeModal() {
-  const { showUpgradeModal, upgradeMessage, dismissUpgrade } = usePlan();
+  const { showUpgradeModal, upgradeMessage, upgradeCta, upgradeLink, dismissUpgrade } = usePlan();
   const navigate = useNavigate();
+
+  const handleAction = () => {
+    dismissUpgrade();
+    if (upgradeLink) {
+      window.open(upgradeLink, "_blank");
+    } else {
+      navigate("/#harga");
+    }
+  };
 
   return (
     <AlertDialog open={showUpgradeModal} onOpenChange={(open) => { if (!open) dismissUpgrade(); }}>
@@ -20,15 +29,15 @@ export default function UpgradeModal() {
           </div>
           <AlertDialogTitle className="text-center">Batas Paket Tercapai</AlertDialogTitle>
           <AlertDialogDescription className="text-center">
-            {upgradeMessage || "Upgrade ke paket Juragan untuk kelola lebih banyak kamar dan properti."}
+            {upgradeMessage || "Upgrade ke paket Juragan untuk kelola lebih banyak kamar."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
           <AlertDialogAction
-            onClick={() => { dismissUpgrade(); navigate("/#harga"); }}
+            onClick={handleAction}
             className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold"
           >
-            Upgrade Sekarang
+            {upgradeCta}
           </AlertDialogAction>
           <AlertDialogCancel className="w-full">Nanti Saja</AlertDialogCancel>
         </AlertDialogFooter>

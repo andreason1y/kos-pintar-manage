@@ -206,7 +206,7 @@ const COMPETITOR_LABEL = "Aplikasi Lain";
 /* ─── FAQ ─── */
 const FAQS = [
   { q: "Apakah data saya aman?", a: "Ya, data disimpan di server terenkripsi dan hanya bisa diakses oleh Anda." },
-  { q: "Apa beda paket Mandiri dan Juragan?", a: "Paket Mandiri mendukung hingga 40 unit kamar dan 2 properti. Paket Juragan mendukung hingga 200 unit kamar dan 10 properti, plus prioritas support." },
+  { q: "Apa beda paket Mandiri dan Juragan?", a: "Paket Mandiri mendukung hingga 40 kamar. Paket Juragan mendukung hingga 200 kamar, plus prioritas support. Masing-masing 1 properti per akun." },
   { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga sudah termasuk semua fitur untuk kelola kos-kosan Anda." },
   { q: "Bagaimana cara perpanjang langganan?", a: "Kami akan kirim notifikasi sebelum masa langganan habis. Perpanjang langsung dari aplikasi." },
   { q: "Apakah bisa dicoba dulu?", a: "Ya, tersedia mode demo tanpa perlu daftar. Klik \"Coba Demo\" di halaman utama." },
@@ -520,7 +520,7 @@ export default function LandingPage() {
                     <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
                   </div>
                   <div className="space-y-2">
-                    {["Maks 40 unit kamar", "Maks 2 properti", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
+                    {["Maks 40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
                         <span className="text-sm text-foreground">{f}</span>
@@ -552,7 +552,7 @@ export default function LandingPage() {
                     <p className="text-xs text-accent font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
                   </div>
                   <div className="space-y-2">
-                    {["Maks 200 unit kamar", "Maks 10 properti", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
+                    {["Maks 200 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-accent flex-shrink-0" aria-hidden="true" />
                         <span className="text-sm text-foreground">{f}</span>
