@@ -191,7 +191,7 @@ const EMOJIS = ["📋", "💰", "🏠", "📄", "📊", "🔔"];
 
 /* ─── COMPARISON ─── */
 const COMPARISON = [
-  { feature: "Harga", kp: "Rp 249k/tahun (flat)", sk: "Rp 9.000/kamar/bulan" },
+  { feature: "Harga (Mandiri)", kp: "Rp 249k/tahun (flat)", sk: "Rp 9.000/kamar/bulan" },
   { feature: "10 kamar setahun", kp: "Rp 249.000", sk: "Rp 1.080.000" },
   { feature: "20 kamar setahun", kp: "Rp 249.000", sk: "Rp 2.160.000" },
   { feature: "Manajemen penyewa", kp: true, sk: true },
@@ -206,8 +206,8 @@ const COMPETITOR_LABEL = "Aplikasi Lain";
 /* ─── FAQ ─── */
 const FAQS = [
   { q: "Apakah data saya aman?", a: "Ya, data disimpan di server terenkripsi dan hanya bisa diakses oleh Anda." },
-  { q: "Berapa batas jumlah kamar?", a: "Paket standar mendukung hingga 40 unit kamar. Untuk lebih dari 40 unit, tersedia paket yang lebih besar." },
-  { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga Rp 249.000 sudah termasuk semua fitur untuk kelola kos-kosan Anda." },
+  { q: "Apa beda paket Mandiri dan Juragan?", a: "Paket Mandiri mendukung hingga 40 unit kamar dan 2 properti. Paket Juragan mendukung hingga 200 unit kamar dan 10 properti, plus prioritas support." },
+  { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga sudah termasuk semua fitur untuk kelola kos-kosan Anda." },
   { q: "Bagaimana cara perpanjang langganan?", a: "Kami akan kirim notifikasi sebelum masa langganan habis. Perpanjang langsung dari aplikasi." },
   { q: "Apakah bisa dicoba dulu?", a: "Ya, tersedia mode demo tanpa perlu daftar. Klik \"Coba Demo\" di halaman utama." },
 ];
