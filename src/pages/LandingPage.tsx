@@ -594,7 +594,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FAQ ─── */}
-        <section className="px-4 md:px-8 py-10 md:py-16" aria-label="FAQ tentang aplikasi KosPintar">
+        <section id="faq" className="px-4 md:px-8 py-10 md:py-16" aria-label="FAQ tentang aplikasi KosPintar">
           <FadeIn>
             <h2 className="text-lg md:text-2xl font-extrabold text-foreground text-center">
               Pertanyaan Seputar Aplikasi KosPintar
