@@ -10,8 +10,7 @@ import { useDemo } from "@/lib/demo-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ClipboardList, Wallet, Home, FileText, BarChart3, Bell,
-  Check, X, Instagram, MessageCircle, ArrowRight,
-  Users, DoorOpen, TrendingUp, CreditCard, Star
+  Check, X, Instagram, MessageCircle, ArrowRight, Star
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import logoIcon from "@/assets/logo-icon.png";
