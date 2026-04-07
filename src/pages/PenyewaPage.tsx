@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
