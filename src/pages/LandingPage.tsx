@@ -520,7 +520,7 @@ export default function LandingPage() {
                     <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
                   </div>
                   <div className="space-y-2">
-                    {["Maks 40 unit kamar", "Maks 2 properti", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
+                    {["Maks 40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
                         <span className="text-sm text-foreground">{f}</span>
