@@ -424,6 +424,14 @@ export default function KeuanganPage() {
     toast.success("PDF berhasil diunduh!");
   };
 
+  // Auto-trigger export PDF from dashboard quick action
+  useEffect(() => {
+    if (pendingActionRef.current === "export-pdf" && computed) {
+      pendingActionRef.current = null;
+      handleExportPDF();
+    }
+  }, [computed]);
+
   if (!computed) return <AppShell><PageHeader title="Keuangan" /><div className="px-4 space-y-3"><SkeletonCard lines={2} /><SkeletonCard /><SkeletonCard /></div></AppShell>;
 
   const { pemasukan, pengeluaran, pemasukanLalu, pengeluaranLalu, barData, pieData, unpaidList, totalUnpaid, totalDeposit, items } = computed;
