@@ -251,18 +251,18 @@ export default function LandingPage() {
               {SCREENSHOTS.map((s) => (
                 <div key={s.label} className="snap-center flex-shrink-0 w-48 space-y-2">
                   <PhoneMockup className="w-full">
-                    {s.component}
+                    <img src={s.src} alt={s.label} className="w-full object-cover object-top" />
                   </PhoneMockup>
                   <p className="text-center text-xs font-semibold text-muted-foreground">{s.label}</p>
                 </div>
               ))}
             </div>
-            {/* Desktop: grid side by side */}
-            <div className="hidden md:grid md:grid-cols-4 gap-6 mt-10 px-8">
+            {/* Desktop: grid */}
+            <div className="hidden md:grid md:grid-cols-5 gap-5 mt-10 px-8">
               {SCREENSHOTS.map((s) => (
                 <div key={s.label} className="space-y-3">
                   <PhoneMockup className="w-full">
-                    {s.component}
+                    <img src={s.src} alt={s.label} className="w-full object-cover object-top" />
                   </PhoneMockup>
                   <p className="text-center text-sm font-semibold text-muted-foreground">{s.label}</p>
                 </div>
