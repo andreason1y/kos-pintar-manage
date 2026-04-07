@@ -32,6 +32,20 @@ export default function KeuanganPage() {
   const [showEdit, setShowEdit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [depositOpen, setDepositOpen] = useState(false);
+  const pendingActionRef = useRef<string | null>(null);
+
+  // Handle URL action params from dashboard quick actions
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get("action");
+    if (action) {
+      pendingActionRef.current = action;
+      window.history.replaceState({}, "", window.location.pathname);
+      if (action === "add-expense") {
+        setShowAdd(true);
+      }
+    }
+  }, []);
 
   const now = new Date();
   const [bulan, setBulan] = useState(now.getMonth() + 1);
