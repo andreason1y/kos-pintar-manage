@@ -115,7 +115,7 @@ export default function ProfilPage() {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <p className="font-semibold text-foreground">Early Bird</p>
+                <p className="font-semibold text-foreground">Paket {planLabel}</p>
                 <span className="px-2 py-0.5 rounded-full bg-[hsl(142,71%,45%)]/15 text-[hsl(142,71%,45%)] text-[10px] font-bold">AKTIF</span>
               </div>
               <p className="text-xs text-muted-foreground">Aktif hingga 31 Desember 2026</p>
