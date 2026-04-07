@@ -43,7 +43,6 @@ export function AppSidebar() {
           <span className="font-extrabold text-lg text-foreground group-data-[collapsible=icon]:hidden">
             KosPintar
           </span>
-          </span>
         </div>
       </SidebarHeader>
 
