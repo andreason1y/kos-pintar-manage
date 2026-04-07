@@ -404,15 +404,15 @@ export default function LandingPage() {
                     <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
                   </div>
                   <div className="space-y-2 mt-3">
-                    {["Maks 40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
+                    {["Maks 40 kamar", "Semua fitur", "Update gratis selamanya"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
                         <span className="text-sm text-foreground">{f}</span>
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full font-bold mt-auto pt-3" size="lg" onClick={handleRegister}>
-                    Mulai Sekarang — Rp 249.000 →
+                  <Button className="w-full font-bold mt-auto pt-3 flex items-center justify-center text-center" size="lg" onClick={handleRegister}>
+                    Daftar Paket Mandiri →
                   </Button>
                 </CardContent>
               </Card>
