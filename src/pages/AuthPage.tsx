@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { Building2, Play, Loader2 } from "lucide-react";
+import { Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDemo } from "@/lib/demo-context";
+import logoIcon from "@/assets/logo-icon.png";
 
 export default function AuthPage() {
   const { setIsDemo } = useDemo();

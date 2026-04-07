@@ -10,10 +10,11 @@ import { useDemo } from "@/lib/demo-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ClipboardList, Wallet, Home, FileText, BarChart3, Bell,
-  Check, X, Instagram, MessageCircle, ChevronRight, ArrowRight,
+  Check, X, Instagram, MessageCircle, ArrowRight,
   Users, DoorOpen, TrendingUp, CreditCard, Star
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import logoIcon from "@/assets/logo-icon.png";
 
 /* ─── Fade-in wrapper ─── */
 function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
@@ -232,9 +233,7 @@ export default function LandingPage() {
   const [slotsUsed, setSlotsUsed] = useState(0);
   const [slotsTaken, setSlotsTaken] = useState(0);
   const [slotsLoaded, setSlotsLoaded] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Init Meta Pixel + fetch slot data
   useEffect(() => {
     initMetaPixel();
     trackEvent("ViewContent");
@@ -276,74 +275,74 @@ export default function LandingPage() {
 
       {/* ─── STICKY HEADER ─── */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="mx-auto max-w-app flex items-center justify-between px-4 h-14">
+        <div className="mx-auto max-w-[1200px] flex items-center justify-between px-4 md:px-8 h-14 md:h-16">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center" aria-hidden="true">
-              <Home className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-extrabold text-base text-foreground">KosPintar</span>
+            <img src={logoIcon} alt="KosPintar" className="w-8 h-8 md:w-9 md:h-9 rounded-lg object-contain" />
+            <span className="font-extrabold text-base md:text-lg text-foreground">KosPintar</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:gap-3">
             <Button variant="ghost" size="sm" onClick={handleLogin}>Masuk</Button>
             <Button size="sm" onClick={handleRegister}>Daftar</Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-app">
+      <main className="mx-auto max-w-[1200px]">
         {/* ─── HERO ─── */}
-        <section className="px-4 pt-10 pb-8" aria-label="Hero">
-          <FadeIn>
-            <h1 className="text-2xl font-extrabold leading-tight text-foreground">
-              Aplikasi Manajemen Kos<br />
-              <span className="text-primary">Terbaik di Indonesia</span>
-            </h1>
-          </FadeIn>
-          <FadeIn delay={0.1}>
-            <h2 className="mt-2 text-base font-bold text-foreground/90 leading-snug">
-              Kelola Penyewa, Tagihan & Keuangan Kos dalam Satu Aplikasi
-            </h2>
-          </FadeIn>
-          <FadeIn delay={0.15}>
-            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-              Tagihan otomatis, reminder WA, nota PDF, dan laporan keuangan lengkap. <strong>Hemat hingga Rp 1.800.000/tahun</strong> dibanding aplikasi kos lain.
-            </p>
-          </FadeIn>
-          <FadeIn delay={0.2}>
-            <div className="mt-6 flex gap-3">
-              <Button size="lg" className="flex-1 font-bold" onClick={handleRegister}>
-                Daftar Sekarang
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-              <Button size="lg" variant="outline" className="flex-1 font-bold" onClick={handleDemo}>
-                Coba Demo
-              </Button>
+        <section className="px-4 md:px-8 pt-10 pb-8 md:pt-20 md:pb-16" aria-label="Hero">
+          <div className="md:grid md:grid-cols-2 md:gap-12 md:items-center">
+            <div>
+              <FadeIn>
+                <h1 className="text-2xl md:text-4xl lg:text-5xl font-extrabold leading-tight text-foreground">
+                  Aplikasi Manajemen Kos<br />
+                  <span className="text-primary">Terbaik di Indonesia</span>
+                </h1>
+              </FadeIn>
+              <FadeIn delay={0.1}>
+                <h2 className="mt-2 md:mt-4 text-base md:text-xl font-bold text-foreground/90 leading-snug">
+                  Kelola Penyewa, Tagihan & Keuangan Kos dalam Satu Aplikasi
+                </h2>
+              </FadeIn>
+              <FadeIn delay={0.15}>
+                <p className="mt-3 md:mt-4 text-sm md:text-base text-muted-foreground leading-relaxed">
+                  Tagihan otomatis, reminder WA, nota PDF, dan laporan keuangan lengkap. <strong>Hemat hingga Rp 1.800.000/tahun</strong> dibanding aplikasi kos lain.
+                </p>
+              </FadeIn>
+              <FadeIn delay={0.2}>
+                <div className="mt-6 flex gap-3 md:max-w-md">
+                  <Button size="lg" className="flex-1 font-bold" onClick={handleRegister}>
+                    Daftar Sekarang
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                  <Button size="lg" variant="outline" className="flex-1 font-bold" onClick={handleDemo}>
+                    Coba Demo
+                  </Button>
+                </div>
+              </FadeIn>
             </div>
-          </FadeIn>
-          <FadeIn delay={0.3}>
-            <div className="mt-8">
-              <PhoneMockup className="w-56">
+            <FadeIn delay={0.3} className="mt-8 md:mt-0">
+              <PhoneMockup className="w-56 md:w-64 lg:w-72">
                 <DashboardPreview />
               </PhoneMockup>
-            </div>
-          </FadeIn>
+            </FadeIn>
+          </div>
         </section>
 
         {/* ─── FEATURES ─── */}
-        <section className="px-4 py-10" aria-label="Fitur aplikasi manajemen kos">
+        <section className="px-4 md:px-8 py-10 md:py-16" aria-label="Fitur aplikasi manajemen kos">
           <FadeIn>
-            <h2 className="text-lg font-extrabold text-foreground text-center">
-              Fitur Lengkap untuk<br />Kelola Kos-kosan
+            <h2 className="text-lg md:text-2xl font-extrabold text-foreground text-center">
+              Fitur Lengkap untuk Kelola Kos-kosan
             </h2>
           </FadeIn>
-          <div className="mt-6 grid grid-cols-2 gap-3">
+          <div className="mt-6 md:mt-10 grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">
             {FEATURES.map((f, i) => (
               <FadeIn key={f.title} delay={i * 0.08}>
                 <Card className="h-full border-border/60">
-                  <CardContent className="p-4 space-y-2">
-                    <span className="text-xl" aria-hidden="true">{EMOJIS[i]}</span>
-                    <h3 className="font-bold text-sm text-foreground">{f.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+                  <CardContent className="p-4 md:p-5 space-y-2">
+                    <span className="text-xl md:text-2xl" aria-hidden="true">{EMOJIS[i]}</span>
+                    <h3 className="font-bold text-sm md:text-base text-foreground">{f.title}</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
                   </CardContent>
                 </Card>
               </FadeIn>
@@ -352,16 +351,16 @@ export default function LandingPage() {
         </section>
 
         {/* ─── APP SCREENSHOTS ─── */}
-        <section className="py-10" aria-label="Screenshot tampilan aplikasi kos KosPintar">
+        <section className="py-10 md:py-16" aria-label="Screenshot tampilan aplikasi kos KosPintar">
           <FadeIn>
-            <h2 className="text-lg font-extrabold text-foreground text-center px-4">
+            <h2 className="text-lg md:text-2xl font-extrabold text-foreground text-center px-4">
               Tampilan Aplikasi Manajemen Kos KosPintar
             </h2>
           </FadeIn>
           <FadeIn delay={0.1}>
+            {/* Mobile: horizontal scroll */}
             <div
-              ref={scrollRef}
-              className="mt-6 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide"
+              className="mt-6 md:mt-10 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide md:hidden"
               style={{ scrollbarWidth: "none" }}
             >
               {SCREENSHOTS.map((s) => (
@@ -373,19 +372,31 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
+            {/* Desktop: grid side by side */}
+            <div className="hidden md:grid md:grid-cols-4 gap-6 mt-10 px-8">
+              {SCREENSHOTS.map((s) => (
+                <div key={s.label} className="space-y-3">
+                  <PhoneMockup className="w-full">
+                    {s.component}
+                  </PhoneMockup>
+                  <p className="text-center text-sm font-semibold text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
           </FadeIn>
         </section>
 
         {/* ─── TESTIMONIALS ─── */}
-        <section className="py-10" aria-label="Testimoni pengguna KosPintar">
+        <section className="py-10 md:py-16" aria-label="Testimoni pengguna KosPintar">
           <FadeIn>
-            <h2 className="text-lg font-extrabold text-foreground text-center px-4">
+            <h2 className="text-lg md:text-2xl font-extrabold text-foreground text-center px-4">
               Apa Kata Pengguna KosPintar?
             </h2>
           </FadeIn>
           <FadeIn delay={0.1}>
+            {/* Mobile: horizontal scroll */}
             <div
-              className="mt-6 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide"
+              className="mt-6 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide md:hidden"
               style={{ scrollbarWidth: "none" }}
             >
               {TESTIMONIALS.map((t) => (
@@ -412,37 +423,63 @@ export default function LandingPage() {
                 </Card>
               ))}
             </div>
-            <p className="text-[10px] text-muted-foreground text-center mt-2 italic">*Testimoni dari pengguna beta KosPintar</p>
+            {/* Desktop: 3-column grid */}
+            <div className="hidden md:grid md:grid-cols-3 gap-5 mt-10 px-8">
+              {TESTIMONIALS.map((t) => (
+                <Card key={t.name} className="border-border/60">
+                  <CardContent className="p-5 space-y-3">
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star key={s} className="w-4 h-4 fill-accent text-accent" />
+                      ))}
+                    </div>
+                    <p className="text-sm text-foreground leading-relaxed">"{t.quote}"</p>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-9 h-9">
+                        <AvatarFallback className={`${t.color} text-primary-foreground text-xs font-bold`}>
+                          {t.name.split(" ").map(w => w[0]).join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-bold text-foreground">{t.name}</p>
+                        <p className="text-xs text-muted-foreground">{t.kos}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <p className="text-[10px] md:text-xs text-muted-foreground text-center mt-2 italic">*Testimoni dari pengguna beta KosPintar</p>
           </FadeIn>
         </section>
 
         {/* ─── COMPARISON TABLE ─── */}
-        <section className="px-4 py-10" aria-label="Perbandingan harga aplikasi kos">
+        <section className="px-4 md:px-8 py-10 md:py-16" aria-label="Perbandingan harga aplikasi kos">
           <FadeIn>
-            <h2 className="text-lg font-extrabold text-foreground text-center">
-              Kenapa KosPintar Lebih Hemat<br />dari Aplikasi Kos Lain?
+            <h2 className="text-lg md:text-2xl font-extrabold text-foreground text-center">
+              Kenapa KosPintar Lebih Hemat dari Aplikasi Kos Lain?
             </h2>
           </FadeIn>
           <FadeIn delay={0.1}>
-            <div className="mt-6 rounded-xl border border-border overflow-hidden">
-              <table className="w-full text-xs" aria-label="Tabel perbandingan KosPintar vs aplikasi kos lain">
+            <div className="mt-6 md:mt-10 md:max-w-3xl md:mx-auto rounded-xl border border-border overflow-hidden">
+              <table className="w-full text-xs md:text-sm" aria-label="Tabel perbandingan KosPintar vs aplikasi kos lain">
                 <thead>
                   <tr className="bg-muted">
-                    <th className="text-left p-2.5 font-semibold text-muted-foreground">Fitur</th>
-                    <th className="p-2.5 font-bold text-primary bg-primary/10 text-center">KosPintar</th>
-                    <th className="p-2.5 font-semibold text-muted-foreground text-center">{COMPETITOR_LABEL}</th>
+                    <th className="text-left p-2.5 md:p-4 font-semibold text-muted-foreground">Fitur</th>
+                    <th className="p-2.5 md:p-4 font-bold text-primary bg-primary/10 text-center">KosPintar</th>
+                    <th className="p-2.5 md:p-4 font-semibold text-muted-foreground text-center">{COMPETITOR_LABEL}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {COMPARISON.map((row, i) => (
                     <tr key={i} className={i % 2 === 0 ? "bg-card" : "bg-muted/30"}>
-                      <td className="p-2.5 text-foreground font-medium">{row.feature}</td>
-                      <td className="p-2.5 text-center bg-primary/5 font-semibold text-primary">
+                      <td className="p-2.5 md:p-4 text-foreground font-medium">{row.feature}</td>
+                      <td className="p-2.5 md:p-4 text-center bg-primary/5 font-semibold text-primary">
                         {typeof row.kp === "boolean" ? (
                           row.kp ? <Check className="w-4 h-4 mx-auto text-primary" aria-label="Ya" /> : <X className="w-4 h-4 mx-auto text-muted-foreground" aria-label="Tidak" />
                         ) : row.kp}
                       </td>
-                      <td className="p-2.5 text-center text-muted-foreground">
+                      <td className="p-2.5 md:p-4 text-center text-muted-foreground">
                         {typeof row.sk === "boolean" ? (
                           row.sk ? <Check className="w-4 h-4 mx-auto text-primary" aria-label="Ya" /> : <X className="w-4 h-4 mx-auto text-muted-foreground" aria-label="Tidak" />
                         ) : row.sk}
@@ -456,82 +493,84 @@ export default function LandingPage() {
         </section>
 
         {/* ─── PRICING ─── */}
-        <section className="px-4 py-10" aria-label="Harga aplikasi manajemen kos">
+        <section className="px-4 md:px-8 py-10 md:py-16" aria-label="Harga aplikasi manajemen kos">
           <FadeIn>
-            <h2 className="text-lg font-extrabold text-foreground text-center">
-              Harga Aplikasi Manajemen Kos<br />yang Terjangkau
+            <h2 className="text-lg md:text-2xl font-extrabold text-foreground text-center">
+              Harga Aplikasi Manajemen Kos yang Terjangkau
             </h2>
           </FadeIn>
 
-          {/* Starter */}
-          <FadeIn delay={0.1}>
-            <Card className="mt-6 border-primary/30 shadow-lg overflow-hidden">
-              <div className="gradient-primary p-2.5 text-center">
-                <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground border-0 font-bold text-xs">
-                  🔥 Early Bird
-                </Badge>
-              </div>
-              <CardContent className="p-5 space-y-3">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-foreground">Starter</p>
-                  <p className="text-sm text-muted-foreground line-through">Rp 499.000/tahun</p>
-                  <p className="text-3xl font-extrabold text-foreground">
-                    Rp 249.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
-                  </p>
-                  <p className="text-xs text-primary font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
-                  <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
+          <div className="md:grid md:grid-cols-2 md:gap-6 md:max-w-3xl md:mx-auto md:mt-10">
+            {/* Starter */}
+            <FadeIn delay={0.1}>
+              <Card className="mt-6 md:mt-0 border-primary/30 shadow-lg overflow-hidden">
+                <div className="gradient-primary p-2.5 text-center">
+                  <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground border-0 font-bold text-xs">
+                    🔥 Early Bird
+                  </Badge>
                 </div>
-                <div className="space-y-2">
-                  {["Cocok untuk 1–40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
-                    <div key={f} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
-                      <span className="text-sm text-foreground">{f}</span>
-                    </div>
-                  ))}
-                </div>
-                <Button className="w-full font-bold" size="lg" onClick={handleRegister}>
-                  Mulai Sekarang — Rp 249.000 →
-                </Button>
-              </CardContent>
-            </Card>
-          </FadeIn>
+                <CardContent className="p-5 space-y-3">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-foreground">Starter</p>
+                    <p className="text-sm text-muted-foreground line-through">Rp 499.000/tahun</p>
+                    <p className="text-3xl font-extrabold text-foreground">
+                      Rp 249.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                    </p>
+                    <p className="text-xs text-primary font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
+                    <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
+                  </div>
+                  <div className="space-y-2">
+                    {["Cocok untuk 1–40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
+                      <div key={f} className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+                        <span className="text-sm text-foreground">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button className="w-full font-bold" size="lg" onClick={handleRegister}>
+                    Mulai Sekarang — Rp 249.000 →
+                  </Button>
+                </CardContent>
+              </Card>
+            </FadeIn>
 
-          {/* Pro */}
-          <FadeIn delay={0.2}>
-            <Card className="mt-4 border-accent/30 shadow-lg overflow-hidden">
-              <div className="bg-accent p-2.5 text-center">
-                <Badge variant="secondary" className="bg-accent-foreground/20 text-accent-foreground border-0 font-bold text-xs">
-                  Untuk kos besar
-                </Badge>
-              </div>
-              <CardContent className="p-5 space-y-3">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-foreground">Pro</p>
-                  <p className="text-sm text-muted-foreground line-through">Rp 999.000/tahun</p>
-                  <p className="text-3xl font-extrabold text-foreground">
-                    Rp 499.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
-                  </p>
-                  <p className="text-xs text-accent font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
+            {/* Pro */}
+            <FadeIn delay={0.2}>
+              <Card className="mt-4 md:mt-0 border-accent/30 shadow-lg overflow-hidden">
+                <div className="bg-accent p-2.5 text-center">
+                  <Badge variant="secondary" className="bg-accent-foreground/20 text-accent-foreground border-0 font-bold text-xs">
+                    Untuk kos besar
+                  </Badge>
                 </div>
-                <div className="space-y-2">
-                  {["Unlimited kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
-                    <div key={f} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-accent flex-shrink-0" aria-hidden="true" />
-                      <span className="text-sm text-foreground">{f}</span>
-                    </div>
-                  ))}
-                </div>
-                <Button className="w-full font-bold bg-accent hover:bg-accent/90 text-accent-foreground" size="lg" onClick={handleRegister}>
-                  Mulai Sekarang — Rp 499.000 →
-                </Button>
-              </CardContent>
-            </Card>
-          </FadeIn>
+                <CardContent className="p-5 space-y-3">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-foreground">Pro</p>
+                    <p className="text-sm text-muted-foreground line-through">Rp 999.000/tahun</p>
+                    <p className="text-3xl font-extrabold text-foreground">
+                      Rp 499.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                    </p>
+                    <p className="text-xs text-accent font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
+                  </div>
+                  <div className="space-y-2">
+                    {["Unlimited kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
+                      <div key={f} className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-accent flex-shrink-0" aria-hidden="true" />
+                        <span className="text-sm text-foreground">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button className="w-full font-bold bg-accent hover:bg-accent/90 text-accent-foreground" size="lg" onClick={handleRegister}>
+                    Mulai Sekarang — Rp 499.000 →
+                  </Button>
+                </CardContent>
+              </Card>
+            </FadeIn>
+          </div>
 
           {/* Slot counter */}
           <FadeIn delay={0.25}>
-            <div className="mt-4 space-y-3">
-              <p className="text-[11px] text-muted-foreground text-center">
+            <div className="mt-4 space-y-3 md:max-w-lg md:mx-auto">
+              <p className="text-[11px] md:text-xs text-muted-foreground text-center">
                 Harga naik setelah 100 pengguna pertama
               </p>
               {slotsLoaded && earlyBirdActive && (
@@ -555,17 +594,17 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FAQ ─── */}
-        <section className="px-4 py-10" aria-label="FAQ tentang aplikasi KosPintar">
+        <section className="px-4 md:px-8 py-10 md:py-16" aria-label="FAQ tentang aplikasi KosPintar">
           <FadeIn>
-            <h2 className="text-lg font-extrabold text-foreground text-center">
-              Pertanyaan Seputar<br />Aplikasi KosPintar
+            <h2 className="text-lg md:text-2xl font-extrabold text-foreground text-center">
+              Pertanyaan Seputar Aplikasi KosPintar
             </h2>
           </FadeIn>
           <FadeIn delay={0.1}>
-            <Accordion type="single" collapsible className="mt-6 space-y-2">
+            <Accordion type="single" collapsible className="mt-6 md:mt-10 space-y-2 md:max-w-2xl md:mx-auto">
               {FAQS.map((faq, i) => (
                 <AccordionItem key={i} value={`faq-${i}`} className="border rounded-lg px-3">
-                  <AccordionTrigger className="text-sm font-semibold text-left">
+                  <AccordionTrigger className="text-sm md:text-base font-semibold text-left">
                     {faq.q}
                   </AccordionTrigger>
                   <AccordionContent className="text-sm text-muted-foreground">
@@ -578,13 +617,13 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FINAL CTA ─── */}
-        <section className="px-4 py-10" aria-label="Daftar sekarang">
+        <section className="px-4 md:px-8 py-10 md:py-16" aria-label="Daftar sekarang">
           <FadeIn>
-            <div className="gradient-primary rounded-2xl p-6 text-center space-y-4">
-              <h2 className="text-lg font-extrabold text-primary-foreground">
+            <div className="gradient-primary rounded-2xl p-6 md:p-10 text-center space-y-4 md:max-w-3xl md:mx-auto">
+              <h2 className="text-lg md:text-2xl font-extrabold text-primary-foreground">
                 Mulai Kelola Kos Lebih Cerdas
               </h2>
-              <p className="text-xs text-primary-foreground/80">
+              <p className="text-xs md:text-sm text-primary-foreground/80">
                 Software kos-kosan terlengkap untuk pemilik properti Indonesia
               </p>
               <Button
@@ -600,35 +639,40 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FOOTER ─── */}
-        <footer className="border-t border-border px-4 py-8 space-y-6">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md gradient-primary flex items-center justify-center" aria-hidden="true">
-              <Home className="w-3 h-3 text-primary-foreground" />
+        <footer className="border-t border-border px-4 md:px-8 py-8 md:py-12">
+          <div className="md:max-w-[1200px] md:mx-auto md:grid md:grid-cols-3 md:gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <img src={logoIcon} alt="KosPintar" className="w-7 h-7 rounded-md object-contain" />
+                <span className="font-extrabold text-sm text-foreground">KosPintar</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Aplikasi manajemen kos-kosan terbaik di Indonesia. Kelola penyewa, tagihan, dan keuangan kos dalam satu aplikasi.</p>
             </div>
-            <span className="font-extrabold text-sm text-foreground">KosPintar</span>
-          </div>
-          <p className="text-xs text-muted-foreground">Aplikasi manajemen kos-kosan terbaik di Indonesia. Kelola penyewa, tagihan, dan keuangan kos dalam satu aplikasi.</p>
 
-          <div className="flex flex-wrap gap-4 text-xs">
-            {["Tentang", "Fitur", "Harga", "FAQ", "Kontak"].map((link) => (
-              <button key={link} className="text-muted-foreground hover:text-foreground transition-colors">
-                {link}
-              </button>
-            ))}
-          </div>
+            <div className="mt-6 md:mt-0">
+              <div className="flex flex-wrap gap-4 text-xs md:flex-col md:gap-2">
+                {["Tentang", "Fitur", "Harga", "FAQ", "Kontak"].map((link) => (
+                  <button key={link} className="text-muted-foreground hover:text-foreground transition-colors">
+                    {link}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          <div className="flex gap-3">
-            <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="Instagram KosPintar">
-              <Instagram className="w-4 h-4 text-muted-foreground" />
-            </a>
-            <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="WhatsApp KosPintar">
-              <MessageCircle className="w-4 h-4 text-muted-foreground" />
-            </a>
+            <div className="mt-6 md:mt-0 space-y-4">
+              <div className="flex gap-3">
+                <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="Instagram KosPintar">
+                  <Instagram className="w-4 h-4 text-muted-foreground" />
+                </a>
+                <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="WhatsApp KosPintar">
+                  <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                </a>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                © 2026 KosPintar. All rights reserved.
+              </p>
+            </div>
           </div>
-
-          <p className="text-[11px] text-muted-foreground">
-            © 2026 KosPintar. All rights reserved.
-          </p>
         </footer>
       </main>
 
