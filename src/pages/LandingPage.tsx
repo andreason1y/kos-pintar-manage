@@ -552,7 +552,7 @@ export default function LandingPage() {
                     <p className="text-xs text-accent font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
                   </div>
                   <div className="space-y-2">
-                    {["Maks 200 unit kamar", "Maks 10 properti", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
+                    {["Maks 200 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-accent flex-shrink-0" aria-hidden="true" />
                         <span className="text-sm text-foreground">{f}</span>
