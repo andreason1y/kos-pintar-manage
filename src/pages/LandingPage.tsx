@@ -92,10 +92,11 @@ const TESTIMONIALS = [
 ];
 
 const SCREENSHOTS = [
-  { label: "Beranda — Dashboard Kos", component: <DashboardPreview /> },
-  { label: "Penyewa — Data Penghuni", component: <TenantListPreview /> },
-  { label: "Kamar — Status Real-time", component: <RoomListPreview /> },
-  { label: "Keuangan — Laporan Bulanan", component: <FinancePreview /> },
+  { label: "Beranda — Dashboard Kos", src: "/screenshots/beranda.png" },
+  { label: "Kamar — Tipe & Unit Kamar", src: "/screenshots/kamar.png" },
+  { label: "Penyewa — Data Penghuni", src: "/screenshots/penyewa.png" },
+  { label: "Keuangan — Laporan Bulanan", src: "/screenshots/keuangan.png" },
+  { label: "Pembayaran — Tagihan Penyewa", src: "/screenshots/pembayaran.png" },
 ];
 
 const SLOT_TOTAL = 100;
