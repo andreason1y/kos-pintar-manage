@@ -1,78 +1,104 @@
 
+Masalah utamanya sekarang lebih ke logic aplikasi, bukan seed data atau data dummy.
 
-## Plan: Fix Data Sync & Align Demo with Real Data
+Yang saya temukan:
+- Data di database untuk akun `andreassina9a@gmail.com` / properti `Kos Lawyer` sudah konsisten: 3 tipe kamar, 12 kamar, 8 penyewa aktif, 11 transaksi, 6 pengeluaran, 9 deposit.
+- Jadi kalau antar menu masih terasa tidak sinkron, penyebab terbesarnya adalah alur CRUD di frontend yang menulis ke beberapa tabel secara terpisah.
 
-### Root Cause of Sync Issues
+Akar masalah logic:
+1. Mutasi penting tidak atomic
+   - Tambah penyewa = insert `tenants` + update `rooms` + insert `transactions` + insert `deposits`
+   - Semua dijalankan satu-per-satu dari client.
+   - Kalau salah satu step gagal, tabel lain tetap berubah → menu Kamar, Penyewa, Pembayaran, Keuangan bisa beda isi.
 
-After inspecting the database for `andreassina9a@gmail.com`:
+2. Delete / end-contract belum membersihkan semua relasi
+   - Hapus penyewa saat ini hanya update kamar + delete tenant.
+   - Transaksi dan deposit lama bisa tertinggal, jadi Pembayaran/Keuangan masih membaca data yang secara bisnis sudah “hilang”.
 
-1. **Tenant "Budi Santoso"** is `status: aktif` but `room_id: NULL` — appears as tenant without room in Penyewa, invisible in Kamar, breaks Keuangan room-type pie chart
-2. **Room "A1" doesn't exist** — rooms start at A2 (11 rooms instead of 12 for the Standar type)
-3. **Tenant "Budi"** (manually added) occupies A5 but has no historical transactions — shows as tenant with no payment history
-4. These orphaned references cause data to look different across Dashboard, Kamar, Penyewa, Pembayaran, and Keuangan pages
+3. Deposit flow belum benar-benar sinkron
+   - Real mode sudah baca `deposits`, tapi demo mode belum punya sumber data deposit yang nyata.
+   - Di `PenyewaPage`, demo branch untuk `handleEndContract` bahkan set `depositInfo(null)`, jadi alur deposit demo tidak pernah benar-benar sama dengan real.
 
-### Solution
+4. Sinkronisasi antar menu terlalu bergantung pada “query per tabel”
+   - Setiap halaman merakit data sendiri dari `rooms`, `tenants`, `transactions`, `expenses`, `deposits`.
+   - Kalau ada satu relasi yang tertinggal/orphan, tiap halaman akan menghasilkan angka/tampilan berbeda.
 
-**Step 1: Delete all existing data for this user** (via Supabase insert tool for DELETE operations)
+5. Penanganan error antar step masih lemah
+   - Banyak operasi lanjutan tidak dicek error-nya satu per satu.
+   - Akibatnya UI bisa tampil “berhasil”, padahal hanya sebagian data yang tersimpan.
 
-Delete in order to respect dependencies:
-1. `deposits` where `property_id = '0cd559f1-...'`
-2. `transactions` where `property_id = '0cd559f1-...'`
-3. `expenses` where `property_id = '0cd559f1-...'`
-4. `reminders` where `property_id = '0cd559f1-...'`
-5. `tenants` where `property_id = '0cd559f1-...'`
-6. `rooms` where `room_type_id` in the 3 room type IDs
-7. `room_types` where `property_id = '0cd559f1-...'`
+Kesimpulan singkat:
+- Bukan terutama masalah RLS.
+- Bukan terutama masalah dummy data.
+- Ini masalah arsitektur mutation + relasi data yang belum dijaga secara transactional.
 
-Keep the `properties` row intact (Kos Lawyer).
+Rencana perbaikan:
+1. Pindahkan operasi bisnis penting ke server-side flow
+   - Buat RPC/Edge Function untuk:
+     - tambah penyewa
+     - akhiri sewa
+     - hapus penyewa
+     - pembayaran
+   - Tiap flow harus menulis semua tabel terkait dalam satu transaksi bisnis.
 
-**Step 2: Insert new clean dummy data** with proper relationships
+2. Jadikan “tenant lifecycle” konsisten
+   - Tambah penyewa harus selalu:
+     - assign kamar
+     - ubah status kamar
+     - buat transaksi awal
+     - buat deposit bila ada
+   - Akhiri sewa harus selalu:
+     - ubah status tenant
+     - kosongkan kamar
+     - selesaikan deposit
+     - buat expense/income sesuai aturan deposit
+   - Hapus penyewa harus jelas:
+     - soft delete / block jika masih punya transaksi
+     - atau cascade logic yang aman
 
-Property: **Kos Lawyer**, Komplek Tarakanita (existing)
+3. Tambahkan model deposit ke demo context
+   - Demo harus punya `deposits[]`, CRUD deposit, dan helper lookup.
+   - Semua flow demo wajib memakai data deposit yang sama seperti real agar parity terjaga.
 
-Room Types (same as demo):
-- Standar: Rp 1.200.000 — 5 rooms (A1-A5), fasilitas: WiFi, Lemari, Parkir Motor
-- Deluxe: Rp 1.800.000 — 4 rooms (B1-B4), fasilitas: AC, WiFi, KM Dalam, Lemari, TV
-- Suite: Rp 2.500.000 — 3 rooms (C1-C3), fasilitas: AC, WiFi, KM Dalam, Lemari, TV, Air Panas, Parkir Motor
+4. Rapikan invalidation dan refresh
+   - Setelah mutasi sukses, invalidate semua query terkait:
+     - rooms
+     - tenants
+     - transactions
+     - expenses
+     - deposits
+   - Hindari partial refresh.
 
-Rooms: 12 total, 8 terisi + 4 kosong (A3, A5, B3, C3)
+5. Standarkan derivation data antar halaman
+   - Buat helper selector bersama untuk:
+     - tenant + room label
+     - unpaid list
+     - room occupancy
+     - income by room type
+   - Dengan begitu Dashboard, Kamar, Penyewa, Pembayaran, Keuangan memakai logika turunan yang sama.
 
-Tenants: 8 aktif (each linked to a specific occupied room) + 1 keluar (no room):
-| Tenant | Room | Type | Gender |
-|--------|------|------|--------|
-| Budi Santoso | A1 | Standar | L |
-| Siti Rahayu | A2 | Standar | P |
-| Ahmad Fauzi | A4 | Standar | L |
-| Dewi Lestari | B1 | Deluxe | P |
-| Rizky Pratama | B2 | Deluxe | L |
-| Nurul Hidayah | B4 | Deluxe | P |
-| Fajar Ramadhan | C1 | Suite | L |
-| Anisa Putri | C2 | Suite | P |
-| Doni Saputra | — | — (keluar) | L |
+6. Tambahkan guard integritas di database
+   - Minimal validasi bahwa:
+     - tenant aktif dengan `room_id` harus sinkron dengan room `terisi`
+     - tenant keluar tidak boleh tetap dianggap aktif di flow pembayaran aktif
+   - Bila perlu pakai function/trigger validasi ringan, bukan mengandalkan frontend saja.
 
-Transactions: April 2026 (current month) for all 8 aktif tenants + March 2026 (last month) for 3 tenants. Mix of lunas, belum_lunas, belum_bayar.
+File yang paling perlu dibenahi:
+- `src/pages/PenyewaPage.tsx`
+- `src/pages/KamarPage.tsx`
+- `src/pages/PembayaranPage.tsx`
+- `src/pages/KeuanganPage.tsx`
+- `src/lib/demo-context.tsx`
+- `src/hooks/use-queries.ts`
+- kemungkinan tambah server-side logic di Supabase (RPC atau edge function)
 
-Expenses: 6 items for April 2026 (Listrik, Air, Internet, Kebersihan, Perbaikan, Keamanan).
+Prioritas implementasi:
+1. Perbaiki flow tambah penyewa / akhiri sewa / hapus penyewa agar transactional
+2. Tambahkan deposit ke demo context
+3. Samakan selector data antar halaman
+4. Baru setelah itu audit ulang semua kartu KPI dan daftar pembayaran
 
-Deposits: 1 per aktif tenant (amount = 1x rent), Doni's deposit = dikembalikan.
-
-**Step 3: Update demo-context.tsx seed data**
-
-Replace demo property name/address with "Kos Lawyer" / "Komplek Tarakanita" and ensure:
-- Same room types, rooms, tenants, transactions, expenses structure
-- Same names, same room assignments
-- Demo data mirrors the real DB exactly
-
-### Technical Details
-
-- All DELETE/INSERT operations use the Supabase insert tool (data operations, not schema changes)
-- Use deterministic UUIDs for easy cross-referencing (e.g., `a1000001-...` pattern for room_types, `b1000001-...` for rooms, etc.)
-- Room status must match: if a tenant points to a room, that room must be `terisi`
-- Transaction `tenant_id` must reference an existing tenant
-- Deposit `tenant_id` must reference an existing tenant
-
-### Files Changed
-
-1. **Database**: DELETE + INSERT via Supabase tools (no migration needed)
-2. **`src/lib/demo-context.tsx`**: Update seed data constants (PROPERTY, ROOM_TYPES, ROOMS, TENANTS, TRANSACTIONS, EXPENSES) to match the new DB data
-
+Hasil yang dituju:
+- Data berubah sekali, lalu semua menu membaca hasil yang sama
+- Tidak ada lagi kasus kamar kosong tapi penyewa masih aktif, atau penyewa sudah dihapus tapi transaksi/deposit masih muncul
+- Demo dan real memakai alur bisnis yang setara
