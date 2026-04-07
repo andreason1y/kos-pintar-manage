@@ -42,7 +42,10 @@ export default function AuthPage() {
         options: { data: { nama, no_hp: noHp } },
       });
       if (error) toast.error(error.message);
-      else toast.success("Akun berhasil dibuat! Silakan cek email untuk verifikasi.");
+      else {
+        trackEvent("CompleteRegistration");
+        toast.success("Akun berhasil dibuat! Silakan cek email untuk verifikasi.");
+      }
     }
     setLoading(false);
   };
