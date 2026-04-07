@@ -150,12 +150,12 @@ export default function DashboardPage() {
   }, [demo.isDemo, roomData, tenantData, txData, expData, expLastData]);
 
   const quickActions = [
-    { icon: UserPlus, label: "Tambah Penyewa", action: () => navigate("/penyewa"), color: "bg-primary/10 text-primary" },
+    { icon: UserPlus, label: "Tambah Penyewa", action: () => navigate("/penyewa?action=add"), color: "bg-primary/10 text-primary" },
     { icon: CreditCard, label: "Pembayaran", action: () => navigate("/pembayaran"), color: "bg-[hsl(142,71%,45%)]/10 text-[hsl(142,71%,45%)]" },
     { icon: Send, label: "Kirim Tagihan", action: () => setShowTagihan(true), color: "bg-accent/10 text-accent" },
-    { icon: Receipt, label: "Pengeluaran", action: () => navigate("/keuangan"), color: "bg-destructive/10 text-destructive" },
-    { icon: LayoutGrid, label: "Daftar Kamar", action: () => navigate("/kamar"), color: "bg-[hsl(262,52%,47%)]/10 text-[hsl(262,52%,47%)]" },
-    { icon: FileText, label: "Laporan", action: () => navigate("/keuangan"), color: "bg-[hsl(199,89%,48%)]/10 text-[hsl(199,89%,48%)]" },
+    { icon: Receipt, label: "Pengeluaran", action: () => navigate("/keuangan?action=add-expense"), color: "bg-destructive/10 text-destructive" },
+    { icon: LayoutGrid, label: "Daftar Kamar", action: () => navigate("/kamar?action=add"), color: "bg-[hsl(262,52%,47%)]/10 text-[hsl(262,52%,47%)]" },
+    { icon: FileText, label: "Laporan", action: () => navigate("/keuangan?action=export-pdf"), color: "bg-[hsl(199,89%,48%)]/10 text-[hsl(199,89%,48%)]" },
   ];
 
   const laba = stats ? stats.pemasukanBulanIni - stats.pengeluaranBulanIni : 0;
