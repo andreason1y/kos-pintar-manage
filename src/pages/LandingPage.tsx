@@ -435,7 +435,7 @@ export default function LandingPage() {
                     </p>
                     <p className="text-xs font-semibold mt-1" style={{ color: "#1B2B6B" }}>Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
                   </div>
-                  <div className="space-y-2 mt-3">
+                  <div className="space-y-2 mt-4 mb-6">
                     {["Maks 200 kamar", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <Check className="w-4 h-4 flex-shrink-0" style={{ color: "#1B2B6B" }} aria-hidden="true" />
