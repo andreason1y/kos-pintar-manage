@@ -5,7 +5,7 @@ import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { getInitials, getAvatarColor } from "@/lib/avatar-colors";
 import { formatRupiah } from "@/lib/helpers";
-import { useRoomTypesAndRooms, useTenants, useTransactions, useInvalidate } from "@/hooks/use-queries";
+import { useRoomTypesAndRooms, useTenants, useTransactions, useDeposits, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import SkeletonCard from "@/components/SkeletonCard";
@@ -64,7 +64,6 @@ export default function PenyewaPage() {
   const bulanIni = now.getMonth() + 1;
   const tahunIni = now.getFullYear();
 
-  // React Query
   const { data: roomData, isLoading: roomsLoading } = useRoomTypesAndRooms();
   const { data: tenantData, isLoading: tenantsLoading } = useTenants();
   const { data: txData, isLoading: txLoading } = useTransactions();
@@ -103,7 +102,7 @@ export default function PenyewaPage() {
       ...r, room_type: roomTypes.find((rt: any) => rt.id === r.room_type_id)
     }));
     return { tenants: mapped, emptyRooms: empty };
-  }, [demo.isDemo, roomData, tenantData, txData]);
+  }, [demo.isDemo, roomData, tenantData, txData, demo.tenants, demo.rooms, demo.roomTypes, demo.transactions]);
 
   const filtered = useMemo(() => {
     let list = tenants;
@@ -114,7 +113,7 @@ export default function PenyewaPage() {
     return list;
   }, [tenants, activeTab, search]);
 
-  const refetch = () => { invalidate.tenants(); invalidate.rooms(); invalidate.transactions(); invalidate.deposits(); };
+  const refetchAll = () => { invalidate.all(); };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,31 +122,33 @@ export default function PenyewaPage() {
     const masuk = new Date(tanggalMasuk);
     const keluar = new Date(masuk);
     keluar.setMonth(keluar.getMonth() + d);
+    const keluarStr = keluar.toISOString().split("T")[0];
 
     if (demo.isDemo) {
-      const selectedRoom = emptyRooms.find((r: any) => r.id === roomId);
-      const harga = selectedRoom?.room_type?.harga_per_bulan || 0;
-      const tenantId = demo.addTenant({ property_id: "prop-1", room_id: roomId, nama, no_hp: noHp || null, gender: gender as "L" | "P", tanggal_masuk: tanggalMasuk, tanggal_keluar: keluar.toISOString().split("T")[0], status: "aktif" });
-      demo.updateRoom(roomId, { status: "terisi" });
-      demo.addTransaction({ tenant_id: tenantId, property_id: "prop-1", periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(), total_tagihan: harga, jumlah_dibayar: 0, status: "belum_bayar", metode_bayar: null, tanggal_bayar: null, catatan: null, nota_number: null, created_at: new Date().toISOString() });
+      demo.demoAddTenantAtomic({
+        roomId, nama, noHp: noHp || null, gender: gender as "L" | "P",
+        tanggalMasuk, tanggalKeluar: keluarStr, depositAmount: parseInt(deposit) || 0,
+      });
       toast.success("Penyewa berhasil ditambahkan!");
       setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1"); setDeposit("");
       return;
     }
+
     if (!activeProperty) return;
-    const { data: tenant, error } = await supabase.from("tenants").insert({ property_id: activeProperty.id, room_id: roomId, nama, no_hp: noHp || null, gender, tanggal_masuk: tanggalMasuk, tanggal_keluar: keluar.toISOString().split("T")[0] } as any).select().single() as any;
+    const { data, error } = await supabase.rpc("add_tenant", {
+      p_property_id: activeProperty.id,
+      p_room_id: roomId,
+      p_nama: nama,
+      p_no_hp: noHp || null,
+      p_gender: gender,
+      p_tanggal_masuk: tanggalMasuk,
+      p_tanggal_keluar: keluarStr,
+      p_deposit_amount: parseInt(deposit) || 0,
+    } as any);
     if (error) { toast.error(error.message); return; }
-    await supabase.from("rooms").update({ status: "terisi" } as any).eq("id", roomId);
-    const selectedRoom = emptyRooms.find((r: any) => r.id === roomId);
-    const harga = selectedRoom?.room_type?.harga_per_bulan || 0;
-    await supabase.from("transactions").insert({ tenant_id: tenant.id, property_id: activeProperty.id, periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(), total_tagihan: harga } as any);
-    const depositAmt = parseInt(deposit) || 0;
-    if (depositAmt > 0) {
-      await supabase.from("deposits").insert({ tenant_id: tenant.id, property_id: activeProperty.id, jumlah: depositAmt } as any);
-    }
     toast.success("Penyewa berhasil ditambahkan!");
     setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1"); setDeposit("");
-    refetch();
+    refetchAll();
   };
 
   const handleEditTenant = async (e: React.FormEvent) => {
@@ -163,25 +164,19 @@ export default function PenyewaPage() {
     if (error) { toast.error(error.message); return; }
     toast.success("Data penyewa diperbarui!");
     setShowEdit(null);
-    refetch();
+    refetchAll();
   };
 
   const handleDeleteTenant = async (id: string) => {
     if (demo.isDemo) {
-      const tenant = tenants.find(t => t.id === id);
-      if (tenant?.room_id) demo.updateRoom(tenant.room_id, { status: "kosong" });
-      demo.deleteTenant(id);
+      demo.demoDeleteTenantAtomic(id);
       toast.success("Penyewa dihapus");
       return;
     }
-    const tenant = tenants.find(t => t.id === id);
-    if (tenant?.room_id) {
-      await supabase.from("rooms").update({ status: "kosong" } as any).eq("id", tenant.room_id);
-    }
-    const { error } = await supabase.from("tenants").delete().eq("id", id) as any;
+    const { error } = await supabase.rpc("delete_tenant", { p_tenant_id: id } as any);
     if (error) { toast.error(error.message); return; }
     toast.success("Penyewa dihapus");
-    refetch();
+    refetchAll();
   };
 
   const handleEndContract = async (tenant: Tenant) => {
@@ -189,9 +184,9 @@ export default function PenyewaPage() {
     setDeductionNote("");
     setDepositAction("full");
     if (demo.isDemo) {
-      // Check demo deposits - find deposit for this tenant (simulated)
-      setDepositInfo(null);
-      setReturnAmount("0");
+      const dep = demo.deposits.find(d => d.tenant_id === tenant.id && d.status === "ditahan");
+      setDepositInfo(dep || null);
+      setReturnAmount(dep ? String(dep.jumlah) : "0");
       return;
     }
     const { data } = await supabase.from("deposits").select("*").eq("tenant_id", tenant.id).eq("status", "ditahan").single() as any;
@@ -206,53 +201,29 @@ export default function PenyewaPage() {
 
   const handleConfirmEndContract = async () => {
     if (!showEndContract) return;
-    const today = new Date().toISOString().split("T")[0];
 
     if (demo.isDemo) {
-      demo.updateTenant(showEndContract.id, { status: "keluar", tanggal_keluar: today });
-      if (showEndContract.room_id) demo.updateRoom(showEndContract.room_id, { status: "kosong" });
-      if (depositInfo) {
-        if (depositAction === "full") {
-          // Record full return as expense
-          demo.addExpense({ property_id: "prop-1", judul: `Pengembalian deposit - ${showEndContract.nama}`, kategori: "Pengembalian Deposit", jumlah: depositInfo.jumlah, tanggal: today, is_recurring: false });
-        } else if (depositAction === "partial") {
-          const returned = parseInt(returnAmount) || 0;
-          if (returned > 0) {
-            demo.addExpense({ property_id: "prop-1", judul: `Pengembalian deposit - ${showEndContract.nama}`, kategori: "Pengembalian Deposit", jumlah: returned, tanggal: today, is_recurring: false });
-          }
-        } else {
-          // forfeit - record as income via transaction
-          demo.addTransaction({ tenant_id: showEndContract.id, property_id: "prop-1", periode_bulan: new Date().getMonth() + 1, periode_tahun: new Date().getFullYear(), total_tagihan: 0, jumlah_dibayar: depositInfo.jumlah, status: "lunas", metode_bayar: "tunai", tanggal_bayar: today, catatan: `Deposit hangus - ${deductionNote || "tidak ada alasan"}`, nota_number: null, created_at: new Date().toISOString() });
-        }
-      }
+      demo.demoEndContractAtomic({
+        tenantId: showEndContract.id,
+        depositAction: depositInfo ? depositAction : "none",
+        returnAmount: parseInt(returnAmount) || 0,
+        deductionNote,
+      });
       toast.success("Kontrak berakhir, penyewa dikeluarkan");
       setShowEndContract(null); setDepositInfo(null);
       return;
     }
 
-    await supabase.from("tenants").update({ status: "keluar", tanggal_keluar: today } as any).eq("id", showEndContract.id);
-    if (showEndContract.room_id) {
-      await supabase.from("rooms").update({ status: "kosong" } as any).eq("id", showEndContract.room_id);
-    }
-    if (depositInfo) {
-      const propertyId = (activeProperty as any)?.id;
-      if (depositAction === "full") {
-        await supabase.from("deposits").update({ status: "dikembalikan", jumlah_dikembalikan: depositInfo.jumlah, tanggal_kembali: today } as any).eq("id", depositInfo.id);
-        await supabase.from("expenses").insert({ property_id: propertyId, judul: `Pengembalian deposit - ${showEndContract.nama}`, kategori: "Pengembalian Deposit", jumlah: depositInfo.jumlah, tanggal: today, is_recurring: false } as any);
-      } else if (depositAction === "partial") {
-        const returned = parseInt(returnAmount) || 0;
-        await supabase.from("deposits").update({ status: "dikembalikan", jumlah_dikembalikan: returned, catatan_potongan: deductionNote || null, tanggal_kembali: today } as any).eq("id", depositInfo.id);
-        if (returned > 0) {
-          await supabase.from("expenses").insert({ property_id: propertyId, judul: `Pengembalian deposit - ${showEndContract.nama}`, kategori: "Pengembalian Deposit", jumlah: returned, tanggal: today, is_recurring: false } as any);
-        }
-      } else {
-        // forfeit
-        await supabase.from("deposits").update({ status: "dikembalikan", jumlah_dikembalikan: 0, catatan_potongan: `Deposit hangus - ${deductionNote || "tidak ada alasan"}`, tanggal_kembali: today } as any).eq("id", depositInfo.id);
-      }
-    }
+    const { error } = await supabase.rpc("end_tenant_contract", {
+      p_tenant_id: showEndContract.id,
+      p_deposit_action: depositInfo ? depositAction : "none",
+      p_return_amount: parseInt(returnAmount) || 0,
+      p_deduction_note: deductionNote || null,
+    } as any);
+    if (error) { toast.error(error.message); return; }
     toast.success("Kontrak berakhir, penyewa dikeluarkan");
     setShowEndContract(null); setDepositInfo(null);
-    refetch();
+    refetchAll();
   };
 
   return (

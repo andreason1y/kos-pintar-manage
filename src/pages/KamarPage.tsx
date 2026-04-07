@@ -97,9 +97,9 @@ export default function KamarPage() {
         ...r, tenantName: tenantsByRoom[r.id]?.nama, tenantId: tenantsByRoom[r.id]?.id,
       })),
     })) as RoomType[];
-  }, [demo.isDemo, roomData, tenantData]);
+  }, [demo.isDemo, roomData, tenantData, demo.roomTypes, demo.rooms, demo.tenants]);
 
-  const refetch = () => { invalidate.rooms(); invalidate.tenants(); invalidate.transactions(); invalidate.deposits(); };
+  const refetchAll = () => { invalidate.all(); };
 
   const handleAddType = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,7 +111,7 @@ export default function KamarPage() {
     if (!activeProperty) return;
     const { error } = await supabase.from("room_types").insert({ property_id: activeProperty.id, nama, harga_per_bulan: parseInt(harga) || 0, fasilitas } as any);
     if (error) toast.error(error.message);
-    else { toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); setFasilitas([]); setCustomFasilitas(""); refetch(); }
+    else { toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); setFasilitas([]); setCustomFasilitas(""); refetchAll(); }
   };
 
   const handleEditType = async (e: React.FormEvent) => {
@@ -124,7 +124,7 @@ export default function KamarPage() {
     }
     const { error } = await supabase.from("room_types").update({ nama, harga_per_bulan: parseInt(harga) || 0, fasilitas } as any).eq("id", showEditType.id);
     if (error) toast.error(error.message);
-    else { toast.success("Tipe kamar diperbarui!"); setShowEditType(null); refetch(); }
+    else { toast.success("Tipe kamar diperbarui!"); setShowEditType(null); refetchAll(); }
   };
 
   const handleDeleteType = async (id: string) => {
@@ -135,7 +135,7 @@ export default function KamarPage() {
     }
     const { error } = await supabase.from("room_types").delete().eq("id", id) as any;
     if (error) toast.error(error.message);
-    else { toast.success("Tipe kamar dihapus"); refetch(); }
+    else { toast.success("Tipe kamar dihapus"); refetchAll(); }
   };
 
   const handleDeleteRoom = async (id: string) => {
@@ -146,7 +146,7 @@ export default function KamarPage() {
     }
     const { error } = await supabase.from("rooms").delete().eq("id", id) as any;
     if (error) toast.error(error.message);
-    else { toast.success("Kamar dihapus"); refetch(); }
+    else { toast.success("Kamar dihapus"); refetchAll(); }
   };
 
   const handleEditRoom = async (e: React.FormEvent) => {
@@ -159,7 +159,7 @@ export default function KamarPage() {
     }
     const { error } = await supabase.from("rooms").update({ nomor: editRoomNomor, lantai: parseInt(editRoomLantai) || 1 } as any).eq("id", showEditRoom.id);
     if (error) toast.error(error.message);
-    else { toast.success("Kamar diperbarui!"); setShowEditRoom(null); refetch(); }
+    else { toast.success("Kamar diperbarui!"); setShowEditRoom(null); refetchAll(); }
   };
 
   const handleBulkAdd = async (e: React.FormEvent) => {
@@ -168,15 +168,10 @@ export default function KamarPage() {
     const n = parseInt(count) || 0;
     const start = parseInt(startNum) || 1;
     const lt = parseInt(lantai) || 1;
-    // Check plan limits
     const currentRoomCount = roomTypes.reduce((sum, rt) => sum + rt.rooms.length, 0);
     if (currentRoomCount + n > limits.maxRooms) {
       if (plan === "juragan" || plan === "demo") {
-        triggerUpgrade(
-          `Batas ${limits.maxRooms} kamar tercapai. Hubungi kami untuk solusi enterprise.`,
-          "Hubungi Kami →",
-          "https://wa.me/62818477620"
-        );
+        triggerUpgrade(`Batas ${limits.maxRooms} kamar tercapai. Hubungi kami untuk solusi enterprise.`, "Hubungi Kami →", "https://wa.me/62818477620");
       } else {
         triggerUpgrade(`Batas ${limits.maxRooms} kamar tercapai. Upgrade ke paket Juragan untuk kelola hingga 200 kamar.`);
       }
@@ -192,7 +187,7 @@ export default function KamarPage() {
     const roomsToInsert = Array.from({ length: n }, (_, i) => ({ room_type_id: showAddRooms, nomor: `${prefix}${start + i}`, lantai: lt, status: "kosong" as const }));
     const { error } = await supabase.from("rooms").insert(roomsToInsert as any);
     if (error) toast.error(error.message);
-    else { toast.success(`${n} kamar ditambahkan!`); setShowAddRooms(null); refetch(); }
+    else { toast.success(`${n} kamar ditambahkan!`); setShowAddRooms(null); refetchAll(); }
   };
 
   const handleAddTenant = async (e: React.FormEvent) => {
@@ -202,45 +197,34 @@ export default function KamarPage() {
     const masuk = new Date(tenantTanggalMasuk);
     const keluar = new Date(masuk);
     keluar.setMonth(keluar.getMonth() + d);
+    const keluarStr = keluar.toISOString().split("T")[0];
 
     if (demo.isDemo) {
-      let hargaSewa = 0;
-      for (const rt of roomTypes) {
-        const room = rt.rooms.find(r => r.id === showAddTenant);
-        if (room) { hargaSewa = rt.harga_per_bulan; break; }
-      }
-      const tenantId = demo.addTenant({ property_id: "prop-1", room_id: showAddTenant, nama: tenantNama, no_hp: tenantHp || null, gender: tenantGender as "L" | "P", tanggal_masuk: tenantTanggalMasuk, tanggal_keluar: keluar.toISOString().split("T")[0], status: "aktif" });
-      demo.updateRoom(showAddTenant, { status: "terisi" });
-      demo.addTransaction({ tenant_id: tenantId, property_id: "prop-1", periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(), total_tagihan: hargaSewa, jumlah_dibayar: 0, status: "belum_bayar", metode_bayar: null, tanggal_bayar: null, catatan: null, nota_number: null, created_at: new Date().toISOString() });
+      demo.demoAddTenantAtomic({
+        roomId: showAddTenant, nama: tenantNama, noHp: tenantHp || null,
+        gender: tenantGender as "L" | "P", tanggalMasuk: tenantTanggalMasuk,
+        tanggalKeluar: keluarStr, depositAmount: parseInt(tenantDeposit) || 0,
+      });
       toast.success("Penyewa berhasil ditambahkan!");
       setShowAddTenant(null); setTenantNama(""); setTenantHp(""); setTenantGender("L"); setTenantDurasi("1"); setTenantDeposit("");
       return;
     }
+
     if (!activeProperty) return;
-    const { data: tenant, error } = await supabase.from("tenants").insert({
-      property_id: activeProperty.id, room_id: showAddTenant, nama: tenantNama,
-      no_hp: tenantHp || null, gender: tenantGender,
-      tanggal_masuk: tenantTanggalMasuk, tanggal_keluar: keluar.toISOString().split("T")[0],
-    } as any).select().single() as any;
-    if (error) { toast.error(error.message); return; }
-    await supabase.from("rooms").update({ status: "terisi" } as any).eq("id", showAddTenant);
-    let hargaSewa = 0;
-    for (const rt of roomTypes) {
-      const room = rt.rooms.find(r => r.id === showAddTenant);
-      if (room) { hargaSewa = rt.harga_per_bulan; break; }
-    }
-    await supabase.from("transactions").insert({
-      tenant_id: tenant.id, property_id: activeProperty.id,
-      periode_bulan: masuk.getMonth() + 1, periode_tahun: masuk.getFullYear(),
-      total_tagihan: hargaSewa,
+    const { error } = await supabase.rpc("add_tenant", {
+      p_property_id: activeProperty.id,
+      p_room_id: showAddTenant,
+      p_nama: tenantNama,
+      p_no_hp: tenantHp || null,
+      p_gender: tenantGender,
+      p_tanggal_masuk: tenantTanggalMasuk,
+      p_tanggal_keluar: keluarStr,
+      p_deposit_amount: parseInt(tenantDeposit) || 0,
     } as any);
-    const depositAmount = parseInt(tenantDeposit) || 0;
-    if (depositAmount > 0) {
-      await supabase.from("deposits").insert({ tenant_id: tenant.id, property_id: activeProperty.id, jumlah: depositAmount } as any);
-    }
+    if (error) { toast.error(error.message); return; }
     toast.success("Penyewa berhasil ditambahkan!");
     setShowAddTenant(null); setTenantNama(""); setTenantHp(""); setTenantGender("L"); setTenantDurasi("1"); setTenantDeposit("");
-    refetch();
+    refetchAll();
   };
 
   const handleRoomTap = (room: Room) => {

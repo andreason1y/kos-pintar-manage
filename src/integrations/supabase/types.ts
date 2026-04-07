@@ -487,6 +487,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_tenant: {
+        Args: {
+          p_deposit_amount?: number
+          p_gender?: string
+          p_nama: string
+          p_no_hp?: string
+          p_property_id: string
+          p_room_id: string
+          p_tanggal_keluar?: string
+          p_tanggal_masuk?: string
+        }
+        Returns: Json
+      }
       admin_get_user_stats: {
         Args: never
         Returns: {
@@ -504,6 +517,16 @@ export type Database = {
           nama: string
           no_hp: string
         }[]
+      }
+      delete_tenant: { Args: { p_tenant_id: string }; Returns: Json }
+      end_tenant_contract: {
+        Args: {
+          p_deduction_note?: string
+          p_deposit_action?: string
+          p_return_amount?: number
+          p_tenant_id: string
+        }
+        Returns: Json
       }
       get_active_outlets: {
         Args: never
