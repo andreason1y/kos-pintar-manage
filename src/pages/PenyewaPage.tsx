@@ -108,7 +108,7 @@ export default function PenyewaPage() {
     let list = tenants;
     if (activeTab === "Aktif") list = list.filter(t => t.status === "aktif");
     else if (activeTab === "Keluar") list = list.filter(t => t.status === "keluar");
-    else if (activeTab === "Jatuh Tempo") list = list.filter(t => t.sisaHari !== undefined && t.sisaHari <= 30 && t.sisaHari >= 0 && t.status === "aktif");
+    else if (activeTab === "Jatuh Tempo") list = list.filter(t => t.status === "aktif" && t.sisaHari !== undefined && t.sisaHari <= 30);
     if (search) list = list.filter(t => t.nama.toLowerCase().includes(search.toLowerCase()));
     return list;
   }, [tenants, activeTab, search]);

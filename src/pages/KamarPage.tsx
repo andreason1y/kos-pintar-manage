@@ -145,6 +145,12 @@ export default function KamarPage() {
   };
 
   const handleDeleteRoom = async (id: string) => {
+    // Guard: check if room has active tenant
+    const room = roomTypes.flatMap(rt => rt.rooms).find(r => r.id === id);
+    if (room && room.tenantName) {
+      toast.error("Kamar ini masih ditempati penyewa. Keluarkan penyewa terlebih dahulu.");
+      return;
+    }
     if (demo.isDemo) {
       demo.deleteRoom(id);
       toast.success("Kamar dihapus");
