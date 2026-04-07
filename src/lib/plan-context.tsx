@@ -7,13 +7,12 @@ export type PlanType = "mandiri" | "juragan" | "demo";
 
 export interface PlanLimits {
   maxRooms: number;
-  maxProperties: number;
 }
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
-  mandiri: { maxRooms: 40, maxProperties: 2 },
-  juragan: { maxRooms: 200, maxProperties: 10 },
-  demo: { maxRooms: 200, maxProperties: 10 },
+  mandiri: { maxRooms: 40 },
+  juragan: { maxRooms: 200 },
+  demo: { maxRooms: 200 },
 };
 
 export const PLAN_LABELS: Record<PlanType, string> = {
@@ -29,7 +28,9 @@ interface PlanContextType {
   loading: boolean;
   showUpgradeModal: boolean;
   upgradeMessage: string;
-  triggerUpgrade: (message: string) => void;
+  upgradeCta: string;
+  upgradeLink: string;
+  triggerUpgrade: (message: string, cta?: string, link?: string) => void;
   dismissUpgrade: () => void;
 }
 
@@ -40,6 +41,8 @@ const PlanContext = createContext<PlanContextType>({
   loading: true,
   showUpgradeModal: false,
   upgradeMessage: "",
+  upgradeCta: "Upgrade ke Juragan →",
+  upgradeLink: "",
   triggerUpgrade: () => {},
   dismissUpgrade: () => {},
 });
@@ -53,6 +56,8 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
+  const [upgradeCta, setUpgradeCta] = useState("Upgrade ke Juragan →");
+  const [upgradeLink, setUpgradeLink] = useState("");
 
   useEffect(() => {
     if (isDemo) {
@@ -81,8 +86,10 @@ export function PlanProvider({ children }: { children: ReactNode }) {
       });
   }, [user, isDemo]);
 
-  const triggerUpgrade = useCallback((message: string) => {
+  const triggerUpgrade = useCallback((message: string, cta?: string, link?: string) => {
     setUpgradeMessage(message);
+    setUpgradeCta(cta || "Upgrade ke Juragan →");
+    setUpgradeLink(link || "");
     setShowUpgradeModal(true);
   }, []);
 
@@ -95,7 +102,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   const planLabel = PLAN_LABELS[plan];
 
   return (
-    <PlanContext.Provider value={{ plan, limits, planLabel, loading, showUpgradeModal, upgradeMessage, triggerUpgrade, dismissUpgrade }}>
+    <PlanContext.Provider value={{ plan, limits, planLabel, loading, showUpgradeModal, upgradeMessage, upgradeCta, upgradeLink, triggerUpgrade, dismissUpgrade }}>
       {children}
     </PlanContext.Provider>
   );
