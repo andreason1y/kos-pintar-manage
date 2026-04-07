@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
-import { CreditCard, MessageCircle, FileText, Download, Send, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { CreditCard, MessageCircle, FileText, Download, Send, MoreVertical, Pencil, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -45,6 +45,7 @@ export default function PembayaranPage() {
   const [showPay, setShowPay] = useState<Payment | null>(null);
   const [showNota, setShowNota] = useState<Payment | null>(null);
   const [showEdit, setShowEdit] = useState<Payment | null>(null);
+  const [showAddTagihan, setShowAddTagihan] = useState(false);
   const [jumlahBayar, setJumlahBayar] = useState("");
   const [payError, setPayError] = useState("");
   const [metode, setMetode] = useState("tunai");
@@ -55,6 +56,12 @@ export default function PembayaranPage() {
   const [editStatus, setEditStatus] = useState("belum_bayar");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
+  // Add tagihan state
+  const [addTenantId, setAddTenantId] = useState("");
+  const [addBulan, setAddBulan] = useState(String(new Date().getMonth() + 1));
+  const [addTahun, setAddTahun] = useState(String(new Date().getFullYear()));
+  const [addTagihan, setAddTagihan] = useState("");
+
   const propertyName = demo.isDemo ? demo.property.nama_kos : activeProperty?.nama_kos || "";
 
   const { data: tenantData, isLoading: tenantsLoading } = useTenants();
@@ -62,6 +69,23 @@ export default function PembayaranPage() {
   const { data: roomData, isLoading: roomsLoading } = useRoomTypesAndRooms();
 
   const loading = !demo.isDemo && (tenantsLoading || txLoading || roomsLoading);
+
+  // Active tenants for "Tambah Tagihan" dropdown
+  const activeTenants = useMemo(() => {
+    if (demo.isDemo) {
+      return demo.tenants.filter(t => t.status === "aktif").map(t => {
+        const room = demo.rooms.find(r => r.id === t.room_id);
+        const rt = room ? demo.roomTypes.find(rr => rr.id === room.room_type_id) : null;
+        return { id: t.id, nama: t.nama, roomLabel: room ? `Kamar ${room.nomor}` : "-", harga: rt?.harga_per_bulan || 0 };
+      });
+    }
+    if (!tenantData || !roomData) return [];
+    return tenantData.filter((t: any) => t.status === "aktif").map((t: any) => {
+      const room = roomData.rooms.find((r: any) => r.id === t.room_id);
+      const rt = room ? roomData.roomTypes.find((rr: any) => rr.id === room.room_type_id) : null;
+      return { id: t.id, nama: t.nama, roomLabel: room ? `Kamar ${room.nomor}` : "-", harga: (rt as any)?.harga_per_bulan || 0 };
+    });
+  }, [demo.isDemo, tenantData, roomData, demo.tenants, demo.rooms, demo.roomTypes]);
 
   const mapPayment = (tx: any, tenantNama: string, tenantHp: string | null, kamar: string): Payment => ({
     id: tx.id, tenant_nama: tenantNama, tenant_hp: tenantHp, kamar,
@@ -122,6 +146,48 @@ export default function PembayaranPage() {
     refetch();
   };
 
+  const handleAddTagihan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addTenantId) { toast.error("Pilih penyewa terlebih dahulu"); return; }
+    const tagihan = parseInt(addTagihan) || 0;
+    if (tagihan <= 0) { toast.error("Jumlah tagihan harus lebih dari 0"); return; }
+    const bulan = parseInt(addBulan);
+    const tahun = parseInt(addTahun);
+
+    if (demo.isDemo) {
+      demo.addTransaction({
+        tenant_id: addTenantId,
+        property_id: "prop-1",
+        periode_bulan: bulan,
+        periode_tahun: tahun,
+        total_tagihan: tagihan,
+        jumlah_dibayar: 0,
+        status: "belum_bayar",
+        metode_bayar: null,
+        tanggal_bayar: null,
+        catatan: null,
+        nota_number: null,
+        created_at: new Date().toISOString(),
+      });
+      toast.success("Tagihan berhasil ditambahkan!");
+      setShowAddTagihan(false); setAddTenantId(""); setAddTagihan("");
+      return;
+    }
+
+    if (!activeProperty) return;
+    const { error } = await supabase.from("transactions").insert({
+      tenant_id: addTenantId,
+      property_id: activeProperty.id,
+      periode_bulan: bulan,
+      periode_tahun: tahun,
+      total_tagihan: tagihan,
+    } as any);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Tagihan berhasil ditambahkan!");
+    setShowAddTagihan(false); setAddTenantId(""); setAddTagihan("");
+    refetch();
+  };
+
   const handleDownloadNota = (p: Payment) => {
     downloadNota({
       propertyName, notaNumber: p.nota_number || generateNotaNumber(p.periode_bulan, p.periode_tahun),
@@ -176,7 +242,9 @@ export default function PembayaranPage() {
 
   return (
     <AppShell>
-      <PageHeader title="Pembayaran" subtitle="Selesaikan tagihan penyewa" />
+      <PageHeader title="Pembayaran" subtitle="Selesaikan tagihan penyewa" action={
+        <Button size="sm" onClick={() => setShowAddTagihan(true)}><Plus size={16} className="mr-1" /> Tagihan</Button>
+      } />
       <div className="px-4 space-y-3">
         <div className="flex gap-2">
           {([["pending", "Belum Lunas"], ["lunas", "Lunas"]] as const).map(([key, label]) => (
@@ -281,6 +349,53 @@ export default function PembayaranPage() {
             </div>
           </form>
         )}
+      </BottomSheet>
+
+      {/* Add tagihan bottom sheet */}
+      <BottomSheet open={showAddTagihan} onClose={() => setShowAddTagihan(false)} title="Tambah Tagihan">
+        <form onSubmit={handleAddTagihan} className="bottom-sheet-form">
+          <div className="bottom-sheet-body">
+            <div className="space-y-2">
+              <Label>Penyewa</Label>
+              <Select value={addTenantId} onValueChange={(v) => {
+                setAddTenantId(v);
+                const t = activeTenants.find(t => t.id === v);
+                if (t) setAddTagihan(String(t.harga));
+              }}>
+                <SelectTrigger><SelectValue placeholder="Pilih penyewa aktif" /></SelectTrigger>
+                <SelectContent>
+                  {activeTenants.map(t => (
+                    <SelectItem key={t.id} value={t.id}>{t.nama} — {t.roomLabel}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Bulan</Label>
+                <Select value={addBulan} onValueChange={setAddBulan}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <SelectItem key={i + 1} value={String(i + 1)}>{getMonthName(i + 1)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Tahun</Label>
+                <Input type="number" value={addTahun} onChange={e => setAddTahun(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Total Tagihan (Rp)</Label>
+              <Input type="number" value={addTagihan} onChange={e => setAddTagihan(e.target.value)} placeholder="Auto dari harga kamar" required />
+            </div>
+          </div>
+          <div className="bottom-sheet-footer">
+            <Button type="submit" className="w-full">Tambah Tagihan</Button>
+          </div>
+        </form>
       </BottomSheet>
 
       {/* Edit transaction */}
