@@ -420,7 +420,7 @@ export default function LandingPage() {
 
             {/* Juragan */}
             <FadeIn delay={0.2} className="flex-1 flex">
-              <Card className="border-[#0B7A6E]/30 shadow-lg overflow-hidden flex flex-col w-full">
+              <Card className="border-[#1B2B6B]/30 shadow-lg overflow-hidden flex flex-col w-full">
                 <div className="p-2.5 text-center" style={{ background: "#1B2B6B" }}>
                   <Badge variant="secondary" className="bg-white/20 text-white border-0 font-bold text-xs">
                     🔥 Early Bird — Kos Besar
