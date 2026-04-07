@@ -411,7 +411,7 @@ export default function LandingPage() {
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full font-bold mt-auto pt-3 flex items-center justify-center text-center" size="lg" onClick={handleRegister}>
+                  <Button className="w-full font-bold mt-auto flex items-center justify-center" size="lg" onClick={handleRegister}>
                     Daftar Paket Mandiri →
                   </Button>
                 </CardContent>
@@ -443,7 +443,7 @@ export default function LandingPage() {
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full font-bold mt-auto pt-3 text-white hover:opacity-90 flex items-center justify-center text-center" size="lg" style={{ background: "#1B2B6B" }} onClick={handleRegister}>
+                  <Button className="w-full font-bold mt-auto text-white hover:opacity-90 flex items-center justify-center" size="lg" style={{ background: "#1B2B6B" }} onClick={handleRegister}>
                     Daftar Paket Juragan →
                   </Button>
                 </CardContent>
