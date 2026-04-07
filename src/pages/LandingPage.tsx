@@ -385,16 +385,16 @@ export default function LandingPage() {
             </h2>
           </FadeIn>
 
-          <div className="md:grid md:grid-cols-2 md:gap-6 md:max-w-3xl md:mx-auto md:mt-10">
+          <div className="md:max-w-3xl md:mx-auto md:mt-10 flex flex-col md:flex-row md:items-stretch gap-4 md:gap-6 mt-6">
             {/* Mandiri */}
-            <FadeIn delay={0.1}>
-              <Card className="mt-6 md:mt-0 border-primary/30 shadow-lg overflow-hidden">
+            <FadeIn delay={0.1} className="flex-1 flex">
+              <Card className="border-primary/30 shadow-lg overflow-hidden flex flex-col w-full">
                 <div className="gradient-primary p-2.5 text-center">
                   <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground border-0 font-bold text-xs">
                     🔥 Early Bird
                   </Badge>
                 </div>
-                <CardContent className="p-5 space-y-3">
+                <CardContent className="p-5 flex flex-col flex-1">
                   <div className="text-center">
                     <p className="text-lg font-bold text-foreground">Mandiri</p>
                     <p className="text-sm text-muted-foreground line-through">Rp 499.000/tahun</p>
@@ -404,7 +404,7 @@ export default function LandingPage() {
                     <p className="text-xs text-primary font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
                     <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 mt-3">
                     {["Maks 40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
@@ -412,7 +412,7 @@ export default function LandingPage() {
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full font-bold" size="lg" onClick={handleRegister}>
+                  <Button className="w-full font-bold mt-auto pt-3" size="lg" onClick={handleRegister}>
                     Mulai Sekarang — Rp 249.000 →
                   </Button>
                 </CardContent>
@@ -420,31 +420,31 @@ export default function LandingPage() {
             </FadeIn>
 
             {/* Juragan */}
-            <FadeIn delay={0.2}>
-              <Card className="mt-4 md:mt-0 border-accent/30 shadow-lg overflow-hidden">
-                <div className="bg-accent p-2.5 text-center">
-                  <Badge variant="secondary" className="bg-accent-foreground/20 text-accent-foreground border-0 font-bold text-xs">
-                    Untuk kos besar
+            <FadeIn delay={0.2} className="flex-1 flex">
+              <Card className="border-[#0B7A6E]/30 shadow-lg overflow-hidden flex flex-col w-full">
+                <div className="p-2.5 text-center" style={{ background: "#0B7A6E" }}>
+                  <Badge variant="secondary" className="bg-white/20 text-white border-0 font-bold text-xs">
+                    🔥 Early Bird — Kos Besar
                   </Badge>
                 </div>
-                <CardContent className="p-5 space-y-3">
+                <CardContent className="p-5 flex flex-col flex-1">
                   <div className="text-center">
                     <p className="text-lg font-bold text-foreground">Juragan</p>
                     <p className="text-sm text-muted-foreground line-through">Rp 999.000/tahun</p>
                     <p className="text-3xl font-extrabold text-foreground">
                       Rp 499.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
                     </p>
-                    <p className="text-xs text-accent font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
+                    <p className="text-xs font-semibold mt-1" style={{ color: "#0B7A6E" }}>Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 mt-3">
                     {["Maks 200 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-accent flex-shrink-0" aria-hidden="true" />
+                        <Check className="w-4 h-4 flex-shrink-0" style={{ color: "#0B7A6E" }} aria-hidden="true" />
                         <span className="text-sm text-foreground">{f}</span>
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full font-bold bg-accent hover:bg-accent/90 text-accent-foreground" size="lg" onClick={handleRegister}>
+                  <Button className="w-full font-bold mt-auto pt-3 text-white hover:opacity-90" size="lg" style={{ background: "#0B7A6E" }} onClick={handleRegister}>
                     Mulai Sekarang — Rp 499.000 →
                   </Button>
                 </CardContent>
