@@ -185,14 +185,15 @@ export default function PenyewaPage() {
   };
 
   const handleEndContract = async (tenant: Tenant) => {
-    if (demo.isDemo) {
-      demo.updateTenant(tenant.id, { status: "keluar", tanggal_keluar: new Date().toISOString().split("T")[0] });
-      if (tenant.room_id) demo.updateRoom(tenant.room_id, { status: "kosong" });
-      toast.success("Kontrak berakhir, penyewa dikeluarkan");
-      return;
-    }
     setShowEndContract(tenant);
     setDeductionNote("");
+    setDepositAction("full");
+    if (demo.isDemo) {
+      // Check demo deposits - find deposit for this tenant (simulated)
+      setDepositInfo(null);
+      setReturnAmount("0");
+      return;
+    }
     const { data } = await supabase.from("deposits").select("*").eq("tenant_id", tenant.id).eq("status", "ditahan").single() as any;
     if (data) {
       setDepositInfo(data);
@@ -205,17 +206,49 @@ export default function PenyewaPage() {
 
   const handleConfirmEndContract = async () => {
     if (!showEndContract) return;
-    await supabase.from("tenants").update({ status: "keluar", tanggal_keluar: new Date().toISOString().split("T")[0] } as any).eq("id", showEndContract.id);
+    const today = new Date().toISOString().split("T")[0];
+
+    if (demo.isDemo) {
+      demo.updateTenant(showEndContract.id, { status: "keluar", tanggal_keluar: today });
+      if (showEndContract.room_id) demo.updateRoom(showEndContract.room_id, { status: "kosong" });
+      if (depositInfo) {
+        if (depositAction === "full") {
+          // Record full return as expense
+          demo.addExpense({ property_id: "prop-1", judul: `Pengembalian deposit - ${showEndContract.nama}`, kategori: "Pengembalian Deposit", jumlah: depositInfo.jumlah, tanggal: today, is_recurring: false });
+        } else if (depositAction === "partial") {
+          const returned = parseInt(returnAmount) || 0;
+          if (returned > 0) {
+            demo.addExpense({ property_id: "prop-1", judul: `Pengembalian deposit - ${showEndContract.nama}`, kategori: "Pengembalian Deposit", jumlah: returned, tanggal: today, is_recurring: false });
+          }
+        } else {
+          // forfeit - record as income via transaction
+          demo.addTransaction({ tenant_id: showEndContract.id, property_id: "prop-1", periode_bulan: new Date().getMonth() + 1, periode_tahun: new Date().getFullYear(), total_tagihan: 0, jumlah_dibayar: depositInfo.jumlah, status: "lunas", metode_bayar: "tunai", tanggal_bayar: today, catatan: `Deposit hangus - ${deductionNote || "tidak ada alasan"}`, nota_number: null, created_at: new Date().toISOString() });
+        }
+      }
+      toast.success("Kontrak berakhir, penyewa dikeluarkan");
+      setShowEndContract(null); setDepositInfo(null);
+      return;
+    }
+
+    await supabase.from("tenants").update({ status: "keluar", tanggal_keluar: today } as any).eq("id", showEndContract.id);
     if (showEndContract.room_id) {
       await supabase.from("rooms").update({ status: "kosong" } as any).eq("id", showEndContract.room_id);
     }
     if (depositInfo) {
-      await supabase.from("deposits").update({
-        status: "dikembalikan",
-        jumlah_dikembalikan: parseInt(returnAmount) || 0,
-        catatan_potongan: deductionNote || null,
-        tanggal_kembali: new Date().toISOString().split("T")[0],
-      } as any).eq("id", depositInfo.id);
+      const propertyId = (activeProperty as any)?.id;
+      if (depositAction === "full") {
+        await supabase.from("deposits").update({ status: "dikembalikan", jumlah_dikembalikan: depositInfo.jumlah, tanggal_kembali: today } as any).eq("id", depositInfo.id);
+        await supabase.from("expenses").insert({ property_id: propertyId, judul: `Pengembalian deposit - ${showEndContract.nama}`, kategori: "Pengembalian Deposit", jumlah: depositInfo.jumlah, tanggal: today, is_recurring: false } as any);
+      } else if (depositAction === "partial") {
+        const returned = parseInt(returnAmount) || 0;
+        await supabase.from("deposits").update({ status: "dikembalikan", jumlah_dikembalikan: returned, catatan_potongan: deductionNote || null, tanggal_kembali: today } as any).eq("id", depositInfo.id);
+        if (returned > 0) {
+          await supabase.from("expenses").insert({ property_id: propertyId, judul: `Pengembalian deposit - ${showEndContract.nama}`, kategori: "Pengembalian Deposit", jumlah: returned, tanggal: today, is_recurring: false } as any);
+        }
+      } else {
+        // forfeit
+        await supabase.from("deposits").update({ status: "dikembalikan", jumlah_dikembalikan: 0, catatan_potongan: `Deposit hangus - ${deductionNote || "tidak ada alasan"}`, tanggal_kembali: today } as any).eq("id", depositInfo.id);
+      }
     }
     toast.success("Kontrak berakhir, penyewa dikeluarkan");
     setShowEndContract(null); setDepositInfo(null);
