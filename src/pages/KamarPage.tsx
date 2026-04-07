@@ -55,6 +55,15 @@ export default function KamarPage() {
   const [showEditRoom, setShowEditRoom] = useState<Room | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ type: "room_type" | "room"; id: string; name: string } | null>(null);
 
+  // Open add modal via URL param from dashboard quick action
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("action") === "add") {
+      setShowAdd(true);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
   const [nama, setNama] = useState("");
   const [harga, setHarga] = useState("");
   const [fasilitas, setFasilitas] = useState<string[]>([]);
