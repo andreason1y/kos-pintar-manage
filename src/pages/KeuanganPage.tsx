@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
-const EXPENSE_CATEGORIES = ["Listrik", "Air", "Kebersihan", "Perbaikan", "Internet", "Keamanan", "Lainnya"];
+const EXPENSE_CATEGORIES = ["Listrik", "Air/PDAM", "Kebersihan", "Perbaikan/Renovasi", "Keamanan", "Internet/WiFi", "Pajak", "Gaji Penjaga", "Pengembalian Deposit", "Lainnya"];
 
 export default function KeuanganPage() {
   const { activeProperty } = useProperty();

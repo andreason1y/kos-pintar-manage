@@ -191,7 +191,7 @@ const EMOJIS = ["📋", "💰", "🏠", "📄", "📊", "🔔"];
 
 /* ─── COMPARISON ─── */
 const COMPARISON = [
-  { feature: "Harga", kp: "Rp 249k/tahun (flat)", sk: "Rp 9.000/kamar/bulan" },
+  { feature: "Harga (Mandiri)", kp: "Rp 249k/tahun (flat)", sk: "Rp 9.000/kamar/bulan" },
   { feature: "10 kamar setahun", kp: "Rp 249.000", sk: "Rp 1.080.000" },
   { feature: "20 kamar setahun", kp: "Rp 249.000", sk: "Rp 2.160.000" },
   { feature: "Manajemen penyewa", kp: true, sk: true },
@@ -206,8 +206,8 @@ const COMPETITOR_LABEL = "Aplikasi Lain";
 /* ─── FAQ ─── */
 const FAQS = [
   { q: "Apakah data saya aman?", a: "Ya, data disimpan di server terenkripsi dan hanya bisa diakses oleh Anda." },
-  { q: "Berapa batas jumlah kamar?", a: "Paket standar mendukung hingga 40 unit kamar. Untuk lebih dari 40 unit, tersedia paket yang lebih besar." },
-  { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga Rp 249.000 sudah termasuk semua fitur untuk kelola kos-kosan Anda." },
+  { q: "Apa beda paket Mandiri dan Juragan?", a: "Paket Mandiri mendukung hingga 40 unit kamar dan 2 properti. Paket Juragan mendukung hingga 200 unit kamar dan 10 properti, plus prioritas support." },
+  { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga sudah termasuk semua fitur untuk kelola kos-kosan Anda." },
   { q: "Bagaimana cara perpanjang langganan?", a: "Kami akan kirim notifikasi sebelum masa langganan habis. Perpanjang langsung dari aplikasi." },
   { q: "Apakah bisa dicoba dulu?", a: "Ya, tersedia mode demo tanpa perlu daftar. Klik \"Coba Demo\" di halaman utama." },
 ];
@@ -501,7 +501,7 @@ export default function LandingPage() {
           </FadeIn>
 
           <div className="md:grid md:grid-cols-2 md:gap-6 md:max-w-3xl md:mx-auto md:mt-10">
-            {/* Starter */}
+            {/* Mandiri */}
             <FadeIn delay={0.1}>
               <Card className="mt-6 md:mt-0 border-primary/30 shadow-lg overflow-hidden">
                 <div className="gradient-primary p-2.5 text-center">
@@ -511,7 +511,7 @@ export default function LandingPage() {
                 </div>
                 <CardContent className="p-5 space-y-3">
                   <div className="text-center">
-                    <p className="text-lg font-bold text-foreground">Starter</p>
+                    <p className="text-lg font-bold text-foreground">Mandiri</p>
                     <p className="text-sm text-muted-foreground line-through">Rp 499.000/tahun</p>
                     <p className="text-3xl font-extrabold text-foreground">
                       Rp 249.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
@@ -520,7 +520,7 @@ export default function LandingPage() {
                     <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
                   </div>
                   <div className="space-y-2">
-                    {["Cocok untuk 1–40 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
+                    {["Maks 40 unit kamar", "Maks 2 properti", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
                         <span className="text-sm text-foreground">{f}</span>
@@ -534,7 +534,7 @@ export default function LandingPage() {
               </Card>
             </FadeIn>
 
-            {/* Pro */}
+            {/* Juragan */}
             <FadeIn delay={0.2}>
               <Card className="mt-4 md:mt-0 border-accent/30 shadow-lg overflow-hidden">
                 <div className="bg-accent p-2.5 text-center">
@@ -544,7 +544,7 @@ export default function LandingPage() {
                 </div>
                 <CardContent className="p-5 space-y-3">
                   <div className="text-center">
-                    <p className="text-lg font-bold text-foreground">Pro</p>
+                    <p className="text-lg font-bold text-foreground">Juragan</p>
                     <p className="text-sm text-muted-foreground line-through">Rp 999.000/tahun</p>
                     <p className="text-3xl font-extrabold text-foreground">
                       Rp 499.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
@@ -552,7 +552,7 @@ export default function LandingPage() {
                     <p className="text-xs text-accent font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
                   </div>
                   <div className="space-y-2">
-                    {["Unlimited kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
+                    {["Maks 200 unit kamar", "Maks 10 properti", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-accent flex-shrink-0" aria-hidden="true" />
                         <span className="text-sm text-foreground">{f}</span>

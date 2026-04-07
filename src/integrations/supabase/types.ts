@@ -340,6 +340,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
+          plan: string
           started_at: string
           status: string
           user_id: string
@@ -348,6 +349,7 @@ export type Database = {
           created_at?: string
           expires_at: string
           id?: string
+          plan?: string
           started_at?: string
           status?: string
           user_id: string
@@ -356,6 +358,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          plan?: string
           started_at?: string
           status?: string
           user_id?: string

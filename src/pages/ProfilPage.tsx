@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
+import { usePlan } from "@/lib/plan-context";
 import { useProfile, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
@@ -23,6 +24,7 @@ export default function ProfilPage() {
   const { user, signOut } = useAuth();
   const { properties, activeProperty, setActiveProperty, refetch: refetchProperties } = useProperty();
   const demo = useDemo();
+  const { planLabel } = usePlan();
   const invalidate = useInvalidate();
 
   const { data: profileData } = useProfile(user?.id);
@@ -113,7 +115,7 @@ export default function ProfilPage() {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <p className="font-semibold text-foreground">Early Bird</p>
+                <p className="font-semibold text-foreground">Paket {planLabel}</p>
                 <span className="px-2 py-0.5 rounded-full bg-[hsl(142,71%,45%)]/15 text-[hsl(142,71%,45%)] text-[10px] font-bold">AKTIF</span>
               </div>
               <p className="text-xs text-muted-foreground">Aktif hingga 31 Desember 2026</p>

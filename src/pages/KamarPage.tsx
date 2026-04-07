@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
+import { usePlan } from "@/lib/plan-context";
 import { formatRupiah } from "@/lib/helpers";
 import { getAvatarColor, getInitials } from "@/lib/avatar-colors";
 import { useRoomTypesAndRooms, useTenants, useInvalidate } from "@/hooks/use-queries";
@@ -44,6 +45,7 @@ export default function KamarPage() {
   const navigate = useNavigate();
   const { activeProperty } = useProperty();
   const demo = useDemo();
+  const { limits, triggerUpgrade } = usePlan();
   const invalidate = useInvalidate();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -166,6 +168,12 @@ export default function KamarPage() {
     const n = parseInt(count) || 0;
     const start = parseInt(startNum) || 1;
     const lt = parseInt(lantai) || 1;
+    // Check plan limits
+    const currentRoomCount = roomTypes.reduce((sum, rt) => sum + rt.rooms.length, 0);
+    if (currentRoomCount + n > limits.maxRooms) {
+      triggerUpgrade(`Batas paket tercapai (maks ${limits.maxRooms} kamar). Upgrade ke paket Juragan untuk kelola lebih banyak kamar.`);
+      return;
+    }
     if (demo.isDemo) {
       for (let i = 0; i < n; i++) {
         demo.addRoom({ room_type_id: showAddRooms, nomor: `${prefix}${start + i}`, lantai: lt, status: "kosong" });

@@ -124,10 +124,10 @@ const TRANSACTIONS: DemoTransaction[] = [
 const m = String(bulanIni).padStart(2, "0");
 const EXPENSES: DemoExpense[] = [
   { id: "exp-1", property_id: "prop-1", judul: "Bayar Listrik", kategori: "Listrik", jumlah: 850000, tanggal: `${tahunIni}-${m}-08`, is_recurring: true },
-  { id: "exp-2", property_id: "prop-1", judul: "Bayar Air PDAM", kategori: "Air", jumlah: 350000, tanggal: `${tahunIni}-${m}-10`, is_recurring: true },
-  { id: "exp-3", property_id: "prop-1", judul: "Internet Bulanan", kategori: "Internet", jumlah: 500000, tanggal: `${tahunIni}-${m}-05`, is_recurring: true },
+  { id: "exp-2", property_id: "prop-1", judul: "Bayar Air PDAM", kategori: "Air/PDAM", jumlah: 350000, tanggal: `${tahunIni}-${m}-10`, is_recurring: true },
+  { id: "exp-3", property_id: "prop-1", judul: "Internet Bulanan", kategori: "Internet/WiFi", jumlah: 500000, tanggal: `${tahunIni}-${m}-05`, is_recurring: true },
   { id: "exp-4", property_id: "prop-1", judul: "Gaji Kebersihan", kategori: "Kebersihan", jumlah: 600000, tanggal: `${tahunIni}-${m}-01`, is_recurring: true },
-  { id: "exp-5", property_id: "prop-1", judul: "Perbaikan Pipa Kamar B3", kategori: "Perbaikan", jumlah: 250000, tanggal: `${tahunIni}-${m}-12`, is_recurring: false },
+  { id: "exp-5", property_id: "prop-1", judul: "Perbaikan Pipa Kamar B3", kategori: "Perbaikan/Renovasi", jumlah: 250000, tanggal: `${tahunIni}-${m}-12`, is_recurring: false },
   { id: "exp-6", property_id: "prop-1", judul: "Keamanan Bulanan", kategori: "Keamanan", jumlah: 300000, tanggal: `${tahunIni}-${m}-01`, is_recurring: true },
 ];
 
