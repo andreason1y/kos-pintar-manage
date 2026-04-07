@@ -421,7 +421,7 @@ export default function LandingPage() {
             {/* Juragan */}
             <FadeIn delay={0.2} className="flex-1 flex">
               <Card className="border-[#0B7A6E]/30 shadow-lg overflow-hidden flex flex-col w-full">
-                <div className="p-2.5 text-center" style={{ background: "#0B7A6E" }}>
+                <div className="p-2.5 text-center" style={{ background: "#1B2B6B" }}>
                   <Badge variant="secondary" className="bg-white/20 text-white border-0 font-bold text-xs">
                     🔥 Early Bird — Kos Besar
                   </Badge>
@@ -433,18 +433,18 @@ export default function LandingPage() {
                     <p className="text-3xl font-extrabold text-foreground">
                       Rp 499.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
                     </p>
-                    <p className="text-xs font-semibold mt-1" style={{ color: "#0B7A6E" }}>Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
+                    <p className="text-xs font-semibold mt-1" style={{ color: "#1B2B6B" }}>Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
                   </div>
                   <div className="space-y-2 mt-3">
-                    {["Maks 200 kamar", "Unlimited penyewa", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
+                    {["Maks 200 kamar", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
-                        <Check className="w-4 h-4 flex-shrink-0" style={{ color: "#0B7A6E" }} aria-hidden="true" />
+                        <Check className="w-4 h-4 flex-shrink-0" style={{ color: "#1B2B6B" }} aria-hidden="true" />
                         <span className="text-sm text-foreground">{f}</span>
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full font-bold mt-auto pt-3 text-white hover:opacity-90" size="lg" style={{ background: "#0B7A6E" }} onClick={handleRegister}>
-                    Mulai Sekarang — Rp 499.000 →
+                  <Button className="w-full font-bold mt-auto pt-3 text-white hover:opacity-90 flex items-center justify-center text-center" size="lg" style={{ background: "#1B2B6B" }} onClick={handleRegister}>
+                    Daftar Paket Juragan →
                   </Button>
                 </CardContent>
               </Card>
