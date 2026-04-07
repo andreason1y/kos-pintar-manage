@@ -168,6 +168,12 @@ export default function KamarPage() {
     const n = parseInt(count) || 0;
     const start = parseInt(startNum) || 1;
     const lt = parseInt(lantai) || 1;
+    // Check plan limits
+    const currentRoomCount = roomTypes.reduce((sum, rt) => sum + rt.rooms.length, 0);
+    if (currentRoomCount + n > limits.maxRooms) {
+      triggerUpgrade(`Batas paket tercapai (maks ${limits.maxRooms} kamar). Upgrade ke paket Juragan untuk kelola lebih banyak kamar.`);
+      return;
+    }
     if (demo.isDemo) {
       for (let i = 0; i < n; i++) {
         demo.addRoom({ room_type_id: showAddRooms, nomor: `${prefix}${start + i}`, lantai: lt, status: "kosong" });
