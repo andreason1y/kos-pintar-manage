@@ -277,7 +277,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
         <div className="mx-auto max-w-[1200px] flex items-center justify-between px-4 md:px-8 h-14 md:h-16">
           <div className="flex items-center gap-2">
-            <img src={logoIcon} alt="KosPintar" className="w-8 h-8 md:w-9 md:h-9 rounded-lg object-contain" />
+            <img src={logoIcon} alt="KosPintar" className="h-9 w-9 rounded-lg object-contain" />
             <span className="font-extrabold text-base md:text-lg text-foreground">KosPintar</span>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
@@ -329,7 +329,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FEATURES ─── */}
-        <section className="px-4 md:px-8 py-10 md:py-16" aria-label="Fitur aplikasi manajemen kos">
+        <section id="fitur" className="px-4 md:px-8 py-10 md:py-16" aria-label="Fitur aplikasi manajemen kos">
           <FadeIn>
             <h2 className="text-lg md:text-2xl font-extrabold text-foreground text-center">
               Fitur Lengkap untuk Kelola Kos-kosan
@@ -493,7 +493,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── PRICING ─── */}
-        <section className="px-4 md:px-8 py-10 md:py-16" aria-label="Harga aplikasi manajemen kos">
+        <section id="harga" className="px-4 md:px-8 py-10 md:py-16" aria-label="Harga aplikasi manajemen kos">
           <FadeIn>
             <h2 className="text-lg md:text-2xl font-extrabold text-foreground text-center">
               Harga Aplikasi Manajemen Kos yang Terjangkau
@@ -594,7 +594,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FAQ ─── */}
-        <section className="px-4 md:px-8 py-10 md:py-16" aria-label="FAQ tentang aplikasi KosPintar">
+        <section id="faq" className="px-4 md:px-8 py-10 md:py-16" aria-label="FAQ tentang aplikasi KosPintar">
           <FadeIn>
             <h2 className="text-lg md:text-2xl font-extrabold text-foreground text-center">
               Pertanyaan Seputar Aplikasi KosPintar
@@ -643,28 +643,28 @@ export default function LandingPage() {
           <div className="md:max-w-[1200px] md:mx-auto md:grid md:grid-cols-3 md:gap-8">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <img src={logoIcon} alt="KosPintar" className="w-7 h-7 rounded-md object-contain" />
-                <span className="font-extrabold text-sm text-foreground">KosPintar</span>
+            <img src={logoIcon} alt="KosPintar" className="h-10 w-10 rounded-lg object-contain" />
+                <span className="font-extrabold text-base text-foreground">KosPintar</span>
               </div>
               <p className="text-xs text-muted-foreground">Aplikasi manajemen kos-kosan terbaik di Indonesia. Kelola penyewa, tagihan, dan keuangan kos dalam satu aplikasi.</p>
             </div>
 
             <div className="mt-6 md:mt-0">
               <div className="flex flex-wrap gap-4 text-xs md:flex-col md:gap-2">
-                {["Tentang", "Fitur", "Harga", "FAQ", "Kontak"].map((link) => (
-                  <button key={link} className="text-muted-foreground hover:text-foreground transition-colors">
-                    {link}
-                  </button>
-                ))}
+                <a href="#fitur" className="text-muted-foreground hover:text-foreground transition-colors">Tentang</a>
+                <a href="#fitur" className="text-muted-foreground hover:text-foreground transition-colors">Fitur</a>
+                <a href="#harga" className="text-muted-foreground hover:text-foreground transition-colors">Harga</a>
+                <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
+                <a href="mailto:halo@kospintar.id" className="text-muted-foreground hover:text-foreground transition-colors">Kontak</a>
               </div>
             </div>
 
             <div className="mt-6 md:mt-0 space-y-4">
               <div className="flex gap-3">
-                <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="Instagram KosPintar">
+                <a href="https://instagram.com/kospintar_id" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="Instagram KosPintar">
                   <Instagram className="w-4 h-4 text-muted-foreground" />
                 </a>
-                <a href="#" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="WhatsApp KosPintar">
+                <a href="https://wa.me/62818477620" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="WhatsApp KosPintar">
                   <MessageCircle className="w-4 h-4 text-muted-foreground" />
                 </a>
               </div>
