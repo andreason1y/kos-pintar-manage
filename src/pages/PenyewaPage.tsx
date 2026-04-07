@@ -57,6 +57,7 @@ export default function PenyewaPage() {
   const [depositInfo, setDepositInfo] = useState<any>(null);
   const [returnAmount, setReturnAmount] = useState("");
   const [deductionNote, setDeductionNote] = useState("");
+  const [depositAction, setDepositAction] = useState<"full" | "partial" | "forfeit">("full");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const now = new Date();
