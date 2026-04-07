@@ -206,7 +206,7 @@ const COMPETITOR_LABEL = "Aplikasi Lain";
 /* ─── FAQ ─── */
 const FAQS = [
   { q: "Apakah data saya aman?", a: "Ya, data disimpan di server terenkripsi dan hanya bisa diakses oleh Anda." },
-  { q: "Apa beda paket Mandiri dan Juragan?", a: "Paket Mandiri mendukung hingga 40 unit kamar dan 2 properti. Paket Juragan mendukung hingga 200 unit kamar dan 10 properti, plus prioritas support." },
+  { q: "Apa beda paket Mandiri dan Juragan?", a: "Paket Mandiri mendukung hingga 40 kamar. Paket Juragan mendukung hingga 200 kamar, plus prioritas support. Masing-masing 1 properti per akun." },
   { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga sudah termasuk semua fitur untuk kelola kos-kosan Anda." },
   { q: "Bagaimana cara perpanjang langganan?", a: "Kami akan kirim notifikasi sebelum masa langganan habis. Perpanjang langsung dari aplikasi." },
   { q: "Apakah bisa dicoba dulu?", a: "Ya, tersedia mode demo tanpa perlu daftar. Klik \"Coba Demo\" di halaman utama." },
