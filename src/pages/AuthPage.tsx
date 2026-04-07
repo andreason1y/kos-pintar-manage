@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { trackEvent } from "@/lib/meta-pixel";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,10 @@ export default function AuthPage() {
         options: { data: { nama, no_hp: noHp } },
       });
       if (error) toast.error(error.message);
-      else toast.success("Akun berhasil dibuat! Silakan cek email untuk verifikasi.");
+      else {
+        trackEvent("CompleteRegistration");
+        toast.success("Akun berhasil dibuat! Silakan cek email untuk verifikasi.");
+      }
     }
     setLoading(false);
   };

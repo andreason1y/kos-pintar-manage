@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from "react";
+import { initMetaPixel, trackEvent } from "@/lib/meta-pixel";
 import { useNavigate } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -233,8 +234,11 @@ export default function LandingPage() {
   const [slotsLoaded, setSlotsLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch real user count + settings for slot counter
+  // Init Meta Pixel + fetch slot data
   useEffect(() => {
+    initMetaPixel();
+    trackEvent("ViewContent");
+
     Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("settings").select("value").eq("key", "early_bird_slots_taken").single(),
@@ -252,7 +256,10 @@ export default function LandingPage() {
     navigate("/beranda");
   };
 
-  const handleRegister = () => navigate("/login?tab=register");
+  const handleRegister = () => {
+    trackEvent("InitiateCheckout");
+    navigate("/login?tab=register");
+  };
   const handleLogin = () => navigate("/login");
 
   const slotsRemaining = SLOT_TOTAL - (slotsTaken + slotsUsed);
