@@ -74,8 +74,8 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4">
         <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-          <Avatar className="h-8 w-8 shrink-0" style={{ backgroundColor: avatarColor }}>
-            <AvatarFallback className="text-xs font-bold text-primary-foreground" style={{ backgroundColor: avatarColor }}>
+          <Avatar className="h-8 w-8 shrink-0" style={{ backgroundColor: avatarColor.bg }}>
+            <AvatarFallback className="text-xs font-bold" style={{ backgroundColor: avatarColor.bg, color: avatarColor.fg }}>
               {initials}
             </AvatarFallback>
           </Avatar>
