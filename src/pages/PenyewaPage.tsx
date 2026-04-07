@@ -35,7 +35,7 @@ interface Tenant {
   sisaHari?: number;
 }
 
-const tabsList = ["Semua", "Aktif", "Jatuh Tempo", "Keluar"];
+const tabsList = ["Semua", "Lunas", "Jatuh Tempo", "Keluar"];
 
 export default function PenyewaPage() {
   const { activeProperty } = useProperty();
