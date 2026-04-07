@@ -256,7 +256,10 @@ export default function LandingPage() {
     navigate("/beranda");
   };
 
-  const handleRegister = () => navigate("/login?tab=register");
+  const handleRegister = () => {
+    trackEvent("InitiateCheckout");
+    navigate("/login?tab=register");
+  };
   const handleLogin = () => navigate("/login");
 
   const slotsRemaining = SLOT_TOTAL - (slotsTaken + slotsUsed);
