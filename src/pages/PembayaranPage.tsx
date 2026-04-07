@@ -18,9 +18,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
-import { CreditCard, MessageCircle, FileText, Download, Send, MoreVertical, Pencil, Trash2, Plus } from "lucide-react";
+import { CreditCard, MessageCircle, FileText, Download, Send, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 
 interface Payment {
   id: string;
@@ -36,6 +37,29 @@ interface Payment {
   metode_bayar: string | null;
   tanggal_bayar: string | null;
   nota_number: string | null;
+  daysUntilDue: number;
+  tanggal_masuk_day: number;
+}
+
+type Category = "akan_jatuh_tempo" | "jatuh_tempo_hari_ini" | "belum_lunas" | "lunas";
+
+const CATEGORIES: { key: Category; label: string; badgeClass: string }[] = [
+  { key: "akan_jatuh_tempo", label: "Akan Jatuh Tempo", badgeClass: "bg-[hsl(38,92%,50%)] text-white" },
+  { key: "jatuh_tempo_hari_ini", label: "Jatuh Tempo Hari Ini", badgeClass: "bg-destructive text-destructive-foreground" },
+  { key: "belum_lunas", label: "Belum Lunas", badgeClass: "bg-[hsl(0,50%,35%)] text-white" },
+  { key: "lunas", label: "Lunas", badgeClass: "bg-[hsl(142,71%,45%)] text-white" },
+];
+
+function getDueDateLabel(days: number): string {
+  if (days === 0) return "Jatuh tempo hari ini";
+  if (days > 0) return `${days} hari lagi`;
+  return `Terlambat ${Math.abs(days)} hari`;
+}
+
+function getDueDateColor(days: number): string {
+  if (days > 1) return "text-[hsl(38,92%,50%)]";
+  if (days === 0) return "text-destructive";
+  return "text-[hsl(0,50%,35%)]";
 }
 
 export default function PembayaranPage() {
@@ -45,22 +69,15 @@ export default function PembayaranPage() {
   const [showPay, setShowPay] = useState<Payment | null>(null);
   const [showNota, setShowNota] = useState<Payment | null>(null);
   const [showEdit, setShowEdit] = useState<Payment | null>(null);
-  const [showAddTagihan, setShowAddTagihan] = useState(false);
   const [jumlahBayar, setJumlahBayar] = useState("");
   const [payError, setPayError] = useState("");
   const [metode, setMetode] = useState("tunai");
   const [catatan, setCatatan] = useState("");
-  const [activeTab, setActiveTab] = useState<"pending" | "lunas">("pending");
+  const [activeCategories, setActiveCategories] = useState<Set<Category>>(new Set(["akan_jatuh_tempo", "jatuh_tempo_hari_ini"]));
   const [editJumlah, setEditJumlah] = useState("");
   const [editMetode, setEditMetode] = useState("tunai");
   const [editStatus, setEditStatus] = useState("belum_bayar");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
-
-  // Add tagihan state
-  const [addTenantId, setAddTenantId] = useState("");
-  const [addBulan, setAddBulan] = useState(String(new Date().getMonth() + 1));
-  const [addTahun, setAddTahun] = useState(String(new Date().getFullYear()));
-  const [addTagihan, setAddTagihan] = useState("");
 
   const propertyName = demo.isDemo ? demo.property.nama_kos : activeProperty?.nama_kos || "";
 
@@ -70,49 +87,87 @@ export default function PembayaranPage() {
 
   const loading = !demo.isDemo && (tenantsLoading || txLoading || roomsLoading);
 
-  // Active tenants for "Tambah Tagihan" dropdown
-  const activeTenants = useMemo(() => {
-    if (demo.isDemo) {
-      return demo.tenants.filter(t => t.status === "aktif").map(t => {
-        const room = demo.rooms.find(r => r.id === t.room_id);
-        const rt = room ? demo.roomTypes.find(rr => rr.id === room.room_type_id) : null;
-        return { id: t.id, nama: t.nama, roomLabel: room ? `Kamar ${room.nomor}` : "-", harga: rt?.harga_per_bulan || 0 };
-      });
-    }
-    if (!tenantData || !roomData) return [];
-    return tenantData.filter((t: any) => t.status === "aktif").map((t: any) => {
-      const room = roomData.rooms.find((r: any) => r.id === t.room_id);
-      const rt = room ? roomData.roomTypes.find((rr: any) => rr.id === room.room_type_id) : null;
-      return { id: t.id, nama: t.nama, roomLabel: room ? `Kamar ${room.nomor}` : "-", harga: (rt as any)?.harga_per_bulan || 0 };
-    });
-  }, [demo.isDemo, tenantData, roomData, demo.tenants, demo.rooms, demo.roomTypes]);
+  const today = new Date();
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-  const mapPayment = (tx: any, tenantNama: string, tenantHp: string | null, kamar: string): Payment => ({
-    id: tx.id, tenant_nama: tenantNama, tenant_hp: tenantHp, kamar,
-    periode_bulan: tx.periode_bulan, periode_tahun: tx.periode_tahun,
-    total_tagihan: tx.total_tagihan, jumlah_dibayar: tx.jumlah_dibayar,
-    status: tx.status, sisa: tx.total_tagihan - tx.jumlah_dibayar,
-    metode_bayar: tx.metode_bayar, tanggal_bayar: tx.tanggal_bayar, nota_number: tx.nota_number,
-  });
+  const mapPayment = (tx: any, tenantNama: string, tenantHp: string | null, kamar: string, tanggalMasukDay: number): Payment => {
+    // Due date = tanggal_masuk day-of-month in the transaction's period
+    const dueDate = new Date(tx.periode_tahun, tx.periode_bulan - 1, tanggalMasukDay);
+    const diffMs = dueDate.getTime() - todayDate.getTime();
+    const daysUntilDue = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
-  const { pending, lunas } = useMemo(() => {
+    return {
+      id: tx.id, tenant_nama: tenantNama, tenant_hp: tenantHp, kamar,
+      periode_bulan: tx.periode_bulan, periode_tahun: tx.periode_tahun,
+      total_tagihan: tx.total_tagihan, jumlah_dibayar: tx.jumlah_dibayar,
+      status: tx.status, sisa: tx.total_tagihan - tx.jumlah_dibayar,
+      metode_bayar: tx.metode_bayar, tanggal_bayar: tx.tanggal_bayar, nota_number: tx.nota_number,
+      daysUntilDue,
+      tanggal_masuk_day: tanggalMasukDay,
+    };
+  };
+
+  const categorized = useMemo(() => {
+    let allPayments: Payment[] = [];
+
     if (demo.isDemo) {
-      const all = demo.transactions.map(tx => {
+      allPayments = demo.transactions.map(tx => {
         const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
         const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
-        return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp || null, room?.nomor || "-");
+        const masukDay = tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1;
+        return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp || null, room?.nomor || "-", masukDay);
       });
-      return { pending: all.filter(p => p.status !== "lunas"), lunas: all.filter(p => p.status === "lunas") };
+    } else if (txData && tenantData && roomData) {
+      const rooms = roomData.rooms;
+      allPayments = txData.map((tx: any) => {
+        const tenant = tenantData.find((t: any) => t.id === tx.tenant_id);
+        const room = tenant?.room_id ? rooms.find((r: any) => r.id === tenant.room_id) : null;
+        const masukDay = tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1;
+        return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp, room?.nomor || "-", masukDay);
+      });
     }
-    if (!txData || !tenantData || !roomData) return { pending: [] as Payment[], lunas: [] as Payment[] };
-    const rooms = roomData.rooms;
-    const all: Payment[] = txData.map((tx: any) => {
-      const tenant = tenantData.find((t: any) => t.id === tx.tenant_id);
-      const room = tenant?.room_id ? rooms.find((r: any) => r.id === tenant.room_id) : null;
-      return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp, room?.nomor || "-");
+
+    const result: Record<Category, Payment[]> = {
+      akan_jatuh_tempo: [],
+      jatuh_tempo_hari_ini: [],
+      belum_lunas: [],
+      lunas: [],
+    };
+
+    for (const p of allPayments) {
+      if (p.status === "lunas") {
+        result.lunas.push(p);
+      } else if (p.daysUntilDue >= 1 && p.daysUntilDue <= 7) {
+        result.akan_jatuh_tempo.push(p);
+      } else if (p.daysUntilDue === 0) {
+        result.jatuh_tempo_hari_ini.push(p);
+      } else {
+        // H+1 and beyond (overdue) OR more than 7 days out
+        result.belum_lunas.push(p);
+      }
+    }
+
+    return result;
+  }, [demo.isDemo, txData, tenantData, roomData, demo.transactions, demo.tenants, demo.rooms]);
+
+  const toggleCategory = (cat: Category) => {
+    setActiveCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
     });
-    return { pending: all.filter(p => p.status !== "lunas"), lunas: all.filter(p => p.status === "lunas") };
-  }, [demo.isDemo, txData, tenantData, roomData]);
+  };
+
+  const visiblePayments = useMemo(() => {
+    const list: Payment[] = [];
+    for (const cat of CATEGORIES) {
+      if (activeCategories.has(cat.key)) {
+        list.push(...categorized[cat.key]);
+      }
+    }
+    return list;
+  }, [activeCategories, categorized]);
 
   const refetch = () => { invalidate.all(); };
 
@@ -143,48 +198,6 @@ export default function PembayaranPage() {
     if (error) { toast.error(error.message); return; }
     toast.success(newStatus === "lunas" ? "Pembayaran lunas!" : "Pembayaran parsial berhasil");
     setShowPay(null); setJumlahBayar(""); setCatatan(""); setPayError("");
-    refetch();
-  };
-
-  const handleAddTagihan = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!addTenantId) { toast.error("Pilih penyewa terlebih dahulu"); return; }
-    const tagihan = parseInt(addTagihan) || 0;
-    if (tagihan <= 0) { toast.error("Jumlah tagihan harus lebih dari 0"); return; }
-    const bulan = parseInt(addBulan);
-    const tahun = parseInt(addTahun);
-
-    if (demo.isDemo) {
-      demo.addTransaction({
-        tenant_id: addTenantId,
-        property_id: "prop-1",
-        periode_bulan: bulan,
-        periode_tahun: tahun,
-        total_tagihan: tagihan,
-        jumlah_dibayar: 0,
-        status: "belum_bayar",
-        metode_bayar: null,
-        tanggal_bayar: null,
-        catatan: null,
-        nota_number: null,
-        created_at: new Date().toISOString(),
-      });
-      toast.success("Tagihan berhasil ditambahkan!");
-      setShowAddTagihan(false); setAddTenantId(""); setAddTagihan("");
-      return;
-    }
-
-    if (!activeProperty) return;
-    const { error } = await supabase.from("transactions").insert({
-      tenant_id: addTenantId,
-      property_id: activeProperty.id,
-      periode_bulan: bulan,
-      periode_tahun: tahun,
-      total_tagihan: tagihan,
-    } as any);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Tagihan berhasil ditambahkan!");
-    setShowAddTagihan(false); setAddTenantId(""); setAddTagihan("");
     refetch();
   };
 
@@ -238,32 +251,44 @@ export default function PembayaranPage() {
     refetch();
   };
 
-  const currentList = activeTab === "pending" ? pending : lunas;
-
   return (
     <AppShell>
-      <PageHeader title="Pembayaran" subtitle="Selesaikan tagihan penyewa" action={
-        <Button size="sm" onClick={() => setShowAddTagihan(true)}><Plus size={16} className="mr-1" /> Tagihan</Button>
-      } />
+      <PageHeader title="Pembayaran" subtitle="Selesaikan tagihan penyewa" />
       <div className="px-4 space-y-3">
-        <div className="flex gap-2">
-          {([["pending", "Belum Lunas"], ["lunas", "Lunas"]] as const).map(([key, label]) => (
-            <button key={key} onClick={() => setActiveTab(key)}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-            >{label} ({key === "pending" ? pending.length : lunas.length})</button>
-          ))}
+        {/* Category filter chips */}
+        <div className="flex flex-wrap gap-2">
+          {CATEGORIES.map(cat => {
+            const count = categorized[cat.key].length;
+            const isActive = activeCategories.has(cat.key);
+            return (
+              <button
+                key={cat.key}
+                onClick={() => toggleCategory(cat.key)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                  isActive
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-card text-muted-foreground"
+                }`}
+              >
+                <span>{cat.label}</span>
+                <Badge className={`${cat.badgeClass} text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center border-0`}>
+                  {count}
+                </Badge>
+              </button>
+            );
+          })}
         </div>
 
         {loading ? (
           <div className="space-y-3"><SkeletonCard /><SkeletonCard /></div>
-        ) : currentList.length === 0 ? (
+        ) : visiblePayments.length === 0 ? (
           <EmptyState
             icon={<CreditCard className="text-muted-foreground" size={28} />}
-            title={activeTab === "pending" ? "Semua tagihan lunas" : "Belum ada pembayaran lunas"}
-            description={activeTab === "pending" ? "Tidak ada tagihan yang perlu diselesaikan" : "Pembayaran lunas akan muncul di sini"}
+            title="Tidak ada tagihan"
+            description="Tidak ada tagihan dalam kategori yang dipilih"
           />
         ) : (
-          currentList.map((p, i) => (
+          visiblePayments.map((p, i) => (
             <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02, duration: 0.15 }}
               className="bg-card rounded-xl border border-border p-4 shadow-sm"
             >
@@ -271,6 +296,11 @@ export default function PembayaranPage() {
                 <div>
                   <p className="font-semibold text-foreground">{p.tenant_nama}</p>
                   <p className="text-sm text-muted-foreground">Kamar {p.kamar} · {getMonthName(p.periode_bulan)} {p.periode_tahun}</p>
+                  {p.status !== "lunas" && (
+                    <p className={`text-xs font-semibold mt-0.5 ${getDueDateColor(p.daysUntilDue)}`}>
+                      {getDueDateLabel(p.daysUntilDue)}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-1">
                   <StatusBadge status={p.status} />
@@ -349,53 +379,6 @@ export default function PembayaranPage() {
             </div>
           </form>
         )}
-      </BottomSheet>
-
-      {/* Add tagihan bottom sheet */}
-      <BottomSheet open={showAddTagihan} onClose={() => setShowAddTagihan(false)} title="Tambah Tagihan">
-        <form onSubmit={handleAddTagihan} className="bottom-sheet-form">
-          <div className="bottom-sheet-body">
-            <div className="space-y-2">
-              <Label>Penyewa</Label>
-              <Select value={addTenantId} onValueChange={(v) => {
-                setAddTenantId(v);
-                const t = activeTenants.find(t => t.id === v);
-                if (t) setAddTagihan(String(t.harga));
-              }}>
-                <SelectTrigger><SelectValue placeholder="Pilih penyewa aktif" /></SelectTrigger>
-                <SelectContent>
-                  {activeTenants.map(t => (
-                    <SelectItem key={t.id} value={t.id}>{t.nama} — {t.roomLabel}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Bulan</Label>
-                <Select value={addBulan} onValueChange={setAddBulan}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <SelectItem key={i + 1} value={String(i + 1)}>{getMonthName(i + 1)}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Tahun</Label>
-                <Input type="number" value={addTahun} onChange={e => setAddTahun(e.target.value)} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Total Tagihan (Rp)</Label>
-              <Input type="number" value={addTagihan} onChange={e => setAddTagihan(e.target.value)} placeholder="Auto dari harga kamar" required />
-            </div>
-          </div>
-          <div className="bottom-sheet-footer">
-            <Button type="submit" className="w-full">Tambah Tagihan</Button>
-          </div>
-        </form>
       </BottomSheet>
 
       {/* Edit transaction */}

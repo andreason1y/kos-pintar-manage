@@ -190,15 +190,18 @@ const FEATURES = [
 const EMOJIS = ["📋", "💰", "🏠", "📄", "📊", "🔔"];
 
 /* ─── COMPARISON ─── */
-const COMPARISON = [
+const COMPARISON: { feature: string; kp: string | boolean; sk: string | boolean }[] = [
   { feature: "Harga (Mandiri)", kp: "Rp 249k/tahun (flat)", sk: "Rp 9.000/kamar/bulan" },
   { feature: "10 kamar setahun", kp: "Rp 249.000", sk: "Rp 1.080.000" },
   { feature: "20 kamar setahun", kp: "Rp 249.000", sk: "Rp 2.160.000" },
   { feature: "Manajemen penyewa", kp: true, sk: true },
   { feature: "Nota PDF", kp: true, sk: true },
-  { feature: "Reminder WA otomatis", kp: true, sk: true },
-  { feature: "Harga flat (bukan per kamar)", kp: true, sk: false },
+  { feature: "Reminder WA ke penyewa", kp: true, sk: true },
+  { feature: "Notifikasi jatuh tempo ke owner", kp: true, sk: false },
+  { feature: "Laporan keuangan + export PDF", kp: true, sk: false },
+  { feature: "Harga flat bukan per kamar", kp: true, sk: false },
   { feature: "Tanpa biaya tersembunyi", kp: true, sk: false },
+  { feature: "Tidak terikat marketplace", kp: true, sk: false },
 ];
 
 const COMPETITOR_LABEL = "Aplikasi Lain";
@@ -213,9 +216,9 @@ const FAQS = [
 ];
 
 const TESTIMONIALS = [
-  { quote: "Sebelumnya saya catat tagihan penyewa di buku tulis, sering lupa dan kecolongan. Sekarang semua otomatis, reminder WA langsung ke penyewa.", name: "Pak Hendra", kos: "Kos Putra Mandiri, Bandung", color: "bg-primary" },
-  { quote: "Dibanding aplikasi lain yang saya coba, KosPintar jauh lebih simpel dan yang paling penting harganya flat. Punya 18 kamar tapi bayarnya sama aja.", name: "Bu Ratna", kos: "Kos Melati, Yogyakarta", color: "bg-accent" },
-  { quote: "Nota PDF langsung kirim ke WhatsApp penyewa, profesional banget. Penyewa jadi lebih tepat waktu bayarnya.", name: "Pak Doni", kos: "Kos Barokah, Surabaya", color: "bg-destructive" },
+  { quote: "Sewa sudah otomatis tercatat, saya tinggal cek HP kalau ada yang belum bayar. Jauh lebih rapi dari buku tulis.", name: "Pak Hendra S.", kos: "Kos di Bandung Utara", color: "bg-primary" },
+  { quote: "Harganya flat, punya 18 kamar tapi bayarnya sama aja kayak yang punya 5 kamar. Masuk akal banget.", name: "Bu Ratna W.", kos: "Kos di Sleman, Yogyakarta", color: "bg-accent" },
+  { quote: "Nota PDF langsung kirim ke WA penyewa, penyewa jadi lebih serius bayarnya.", name: "Pak Doni A.", kos: "Kos di Gubeng, Surabaya", color: "bg-destructive" },
 ];
 
 const SCREENSHOTS = [
@@ -226,6 +229,12 @@ const SCREENSHOTS = [
 ];
 
 const SLOT_TOTAL = 100;
+
+/* ─── Smooth scroll helper ─── */
+function smoothScrollTo(id: string) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth" });
+}
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -263,6 +272,11 @@ export default function LandingPage() {
 
   const slotsRemaining = SLOT_TOTAL - (slotsTaken + slotsUsed);
   const earlyBirdActive = slotsRemaining > 0;
+
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    smoothScrollTo(id);
+  };
 
   return (
     <div className="min-h-screen bg-background font-sans">
@@ -476,12 +490,12 @@ export default function LandingPage() {
                       <td className="p-2.5 md:p-4 text-foreground font-medium">{row.feature}</td>
                       <td className="p-2.5 md:p-4 text-center bg-primary/5 font-semibold text-primary">
                         {typeof row.kp === "boolean" ? (
-                          row.kp ? <Check className="w-4 h-4 mx-auto text-primary" aria-label="Ya" /> : <X className="w-4 h-4 mx-auto text-muted-foreground" aria-label="Tidak" />
+                          row.kp ? <Check className="w-4 h-4 mx-auto text-primary" aria-label="Ya" /> : <X className="w-4 h-4 mx-auto text-muted-foreground/40" aria-label="Tidak" />
                         ) : row.kp}
                       </td>
                       <td className="p-2.5 md:p-4 text-center text-muted-foreground">
                         {typeof row.sk === "boolean" ? (
-                          row.sk ? <Check className="w-4 h-4 mx-auto text-primary" aria-label="Ya" /> : <X className="w-4 h-4 mx-auto text-muted-foreground" aria-label="Tidak" />
+                          row.sk ? <Check className="w-4 h-4 mx-auto text-primary" aria-label="Ya" /> : <X className="w-4 h-4 mx-auto text-muted-foreground/40" aria-label="Tidak" />
                         ) : row.sk}
                       </td>
                     </tr>
@@ -616,6 +630,18 @@ export default function LandingPage() {
           </FadeIn>
         </section>
 
+        {/* ─── TENTANG KAMI ─── */}
+        <section id="tentang" className="px-4 md:px-8 py-10 md:py-16" aria-label="Tentang KosPintar">
+          <FadeIn>
+            <div className="bg-muted rounded-2xl p-6 md:p-10 text-center md:max-w-3xl md:mx-auto">
+              <h2 className="text-lg md:text-2xl font-extrabold text-foreground mb-3">Tentang Kami</h2>
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                KosPintar dibuat untuk membantu pemilik kos Indonesia kelola properti lebih mudah, tanpa ribet, tanpa mahal.
+              </p>
+            </div>
+          </FadeIn>
+        </section>
+
         {/* ─── FINAL CTA ─── */}
         <section className="px-4 md:px-8 py-10 md:py-16" aria-label="Daftar sekarang">
           <FadeIn>
@@ -651,11 +677,11 @@ export default function LandingPage() {
 
             <div className="mt-6 md:mt-0">
               <div className="flex flex-wrap gap-4 text-xs md:flex-col md:gap-2">
-                <a href="#fitur" className="text-muted-foreground hover:text-foreground transition-colors">Tentang</a>
-                <a href="#fitur" className="text-muted-foreground hover:text-foreground transition-colors">Fitur</a>
-                <a href="#harga" className="text-muted-foreground hover:text-foreground transition-colors">Harga</a>
-                <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
-                <a href="mailto:halo@kospintar.id" className="text-muted-foreground hover:text-foreground transition-colors">Kontak</a>
+                <a href="#tentang" onClick={e => handleAnchorClick(e, "tentang")} className="text-muted-foreground hover:text-foreground transition-colors">Tentang Kami</a>
+                <a href="#fitur" onClick={e => handleAnchorClick(e, "fitur")} className="text-muted-foreground hover:text-foreground transition-colors">Fitur</a>
+                <a href="#harga" onClick={e => handleAnchorClick(e, "harga")} className="text-muted-foreground hover:text-foreground transition-colors">Harga</a>
+                <a href="#faq" onClick={e => handleAnchorClick(e, "faq")} className="text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
+                <a href="https://wa.me/62818477620" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Kontak</a>
               </div>
             </div>
 
