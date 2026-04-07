@@ -329,7 +329,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FEATURES ─── */}
-        <section className="px-4 md:px-8 py-10 md:py-16" aria-label="Fitur aplikasi manajemen kos">
+        <section id="fitur" className="px-4 md:px-8 py-10 md:py-16" aria-label="Fitur aplikasi manajemen kos">
           <FadeIn>
             <h2 className="text-lg md:text-2xl font-extrabold text-foreground text-center">
               Fitur Lengkap untuk Kelola Kos-kosan
