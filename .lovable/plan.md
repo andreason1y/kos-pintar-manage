@@ -1,53 +1,78 @@
 
 
-## Plan: Sync Feature Parity Between Demo and Real Mode
+## Plan: Fix Data Sync & Align Demo with Real Data
 
-### Problem Identified
+### Root Cause of Sync Issues
 
-**Real mode missing visualizations (that demo has):**
-1. `KeuanganPage` — `barData` returns `[]` in real mode (line 137), so the 6-month bar chart never renders
-2. `KeuanganPage` — `pieData` returns `[]` in real mode (line 138), so the room-type pie chart never renders  
-3. `KeuanganPage` — `pengeluaranLalu` is hardcoded to `0` in real mode (line 136), so expense trend comparison is broken
-4. `DashboardPage` — `pengeluaranBulanLalu` is `0` in real mode (line 143), breaking laba trend
+After inspecting the database for `andreassina9a@gmail.com`:
 
-**Demo mode missing features (that real has):**
-1. All CRUD operations blocked with generic toast — user can't experience add/edit/delete flows
-2. No interactive demo for: adding tenants, paying bills, adding expenses, managing rooms
+1. **Tenant "Budi Santoso"** is `status: aktif` but `room_id: NULL` — appears as tenant without room in Penyewa, invisible in Kamar, breaks Keuangan room-type pie chart
+2. **Room "A1" doesn't exist** — rooms start at A2 (11 rooms instead of 12 for the Standar type)
+3. **Tenant "Budi"** (manually added) occupies A5 but has no historical transactions — shows as tenant with no payment history
+4. These orphaned references cause data to look different across Dashboard, Kamar, Penyewa, Pembayaran, and Keuangan pages
 
-### Changes
+### Solution
 
-#### 1. Fix Real Mode Visualizations in `KeuanganPage.tsx`
+**Step 1: Delete all existing data for this user** (via Supabase insert tool for DELETE operations)
 
-In the real-mode branch of `computed` useMemo (lines 107-142):
+Delete in order to respect dependencies:
+1. `deposits` where `property_id = '0cd559f1-...'`
+2. `transactions` where `property_id = '0cd559f1-...'`
+3. `expenses` where `property_id = '0cd559f1-...'`
+4. `reminders` where `property_id = '0cd559f1-...'`
+5. `tenants` where `property_id = '0cd559f1-...'`
+6. `rooms` where `room_type_id` in the 3 room type IDs
+7. `room_types` where `property_id = '0cd559f1-...'`
 
-- **Bar chart**: Build 6-month trend by querying `txData` for each of the last 6 months and fetching/estimating expenses per month
-- **Pie chart**: Group `txMonth` payments by room type using `roomData.roomTypes` mapping (tenant → room → room_type)
-- **pengeluaranLalu**: Fetch previous month expenses via a second `useExpenses(bulanLalu, tahunLalu)` hook call, or compute from available data
+Keep the `properties` row intact (Kos Lawyer).
 
-#### 2. Fix Real Mode Dashboard Trend in `DashboardPage.tsx`
+**Step 2: Insert new clean dummy data** with proper relationships
 
-- Add `useExpenses(bulanLalu, tahunLalu)` to fetch last month's expenses
-- Use it to compute `pengeluaranBulanLalu` properly instead of `0`
+Property: **Kos Lawyer**, Komplek Tarakanita (existing)
 
-#### 3. Enable Interactive Demo Mode
+Room Types (same as demo):
+- Standar: Rp 1.200.000 — 5 rooms (A1-A5), fasilitas: WiFi, Lemari, Parkir Motor
+- Deluxe: Rp 1.800.000 — 4 rooms (B1-B4), fasilitas: AC, WiFi, KM Dalam, Lemari, TV
+- Suite: Rp 2.500.000 — 3 rooms (C1-C3), fasilitas: AC, WiFi, KM Dalam, Lemari, TV, Air Panas, Parkir Motor
 
-Instead of blocking all operations with a toast, allow demo mutations to work on local state:
+Rooms: 12 total, 8 terisi + 4 kosong (A3, A5, B3, C3)
 
-- Add mutable state arrays to `DemoProvider` in `demo-context.tsx`: `tenants`, `rooms`, `transactions`, `expenses` as `useState` arrays initialized from the seed data
-- Add mutation functions: `addTenant`, `updateTenant`, `deleteTenant`, `addRoom`, `deleteRoom`, `addExpense`, `updateExpense`, `deleteExpense`, `updateTransaction`
-- Update each page's mutation handlers to call demo context mutations when `isDemo` is true, instead of showing a toast
+Tenants: 8 aktif (each linked to a specific occupied room) + 1 keluar (no room):
+| Tenant | Room | Type | Gender |
+|--------|------|------|--------|
+| Budi Santoso | A1 | Standar | L |
+| Siti Rahayu | A2 | Standar | P |
+| Ahmad Fauzi | A4 | Standar | L |
+| Dewi Lestari | B1 | Deluxe | P |
+| Rizky Pratama | B2 | Deluxe | L |
+| Nurul Hidayah | B4 | Deluxe | P |
+| Fajar Ramadhan | C1 | Suite | L |
+| Anisa Putri | C2 | Suite | P |
+| Doni Saputra | — | — (keluar) | L |
 
-### Files to Edit
+Transactions: April 2026 (current month) for all 8 aktif tenants + March 2026 (last month) for 3 tenants. Mix of lunas, belum_lunas, belum_bayar.
 
-1. **`src/pages/KeuanganPage.tsx`** — Add bar chart and pie chart computation for real mode; add second expenses query for previous month
-2. **`src/pages/DashboardPage.tsx`** — Add previous month expenses query for accurate laba trend
-3. **`src/lib/demo-context.tsx`** — Add mutable state and mutation functions for interactive demo
-4. **`src/pages/PenyewaPage.tsx`** — Replace demo toast blocks with demo context mutations
-5. **`src/pages/KamarPage.tsx`** — Same: use demo context mutations
-6. **`src/pages/PembayaranPage.tsx`** — Same: use demo context mutations
-7. **`src/hooks/use-queries.ts`** — Add `useExpenses` for previous month support (already parameterized, just need to call it)
+Expenses: 6 items for April 2026 (Listrik, Air, Internet, Kebersihan, Perbaikan, Keamanan).
 
-### Priority Order
-1. Fix real mode charts first (highest impact, user's primary complaint)
-2. Then enable interactive demo
+Deposits: 1 per aktif tenant (amount = 1x rent), Doni's deposit = dikembalikan.
+
+**Step 3: Update demo-context.tsx seed data**
+
+Replace demo property name/address with "Kos Lawyer" / "Komplek Tarakanita" and ensure:
+- Same room types, rooms, tenants, transactions, expenses structure
+- Same names, same room assignments
+- Demo data mirrors the real DB exactly
+
+### Technical Details
+
+- All DELETE/INSERT operations use the Supabase insert tool (data operations, not schema changes)
+- Use deterministic UUIDs for easy cross-referencing (e.g., `a1000001-...` pattern for room_types, `b1000001-...` for rooms, etc.)
+- Room status must match: if a tenant points to a room, that room must be `terisi`
+- Transaction `tenant_id` must reference an existing tenant
+- Deposit `tenant_id` must reference an existing tenant
+
+### Files Changed
+
+1. **Database**: DELETE + INSERT via Supabase tools (no migration needed)
+2. **`src/lib/demo-context.tsx`**: Update seed data constants (PROPERTY, ROOM_TYPES, ROOMS, TENANTS, TRANSACTIONS, EXPENSES) to match the new DB data
 
