@@ -7,6 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { PropertyProvider, useProperty } from "@/lib/property-context";
 import { DemoProvider, useDemo } from "@/lib/demo-context";
+import { PlanProvider } from "@/lib/plan-context";
+import UpgradeModal from "@/components/UpgradeModal";
 
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
