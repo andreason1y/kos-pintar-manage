@@ -404,15 +404,38 @@ export default function PenyewaPage() {
               </div>
               {depositInfo && (
                 <>
-                  <div className="space-y-2">
-                    <Label>Deposit Ditahan: {formatRupiah(depositInfo.jumlah)}</Label>
-                    <Label>Jumlah Dikembalikan (Rp)</Label>
-                    <Input type="number" value={returnAmount} onChange={e => setReturnAmount(e.target.value)} />
+                  <div className="bg-secondary rounded-lg p-3">
+                    <p className="text-sm font-medium text-foreground">Deposit Ditahan: {formatRupiah(depositInfo.jumlah)}</p>
                   </div>
                   <div className="space-y-2">
-                    <Label>Catatan Potongan</Label>
-                    <Input value={deductionNote} onChange={e => setDeductionNote(e.target.value)} placeholder="Contoh: kerusakan AC" />
+                    <Label>Pilih Tindakan Deposit</Label>
+                    <div className="space-y-2">
+                      <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${depositAction === "full" ? "border-primary bg-primary/5" : "border-border"}`}>
+                        <input type="radio" name="depositAction" checked={depositAction === "full"} onChange={() => setDepositAction("full")} className="accent-[hsl(var(--primary))]" />
+                        <span className="text-sm text-foreground">Kembalikan Penuh</span>
+                      </label>
+                      <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${depositAction === "partial" ? "border-primary bg-primary/5" : "border-border"}`}>
+                        <input type="radio" name="depositAction" checked={depositAction === "partial"} onChange={() => setDepositAction("partial")} className="accent-[hsl(var(--primary))]" />
+                        <span className="text-sm text-foreground">Kembalikan Sebagian</span>
+                      </label>
+                      <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${depositAction === "forfeit" ? "border-destructive bg-destructive/5" : "border-border"}`}>
+                        <input type="radio" name="depositAction" checked={depositAction === "forfeit"} onChange={() => setDepositAction("forfeit")} className="accent-[hsl(var(--destructive))]" />
+                        <span className="text-sm text-foreground">Hanguskan Deposit</span>
+                      </label>
+                    </div>
                   </div>
+                  {depositAction === "partial" && (
+                    <div className="space-y-2">
+                      <Label>Jumlah Dikembalikan (Rp)</Label>
+                      <Input type="number" value={returnAmount} onChange={e => setReturnAmount(e.target.value)} max={depositInfo.jumlah} />
+                    </div>
+                  )}
+                  {(depositAction === "partial" || depositAction === "forfeit") && (
+                    <div className="space-y-2">
+                      <Label>{depositAction === "forfeit" ? "Alasan Penghangusan" : "Catatan Potongan"}</Label>
+                      <Input value={deductionNote} onChange={e => setDeductionNote(e.target.value)} placeholder={depositAction === "forfeit" ? "Contoh: kerusakan berat, belum bayar sewa" : "Contoh: kerusakan AC"} />
+                    </div>
+                  )}
                 </>
               )}
             </div>
