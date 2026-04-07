@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from "react";
+import { initMetaPixel, trackEvent } from "@/lib/meta-pixel";
 import { useNavigate } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
