@@ -2,6 +2,7 @@ import { DoorOpen, Users, Wallet, UserCircle, Home } from "lucide-react";
 import logoIcon from "@/assets/logo-icon.png";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth-context";
+import { useProfile } from "@/hooks/use-queries";
 import { useDemo } from "@/lib/demo-context";
 import {
   Sidebar,
@@ -30,8 +31,9 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isDemo } = useDemo();
+  const { data: profileData } = useProfile(user?.id);
 
-  const displayName = isDemo ? "Demo User" : (user?.email?.split("@")[0] ?? "User");
+  const displayName = isDemo ? "Demo User" : (profileData?.nama || user?.user_metadata?.nama || user?.email?.split("@")[0] || "User");
   const initials = displayName.slice(0, 2).toUpperCase();
   const avatarColor = getAvatarColor(displayName);
 
