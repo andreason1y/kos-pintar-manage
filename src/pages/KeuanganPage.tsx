@@ -240,46 +240,156 @@ export default function KeuanganPage() {
 
     const incomeItems = items.filter((i: any) => i.type === "income");
     const expenseItems = items.filter((i: any) => i.type === "expense");
-    const expByKategori: Record<string, any[]> = {};
+
+    // Build tenant+room info for income items
+    const incomeRows = incomeItems.map((item: any) => {
+      let tenantName = "-";
+      let roomNo = "-";
+      if (demo.isDemo) {
+        const tx = demo.transactions.find(t => t.id === item.id);
+        if (tx) {
+          const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
+          tenantName = tenant?.nama || "-";
+          const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
+          roomNo = room?.nomor || "-";
+        }
+      } else if (txData && tenantData && roomData) {
+        const tx = (txData as any[]).find((t: any) => t.id === item.id);
+        if (tx) {
+          const tenant = (tenantData as any[]).find((t: any) => t.id === tx.tenant_id);
+          tenantName = tenant?.nama || "-";
+          const room = tenant?.room_id ? (roomData.rooms as any[]).find((r: any) => r.id === tenant.room_id) : null;
+          roomNo = room?.nomor || "-";
+        }
+      }
+      return { date: item.date, label: item.label, tenantName, roomNo, amount: item.amount };
+    });
+
+    const expByKategori: Record<string, { label: string; date: string; amount: number }[]> = {};
     expenseItems.forEach((e: any) => {
       const k = e.kategori || "Lainnya";
       if (!expByKategori[k]) expByKategori[k] = [];
       expByKategori[k].push(e);
     });
 
+    const totalPengeluaran = expenseItems.reduce((s: number, e: any) => s + e.amount, 0);
+    const generateDate = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+
     const html = `
-      <div style="font-family:sans-serif;padding:20px;max-width:600px;margin:0 auto;color:#1a1a1a">
-        <div style="text-align:center;margin-bottom:20px">
-          <h2 style="margin:0;font-size:18px">Laporan Keuangan</h2>
-          <p style="margin:4px 0;font-size:14px;font-weight:bold">${propertyName}</p>
-          ${propertyAlamat ? `<p style="margin:2px 0;font-size:12px;color:#666">${propertyAlamat}</p>` : ""}
-          <p style="margin:2px 0;font-size:12px;color:#666">${getMonthName(bulan)} ${tahun}</p>
+      <div style="font-family:'Segoe UI',Arial,sans-serif;padding:32px 28px;max-width:720px;margin:0 auto;color:#1a1a2e;font-size:13px;line-height:1.5">
+        <!-- Header -->
+        <table style="width:100%;margin-bottom:12px"><tr>
+          <td style="width:50px;vertical-align:top"><img src="${window.location.origin}/logo-icon.png" style="width:40px;height:40px;border-radius:8px" onerror="this.style.display='none'" /></td>
+          <td style="vertical-align:top;padding-left:8px">
+            <div style="font-size:10px;color:#0d9488;font-weight:700;letter-spacing:1px">KOSPINTAR</div>
+          </td>
+          <td style="text-align:right;vertical-align:top">
+            <div style="font-size:16px;font-weight:700;color:#1a1a2e">${propertyName}</div>
+            ${propertyAlamat ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${propertyAlamat}</div>` : ""}
+            <div style="font-size:12px;color:#0d9488;font-weight:600;margin-top:4px">${getMonthName(bulan)} ${tahun}</div>
+          </td>
+        </tr></table>
+        <div style="height:2px;background:linear-gradient(90deg,#0d9488,#14b8a6,#99f6e4);border-radius:2px;margin-bottom:20px"></div>
+
+        <div style="font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:12px">LAPORAN KEUANGAN</div>
+
+        <!-- Summary Box -->
+        <div style="background:#f0fdfa;border:1px solid #ccfbf1;border-radius:10px;padding:16px;margin-bottom:20px">
+          <table style="width:100%;border-collapse:collapse">
+            <tr>
+              <td style="width:33%;text-align:center;padding:4px">
+                <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px">Pemasukan</div>
+                <div style="font-size:16px;font-weight:700;color:#16a34a;margin-top:4px">${formatRupiah(pemasukan)}</div>
+              </td>
+              <td style="width:33%;text-align:center;padding:4px;border-left:1px solid #d1fae5;border-right:1px solid #d1fae5">
+                <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px">Pengeluaran</div>
+                <div style="font-size:16px;font-weight:700;color:#dc2626;margin-top:4px">${formatRupiah(pengeluaran)}</div>
+              </td>
+              <td style="width:33%;text-align:center;padding:4px">
+                <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px">Laba Bersih</div>
+                <div style="font-size:16px;font-weight:700;color:#0d9488;margin-top:4px">${formatRupiah(laba)}</div>
+              </td>
+            </tr>
+          </table>
+          ${totalDeposit > 0 ? `
+            <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #99f6e4;text-align:center">
+              <span style="font-size:11px;color:#6b7280">Deposit Ditahan: </span>
+              <span style="font-size:12px;font-weight:600;color:#6b7280">${formatRupiah(totalDeposit)}</span>
+            </div>
+          ` : ""}
         </div>
-        <hr style="border:1px solid #ddd"/>
-        <h3 style="font-size:14px;margin:16px 0 8px">Ringkasan</h3>
-        <table style="width:100%;font-size:13px;border-collapse:collapse">
-          <tr><td style="padding:4px 0">Pemasukan</td><td style="text-align:right;color:green">${formatRupiah(pemasukan)}</td></tr>
-          <tr><td style="padding:4px 0">Pengeluaran</td><td style="text-align:right;color:red">${formatRupiah(pengeluaran)}</td></tr>
-          <tr style="border-top:1px solid #ddd"><td style="padding:6px 0;font-weight:bold">Laba Bersih</td><td style="text-align:right;font-weight:bold;color:${laba >= 0 ? 'green' : 'red'}">${formatRupiah(laba)}</td></tr>
-          ${totalDeposit > 0 ? `<tr><td style="padding:4px 0;color:#666">Deposit Ditahan</td><td style="text-align:right;color:#666">${formatRupiah(totalDeposit)}</td></tr>` : ""}
-        </table>
-        ${incomeItems.length > 0 ? `
-          <h3 style="font-size:14px;margin:16px 0 8px">Pemasukan</h3>
-          <table style="width:100%;font-size:12px;border-collapse:collapse">
-            ${incomeItems.map((i: any) => `<tr><td style="padding:3px 0">${i.label}</td><td style="text-align:right;color:green">+${formatRupiah(i.amount)}</td></tr>`).join("")}
+
+        <!-- Pemasukan Table -->
+        ${incomeRows.length > 0 ? `
+          <div style="font-size:13px;font-weight:700;color:#16a34a;margin-bottom:8px;display:flex;align-items:center">
+            <span style="display:inline-block;width:4px;height:16px;background:#16a34a;border-radius:2px;margin-right:8px"></span>
+            PEMASUKAN
+          </div>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px">
+            <tr style="background:#f9fafb">
+              <th style="text-align:left;padding:8px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase">Tanggal</th>
+              <th style="text-align:left;padding:8px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase">Keterangan</th>
+              <th style="text-align:left;padding:8px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase">Penyewa</th>
+              <th style="text-align:left;padding:8px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase">Kamar</th>
+              <th style="text-align:right;padding:8px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase">Jumlah</th>
+            </tr>
+            ${incomeRows.map((r: any, i: number) => `
+              <tr style="background:${i % 2 === 0 ? "#ffffff" : "#f9fafb"}">
+                <td style="padding:6px;border-bottom:1px solid #f3f4f6">${r.date}</td>
+                <td style="padding:6px;border-bottom:1px solid #f3f4f6">${r.label}</td>
+                <td style="padding:6px;border-bottom:1px solid #f3f4f6">${r.tenantName}</td>
+                <td style="padding:6px;border-bottom:1px solid #f3f4f6">${r.roomNo}</td>
+                <td style="padding:6px;border-bottom:1px solid #f3f4f6;text-align:right;color:#16a34a;font-weight:600">${formatRupiah(r.amount)}</td>
+              </tr>
+            `).join("")}
+            <tr style="background:#f0fdf4">
+              <td colspan="4" style="padding:8px 6px;font-weight:700;border-top:2px solid #bbf7d0">Total Pemasukan</td>
+              <td style="padding:8px 6px;text-align:right;font-weight:700;color:#16a34a;border-top:2px solid #bbf7d0">${formatRupiah(pemasukan)}</td>
+            </tr>
           </table>
         ` : ""}
+
+        <!-- Pengeluaran Table -->
         ${Object.keys(expByKategori).length > 0 ? `
-          <h3 style="font-size:14px;margin:16px 0 8px">Pengeluaran</h3>
-          ${Object.entries(expByKategori).map(([k, items]) => `
-            <p style="font-size:12px;font-weight:bold;margin:10px 0 4px;color:#555">${k}</p>
-            <table style="width:100%;font-size:12px;border-collapse:collapse">
-              ${items.map((i: any) => `<tr><td style="padding:3px 0">${i.label}</td><td style="text-align:right;color:red">-${formatRupiah(i.amount)}</td></tr>`).join("")}
-            </table>
-          `).join("")}
+          <div style="font-size:13px;font-weight:700;color:#dc2626;margin-bottom:8px;display:flex;align-items:center">
+            <span style="display:inline-block;width:4px;height:16px;background:#dc2626;border-radius:2px;margin-right:8px"></span>
+            PENGELUARAN
+          </div>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px">
+            <tr style="background:#f9fafb">
+              <th style="text-align:left;padding:8px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase">Tanggal</th>
+              <th style="text-align:left;padding:8px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase">Keterangan</th>
+              <th style="text-align:left;padding:8px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase">Kategori</th>
+              <th style="text-align:right;padding:8px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase">Jumlah</th>
+            </tr>
+            ${Object.entries(expByKategori).map(([kat, items]) => {
+              const subtotal = items.reduce((s: number, e: any) => s + e.amount, 0);
+              return `
+                ${items.map((e: any, i: number) => `
+                  <tr style="background:${i % 2 === 0 ? "#ffffff" : "#f9fafb"}">
+                    <td style="padding:6px;border-bottom:1px solid #f3f4f6">${e.date}</td>
+                    <td style="padding:6px;border-bottom:1px solid #f3f4f6">${e.label}</td>
+                    <td style="padding:6px;border-bottom:1px solid #f3f4f6">${kat}</td>
+                    <td style="padding:6px;border-bottom:1px solid #f3f4f6;text-align:right;color:#dc2626;font-weight:500">${formatRupiah(e.amount)}</td>
+                  </tr>
+                `).join("")}
+                <tr style="background:#fef2f2">
+                  <td colspan="3" style="padding:6px;font-weight:600;font-size:11px;color:#6b7280;border-bottom:1px solid #fecaca">Subtotal ${kat}</td>
+                  <td style="padding:6px;text-align:right;font-weight:600;color:#dc2626;font-size:11px;border-bottom:1px solid #fecaca">${formatRupiah(subtotal)}</td>
+                </tr>
+              `;
+            }).join("")}
+            <tr style="background:#fef2f2">
+              <td colspan="3" style="padding:8px 6px;font-weight:700;border-top:2px solid #fca5a5">Total Pengeluaran</td>
+              <td style="padding:8px 6px;text-align:right;font-weight:700;color:#dc2626;border-top:2px solid #fca5a5">${formatRupiah(totalPengeluaran)}</td>
+            </tr>
+          </table>
         ` : ""}
-        <hr style="border:1px solid #ddd;margin:16px 0"/>
-        <p style="text-align:center;font-size:10px;color:#999">Dibuat oleh KosPintar · ${new Date().toLocaleDateString("id-ID")}</p>
+
+        <!-- Footer -->
+        <div style="margin-top:24px;padding-top:12px;border-top:1px solid #e5e7eb;text-align:center">
+          <div style="font-size:10px;color:#9ca3af">Dibuat oleh KosPintar · kospintar.id · ${generateDate}</div>
+        </div>
       </div>
     `;
 
@@ -287,11 +397,12 @@ export default function KeuanganPage() {
     container.innerHTML = html;
     document.body.appendChild(container);
 
+    // Copy logo to public for PDF access
     const sanitizedName = propertyName.replace(/[^a-zA-Z0-9]/g, "-");
     await html2pdf().set({
-      margin: [10, 10, 10, 10],
+      margin: [12, 12, 12, 12],
       filename: `Laporan-Keuangan-${sanitizedName}-${getMonthName(bulan)}-${tahun}.pdf`,
-      html2canvas: { scale: 2 },
+      html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
     }).from(container).save();
 

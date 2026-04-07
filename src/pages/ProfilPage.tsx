@@ -57,12 +57,22 @@ export default function ProfilPage() {
     if (demo.isDemo) { toast.info("Mode demo: fitur ini tidak tersedia"); return; }
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").update({ nama: editNama, no_hp: editHp || null } as any).eq("id", user.id);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Profil diperbarui!");
-      invalidate.profile();
-      setShowEdit(false);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({ id: user.id, nama: editNama, no_hp: editHp || null } as any, { onConflict: "id" });
+      if (error) {
+        console.error("Profile save error:", error);
+        toast.error(error.message);
+      } else {
+        toast.success("Profil berhasil diperbarui!");
+        setShowEdit(false);
+        // Force immediate refetch
+        await invalidate.profile();
+      }
+    } catch (err: any) {
+      console.error("Profile save exception:", err);
+      toast.error("Gagal menyimpan profil");
     }
     setSaving(false);
   };

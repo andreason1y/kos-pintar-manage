@@ -106,9 +106,16 @@ export default function PenyewaPage() {
 
   const filtered = useMemo(() => {
     let list = tenants;
-    if (activeTab === "Aktif") list = list.filter(t => t.status === "aktif");
-    else if (activeTab === "Keluar") list = list.filter(t => t.status === "keluar");
-    else if (activeTab === "Jatuh Tempo") list = list.filter(t => t.status === "aktif" && t.sisaHari !== undefined && t.sisaHari <= 30);
+    if (activeTab === "Lunas") {
+      list = list.filter(t => t.status === "aktif" && t.latestTxStatus === "lunas");
+    } else if (activeTab === "Keluar") {
+      list = list.filter(t => t.status === "keluar");
+    } else if (activeTab === "Jatuh Tempo") {
+      list = list.filter(t => t.status === "aktif" && t.latestTxStatus && t.latestTxStatus !== "lunas");
+    } else {
+      // "Semua" — show all active tenants
+      list = list.filter(t => t.status === "aktif");
+    }
     if (search) list = list.filter(t => t.nama.toLowerCase().includes(search.toLowerCase()));
     return list;
   }, [tenants, activeTab, search]);
