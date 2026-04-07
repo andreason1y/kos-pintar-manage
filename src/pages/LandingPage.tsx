@@ -411,7 +411,7 @@ export default function LandingPage() {
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full font-bold mt-auto pt-3 flex items-center justify-center text-center" size="lg" onClick={handleRegister}>
+                  <Button className="w-full font-bold mt-auto flex items-center justify-center" size="lg" onClick={handleRegister}>
                     Daftar Paket Mandiri →
                   </Button>
                 </CardContent>
