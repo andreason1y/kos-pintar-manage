@@ -128,6 +128,12 @@ export default function KamarPage() {
   };
 
   const handleDeleteType = async (id: string) => {
+    // Guard: check if any room in this type has active tenants
+    const rt = roomTypes.find(r => r.id === id);
+    if (rt && rt.rooms.some(r => r.tenantName)) {
+      toast.error("Tipe kamar masih memiliki penyewa aktif. Keluarkan penyewa terlebih dahulu.");
+      return;
+    }
     if (demo.isDemo) {
       demo.deleteRoomType(id);
       toast.success("Tipe kamar dihapus");
@@ -139,6 +145,12 @@ export default function KamarPage() {
   };
 
   const handleDeleteRoom = async (id: string) => {
+    // Guard: check if room has active tenant
+    const room = roomTypes.flatMap(rt => rt.rooms).find(r => r.id === id);
+    if (room && room.tenantName) {
+      toast.error("Kamar ini masih ditempati penyewa. Keluarkan penyewa terlebih dahulu.");
+      return;
+    }
     if (demo.isDemo) {
       demo.deleteRoom(id);
       toast.success("Kamar dihapus");

@@ -139,14 +139,6 @@ export default function ProfilPage() {
               style={{ width: `${Math.min((roomCount / limits.maxRooms) * 100, 100)}%` }}
             />
           </div>
-          {plan === "mandiri" && !demo.isDemo && (
-            <button
-              onClick={() => navigate("/#harga")}
-              className="mt-3 text-xs font-semibold text-accent flex items-center gap-1 hover:underline"
-            >
-              Upgrade ke Juragan <ArrowRight size={12} />
-            </button>
-          )}
         </motion.div>
 
         {/* Single property */}
