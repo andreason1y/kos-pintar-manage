@@ -238,6 +238,7 @@ export default function AdminUsers() {
 
   const handleDeactivate = async (userId: string) => {
     await supabase.from("subscriptions").update({ status: "expired" } as any).eq("user_id", userId);
+    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "deactivate_user", detail: userId } as any).then(() => {});
     toast.success("Subscription dinonaktifkan");
     fetchData();
   };
