@@ -75,8 +75,8 @@ const COMPARISON: { feature: string; kp: string | boolean; sk: string | boolean 
 
 const COMPETITOR_LABEL = "Aplikasi Lain";
 
-/* ─── FAQ ─── */
-const FAQS = [
+/* ─── Default FAQ/Testimonial fallbacks ─── */
+const DEFAULT_FAQS = [
   { q: "Apakah data saya aman?", a: "Ya, data disimpan di server terenkripsi dan hanya bisa diakses oleh Anda." },
   { q: "Apa beda paket Mandiri dan Juragan?", a: "Paket Mandiri mendukung hingga 40 kamar. Paket Juragan mendukung hingga 200 kamar, plus prioritas support. Masing-masing 1 properti per akun." },
   { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga sudah termasuk semua fitur untuk kelola kos-kosan Anda." },
@@ -84,11 +84,13 @@ const FAQS = [
   { q: "Apakah bisa dicoba dulu?", a: "Ya, tersedia mode demo tanpa perlu daftar. Klik \"Coba Demo\" di halaman utama." },
 ];
 
-const TESTIMONIALS = [
-  { quote: "Sewa sudah otomatis tercatat, saya tinggal cek HP kalau ada yang belum bayar. Jauh lebih rapi dari buku tulis.", name: "Pak Hendra S.", kos: "Kos di Bandung Utara", color: "bg-primary" },
-  { quote: "Harganya flat, punya 18 kamar tapi bayarnya sama aja kayak yang punya 5 kamar. Masuk akal banget.", name: "Bu Ratna W.", kos: "Kos di Sleman, Yogyakarta", color: "bg-accent" },
-  { quote: "Nota PDF langsung kirim ke WA penyewa, penyewa jadi lebih serius bayarnya.", name: "Pak Doni A.", kos: "Kos di Gubeng, Surabaya", color: "bg-destructive" },
+const DEFAULT_TESTIMONIALS = [
+  { quote: "Sewa sudah otomatis tercatat, saya tinggal cek HP kalau ada yang belum bayar. Jauh lebih rapi dari buku tulis.", name: "Pak Hendra S.", kos: "Kos di Bandung Utara", stars: 5 },
+  { quote: "Harganya flat, punya 18 kamar tapi bayarnya sama aja kayak yang punya 5 kamar. Masuk akal banget.", name: "Bu Ratna W.", kos: "Kos di Sleman, Yogyakarta", stars: 5 },
+  { quote: "Nota PDF langsung kirim ke WA penyewa, penyewa jadi lebih serius bayarnya.", name: "Pak Doni A.", kos: "Kos di Gubeng, Surabaya", stars: 5 },
 ];
+
+const AVATAR_COLORS = ["bg-primary", "bg-accent", "bg-destructive", "bg-secondary", "bg-muted"];
 
 const SCREENSHOTS = [
   { label: "Beranda — Dashboard Kos", src: "/screenshots/beranda.png" },
@@ -113,11 +115,25 @@ const DEFAULTS = {
   earlybird_active: 1,
   earlybird_slots_total: 100,
   early_bird_slots_taken: 0,
+  announcement_banner_active: 1,
+  maintenance_mode: 0,
+};
+
+const TEXT_DEFAULTS: Record<string, string> = {
   earlybird_label: "Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama",
   mandiri_sublabel: "Kurang dari Rp 700/hari",
   juragan_sublabel: "",
   mandiri_earlybird_badge: "🔥 Early Bird",
   juragan_earlybird_badge: "🔥 Early Bird — Kos Besar",
+  announcement_banner_text: "🔥 Early Bird: Tersisa {slots} slot — Hemat 50% hari ini",
+  pricing_footer_text: "Harga naik setelah 100 pengguna pertama",
+  hero_headline: "Aplikasi Manajemen Kos Terbaik di Indonesia",
+  hero_subheadline: "Kelola Penyewa, Tagihan & Keuangan Kos dalam Satu Aplikasi",
+  hero_subtext: "Tagihan otomatis, reminder WA, nota PDF, dan laporan keuangan lengkap. Hemat hingga Rp 1.800.000/tahun dibanding aplikasi kos lain.",
+  footer_tagline: "Aplikasi manajemen kos-kosan terbaik di Indonesia. Kelola penyewa, tagihan, dan keuangan kos dalam satu aplikasi.",
+  contact_wa: "62818477620",
+  contact_email: "hello@kospintar.id",
+  app_version: "1.0.0",
 };
 
 function formatRupiahLanding(n: number) {
@@ -133,6 +149,9 @@ export default function LandingPage() {
   // Dynamic pricing state
   const [cfg, setCfg] = useState<Record<string, number>>({});
   const [cfgText, setCfgText] = useState<Record<string, string>>({});
+  const [faqs, setFaqs] = useState<{ q: string; a: string }[]>(DEFAULT_FAQS);
+  const [testimonials, setTestimonials] = useState<{ quote: string; name: string; kos: string; stars: number }[]>(DEFAULT_TESTIMONIALS);
+  const [isMaintenance, setIsMaintenance] = useState(false);
 
   useEffect(() => {
     initMetaPixel();
@@ -150,13 +169,45 @@ export default function LandingPage() {
       ((settingsRes.data || []) as any[]).forEach((r: any) => { numMap[r.key] = r.value; });
       setCfg(numMap);
 
+      // Check maintenance mode
+      if ((numMap.maintenance_mode ?? 0) === 1) {
+        setIsMaintenance(true);
+      }
+
       const txtMap: Record<string, string> = {};
       ((textRes.data || []) as any[]).forEach((r: any) => { txtMap[r.key] = r.value; });
       setCfgText(txtMap);
 
+      // Parse FAQ from DB
+      try {
+        if (txtMap.faq_data) {
+          const parsed = JSON.parse(txtMap.faq_data);
+          if (Array.isArray(parsed) && parsed.length > 0) setFaqs(parsed);
+        }
+      } catch { /* use defaults */ }
+
+      // Parse testimonials from DB
+      try {
+        if (txtMap.testimonials_data) {
+          const parsed = JSON.parse(txtMap.testimonials_data);
+          if (Array.isArray(parsed) && parsed.length > 0) setTestimonials(parsed);
+        }
+      } catch { /* use defaults */ }
+
       setSlotsLoaded(true);
     });
   }, []);
+
+  // Maintenance mode
+  if (isMaintenance) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8 text-center">
+        <img src={logoIcon} alt="KosPintar" className="h-16 w-16 rounded-xl mb-6" />
+        <h1 className="text-2xl font-extrabold text-foreground mb-3">Sedang dalam Pemeliharaan</h1>
+        <p className="text-muted-foreground max-w-md">Kami sedang melakukan pemeliharaan sistem. Silakan kembali lagi nanti.</p>
+      </div>
+    );
+  }
 
   const handleDemo = () => {
     setIsDemo(true);
@@ -169,11 +220,14 @@ export default function LandingPage() {
   };
   const handleLogin = () => navigate("/login");
 
+  // Helper to get text with fallback
+  const t = (key: string) => cfgText[key] ?? TEXT_DEFAULTS[key] ?? "";
+
   // Derived pricing values
   const ebActive = (cfg.earlybird_active ?? DEFAULTS.earlybird_active) === 1;
   const slotTotal = cfg.earlybird_slots_total ?? DEFAULTS.earlybird_slots_total;
   const slotsTaken = cfg.early_bird_slots_taken ?? DEFAULTS.early_bird_slots_taken;
-  const slotsRemaining = slotTotal - (slotsTaken + slotsUsed);
+  const slotsRemaining = Math.max(0, slotTotal - (slotsTaken + slotsUsed));
   const earlyBirdActive = ebActive && slotsRemaining > 0;
 
   const mandiriPriceNormal = cfg.mandiri_price_normal ?? DEFAULTS.mandiri_price_normal;
@@ -181,11 +235,21 @@ export default function LandingPage() {
   const juraganPriceNormal = cfg.juragan_price_normal ?? DEFAULTS.juragan_price_normal;
   const juraganPriceEB = cfg.juragan_price_earlybird ?? DEFAULTS.juragan_price_earlybird;
 
-  const ebLabel = cfgText.earlybird_label ?? DEFAULTS.earlybird_label;
-  const mandiriSublabel = cfgText.mandiri_sublabel ?? DEFAULTS.mandiri_sublabel;
-  const juraganSublabel = cfgText.juragan_sublabel ?? DEFAULTS.juragan_sublabel;
-  const mandiriBadge = cfgText.mandiri_earlybird_badge ?? DEFAULTS.mandiri_earlybird_badge;
-  const juraganBadge = cfgText.juragan_earlybird_badge ?? DEFAULTS.juragan_earlybird_badge;
+  const ebLabel = t("earlybird_label");
+  const mandiriSublabel = t("mandiri_sublabel");
+  const juraganSublabel = t("juragan_sublabel");
+  const mandiriBadge = t("mandiri_earlybird_badge");
+  const juraganBadge = t("juragan_earlybird_badge");
+
+  // Announcement banner
+  const bannerActive = (cfg.announcement_banner_active ?? DEFAULTS.announcement_banner_active) === 1;
+  const bannerText = t("announcement_banner_text").replace("{slots}", String(slotsRemaining));
+
+  // Pricing footer
+  const pricingFooter = t("pricing_footer_text").replace("{total}", String(slotTotal));
+
+  // Contact
+  const contactWa = t("contact_wa");
 
   const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -195,9 +259,9 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background font-sans">
       {/* ─── URGENCY BANNER ─── */}
-      {slotsLoaded && earlyBirdActive && (
+      {slotsLoaded && earlyBirdActive && bannerActive && (
         <div className="bg-primary text-primary-foreground text-center py-2 px-4 text-xs font-semibold">
-          🔥 Early Bird: Tersisa {slotsRemaining} slot — Hemat 50% hari ini
+          {bannerText}
         </div>
       )}
 
@@ -222,19 +286,24 @@ export default function LandingPage() {
             <div>
               <FadeIn>
                 <h1 className="text-2xl md:text-4xl lg:text-5xl font-extrabold leading-tight text-foreground">
-                  Aplikasi Manajemen Kos<br />
-                  <span className="text-primary">Terbaik di Indonesia</span>
+                  {t("hero_headline").includes("Terbaik") ? (
+                    <>
+                      {t("hero_headline").split("Terbaik")[0]}
+                      <span className="text-primary">Terbaik{t("hero_headline").split("Terbaik")[1]}</span>
+                    </>
+                  ) : (
+                    <span className="text-primary">{t("hero_headline")}</span>
+                  )}
                 </h1>
               </FadeIn>
               <FadeIn delay={0.1}>
                 <h2 className="mt-2 md:mt-4 text-base md:text-xl font-bold text-foreground/90 leading-snug">
-                  Kelola Penyewa, Tagihan & Keuangan Kos dalam Satu Aplikasi
+                  {t("hero_subheadline")}
                 </h2>
               </FadeIn>
               <FadeIn delay={0.15}>
-                <p className="mt-3 md:mt-4 text-sm md:text-base text-muted-foreground leading-relaxed">
-                  Tagihan otomatis, reminder WA, nota PDF, dan laporan keuangan lengkap. <strong>Hemat hingga Rp 1.800.000/tahun</strong> dibanding aplikasi kos lain.
-                </p>
+                <p className="mt-3 md:mt-4 text-sm md:text-base text-muted-foreground leading-relaxed"
+                   dangerouslySetInnerHTML={{ __html: t("hero_subtext").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") }} />
               </FadeIn>
               <FadeIn delay={0.2}>
                 <div className="mt-6 flex gap-3 md:max-w-md">
@@ -286,7 +355,6 @@ export default function LandingPage() {
             </h2>
           </FadeIn>
           <FadeIn delay={0.1}>
-            {/* Mobile: horizontal scroll */}
             <div
               className="mt-6 md:mt-10 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide md:hidden"
               style={{ scrollbarWidth: "none" }}
@@ -300,7 +368,6 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            {/* Desktop: grid */}
             <div className="hidden md:grid md:grid-cols-5 gap-5 mt-10 px-8">
               {SCREENSHOTS.map((s) => (
                 <div key={s.label} className="space-y-3">
@@ -322,23 +389,22 @@ export default function LandingPage() {
             </h2>
           </FadeIn>
           <FadeIn delay={0.1}>
-            {/* Mobile: horizontal scroll */}
             <div
               className="mt-6 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide md:hidden"
               style={{ scrollbarWidth: "none" }}
             >
-              {TESTIMONIALS.map((t) => (
-                <Card key={t.name} className="snap-center flex-shrink-0 w-72 border-border/60">
+              {testimonials.map((t, idx) => (
+                <Card key={idx} className="snap-center flex-shrink-0 w-72 border-border/60">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex gap-0.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
+                      {Array.from({ length: t.stars || 5 }).map((_, s) => (
                         <Star key={s} className="w-4 h-4 fill-accent text-accent" />
                       ))}
                     </div>
                     <p className="text-xs text-foreground leading-relaxed">"{t.quote}"</p>
                     <div className="flex items-center gap-2">
                       <Avatar className="w-8 h-8">
-                        <AvatarFallback className={`${t.color} text-primary-foreground text-[10px] font-bold`}>
+                        <AvatarFallback className={`${AVATAR_COLORS[idx % AVATAR_COLORS.length]} text-primary-foreground text-[10px] font-bold`}>
                           {t.name.split(" ").map(w => w[0]).join("")}
                         </AvatarFallback>
                       </Avatar>
@@ -351,20 +417,19 @@ export default function LandingPage() {
                 </Card>
               ))}
             </div>
-            {/* Desktop: 3-column grid */}
             <div className="hidden md:grid md:grid-cols-3 gap-5 mt-10 px-8">
-              {TESTIMONIALS.map((t) => (
-                <Card key={t.name} className="border-border/60">
+              {testimonials.map((t, idx) => (
+                <Card key={idx} className="border-border/60">
                   <CardContent className="p-5 space-y-3">
                     <div className="flex gap-0.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
+                      {Array.from({ length: t.stars || 5 }).map((_, s) => (
                         <Star key={s} className="w-4 h-4 fill-accent text-accent" />
                       ))}
                     </div>
                     <p className="text-sm text-foreground leading-relaxed">"{t.quote}"</p>
                     <div className="flex items-center gap-2">
                       <Avatar className="w-9 h-9">
-                        <AvatarFallback className={`${t.color} text-primary-foreground text-xs font-bold`}>
+                        <AvatarFallback className={`${AVATAR_COLORS[idx % AVATAR_COLORS.length]} text-primary-foreground text-xs font-bold`}>
                           {t.name.split(" ").map(w => w[0]).join("")}
                         </AvatarFallback>
                       </Avatar>
@@ -520,7 +585,7 @@ export default function LandingPage() {
           <FadeIn delay={0.25}>
             <div className="mt-4 space-y-3 md:max-w-lg md:mx-auto">
               <p className="text-[11px] md:text-xs text-muted-foreground text-center">
-                Harga naik setelah {slotTotal} pengguna pertama
+                {pricingFooter}
               </p>
               {slotsLoaded && earlyBirdActive && (
                 <div className="bg-muted rounded-lg p-3 text-center">
@@ -551,7 +616,7 @@ export default function LandingPage() {
           </FadeIn>
           <FadeIn delay={0.1}>
             <Accordion type="single" collapsible className="mt-6 md:mt-10 space-y-2 md:max-w-2xl md:mx-auto">
-              {FAQS.map((faq, i) => (
+              {faqs.map((faq, i) => (
                 <AccordionItem key={i} value={`faq-${i}`} className="border rounded-lg px-3">
                   <AccordionTrigger className="text-sm md:text-base font-semibold text-left">
                     {faq.q}
@@ -604,10 +669,10 @@ export default function LandingPage() {
           <div className="md:max-w-[1200px] md:mx-auto md:grid md:grid-cols-3 md:gap-8">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-            <img src={logoIcon} alt="KosPintar" className="h-10 w-10 rounded-lg object-contain" />
+                <img src={logoIcon} alt="KosPintar" className="h-10 w-10 rounded-lg object-contain" />
                 <span className="font-extrabold text-base text-foreground">KosPintar</span>
               </div>
-              <p className="text-xs text-muted-foreground">Aplikasi manajemen kos-kosan terbaik di Indonesia. Kelola penyewa, tagihan, dan keuangan kos dalam satu aplikasi.</p>
+              <p className="text-xs text-muted-foreground">{t("footer_tagline")}</p>
             </div>
 
             <div className="mt-6 md:mt-0">
@@ -616,7 +681,7 @@ export default function LandingPage() {
                 <a href="#fitur" onClick={e => handleAnchorClick(e, "fitur")} className="text-muted-foreground hover:text-foreground transition-colors">Fitur</a>
                 <a href="#harga" onClick={e => handleAnchorClick(e, "harga")} className="text-muted-foreground hover:text-foreground transition-colors">Harga</a>
                 <a href="#faq" onClick={e => handleAnchorClick(e, "faq")} className="text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
-                <a href="https://wa.me/62818477620" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Kontak</a>
+                <a href={`https://wa.me/${contactWa}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Kontak</a>
               </div>
             </div>
 
@@ -625,12 +690,12 @@ export default function LandingPage() {
                 <a href="https://instagram.com/kospintar_id" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="Instagram KosPintar">
                   <Instagram className="w-4 h-4 text-muted-foreground" />
                 </a>
-                <a href="https://wa.me/62818477620" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="WhatsApp KosPintar">
+                <a href={`https://wa.me/${contactWa}`} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors" aria-label="WhatsApp KosPintar">
                   <MessageCircle className="w-4 h-4 text-muted-foreground" />
                 </a>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                © 2026 KosPintar. All rights reserved.
+                © 2026 KosPintar v{t("app_version")}. All rights reserved.
               </p>
             </div>
           </div>
