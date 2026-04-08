@@ -504,6 +504,7 @@ export default function AdminUsers() {
                           <div><span className="text-muted-foreground">Berakhir:</span> <span className="font-medium">{u.sub_expires || "-"}</span></div>
                           <div><span className="text-muted-foreground">Terdaftar:</span> <span className="font-medium">{new Date(u.created_at).toLocaleString("id-ID")}</span></div>
                           <div><span className="text-muted-foreground">Last Login:</span> <span className="font-medium">{u.last_login ? new Date(u.last_login).toLocaleString("id-ID") : "Belum pernah"}</span></div>
+                          <div><span className="text-muted-foreground">Provider:</span> <span className="font-medium">{u.provider === "google" ? "Google" : "Email"}</span></div>
                         </div>
                       </div>
                     )}
