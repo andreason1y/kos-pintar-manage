@@ -458,9 +458,13 @@ export default function AdminUsers() {
                         <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => openEdit(u)}>
                           <Edit size={12} className="mr-1" /> Edit
                         </Button>
-                        <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { setResetUser(u); setResetMode("email"); setNewPassword(""); }}>
-                          <Key size={12} className="mr-1" /> Password
-                        </Button>
+                        {u.provider === "google" ? (
+                          <span className="text-[10px] text-muted-foreground italic flex items-center h-7 px-2">OAuth — no password</span>
+                        ) : (
+                          <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { setResetUser(u); setResetMode("email"); setNewPassword(""); }}>
+                            <Key size={12} className="mr-1" /> Password
+                          </Button>
+                        )}
                         {u.sub_status === "aktif" ? (
                           <Button size="sm" variant="outline" className="text-xs h-7 text-destructive border-destructive/30" onClick={() => handleDeactivate(u.id)}>
                             <Ban size={12} className="mr-1" /> Off
