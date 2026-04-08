@@ -23,6 +23,8 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminBroadcast = lazy(() => import("./pages/admin/AdminBroadcast"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminSubscriptions = lazy(() => import("./pages/admin/AdminSubscriptions"));
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,8 @@ function MainRoutes() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/broadcast" element={<AdminBroadcast />} />
+        <Route path="/admin/settings" element={<AdminSettings />} />
+        <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
         {/* Redirect old / and /login to /beranda for logged in users */}
         <Route path="/" element={<Navigate to="/beranda" replace />} />
         <Route path="/login" element={<Navigate to="/beranda" replace />} />

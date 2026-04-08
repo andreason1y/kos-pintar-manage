@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatRupiah } from "@/lib/helpers";
-import { Users, Building2, TrendingUp, UserPlus } from "lucide-react";
+import { Users, CreditCard, TrendingUp, UserPlus, Ticket } from "lucide-react";
 import { motion } from "framer-motion";
 import AdminLayout from "./AdminLayout";
-
-const SUBSCRIPTION_PRICE = 49000; // Rp/bulan
 
 interface UserRow {
   id: string;
@@ -15,9 +13,17 @@ interface UserRow {
   no_hp: string | null;
 }
 
+interface SubRow {
+  user_id: string;
+  plan: string;
+  status: string;
+  expires_at: string;
+}
+
 export default function AdminDashboard() {
   const [users, setUsers] = useState<UserRow[]>([]);
-  const [subCount, setSubCount] = useState(0);
+  const [subs, setSubs] = useState<SubRow[]>([]);
+  const [settings, setSettings] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   const now = new Date();
@@ -25,30 +31,48 @@ export default function AdminDashboard() {
   const thisYear = now.getFullYear();
 
   useEffect(() => {
-    const fetch = async () => {
-      const { data: userData } = await supabase.rpc("admin_get_users") as any;
-      const allUsers = (userData || []) as UserRow[];
-      setUsers(allUsers);
-
-      const { data: subData } = await supabase
-        .from("subscriptions")
-        .select("id")
-        .eq("status", "aktif") as any;
-      setSubCount((subData || []).length);
-
+    const load = async () => {
+      const [usersRes, subsRes, settingsRes] = await Promise.all([
+        supabase.rpc("admin_get_users") as any,
+        supabase.from("subscriptions").select("*") as any,
+        supabase.from("settings").select("*") as any,
+      ]);
+      setUsers((usersRes.data || []) as UserRow[]);
+      setSubs((subsRes.data || []) as SubRow[]);
+      const s: Record<string, number> = {};
+      ((settingsRes.data || []) as any[]).forEach((r: any) => { s[r.key] = r.value; });
+      setSettings(s);
       setLoading(false);
     };
-    fetch();
+    load();
   }, []);
+
+  const activeSubs = subs.filter(s => s.status === "aktif");
+  const mandiriCount = activeSubs.filter(s => s.plan === "mandiri").length;
+  const juraganCount = activeSubs.filter(s => s.plan === "juragan").length;
+
+  const priceMandiri = settings.price_mandiri_early || 249000;
+  const priceJuragan = settings.price_juragan_early || 499000;
+  const revenue = mandiriCount * priceMandiri + juraganCount * priceJuragan;
 
   const newThisMonth = users.filter(u => {
     const d = new Date(u.created_at);
     return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
   });
 
-  const revenue = subCount * SUBSCRIPTION_PRICE;
+  const totalSlots = settings.early_bird_total_slots || 100;
+  const slotsTaken = settings.early_bird_slots_taken || 0;
+  const slotsRemaining = Math.max(0, totalSlots - slotsTaken - users.length);
 
-  const recentSignups = [...users].slice(0, 10);
+  const recentSignups = [...users].slice(0, 8);
+
+  const stats = [
+    { label: "Total Users", value: users.length, icon: Users, color: "text-primary" },
+    { label: "Active Subs", value: `${activeSubs.length} (M:${mandiriCount} J:${juraganCount})`, icon: CreditCard, color: "text-[hsl(var(--success))]" },
+    { label: "Est. Revenue", value: formatRupiah(revenue), icon: TrendingUp, color: "text-primary" },
+    { label: "New This Month", value: newThisMonth.length, icon: UserPlus, color: "text-accent" },
+    { label: "Early Bird Slots Left", value: slotsRemaining, icon: Ticket, color: "text-[hsl(var(--warning))]" },
+  ];
 
   return (
     <AdminLayout>
@@ -59,46 +83,24 @@ export default function AdminDashboard() {
           ))}
         </div>
       ) : (
-        <div className="space-y-4">
-          {/* Stat cards */}
-          <div className="grid grid-cols-2 gap-3">
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-              className="bg-card rounded-xl border border-border p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <Users size={18} className="text-primary" />
-                <span className="text-xs text-muted-foreground">Total Users</span>
-              </div>
-              <p className="text-2xl font-bold text-foreground">{users.length}</p>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-              className="bg-card rounded-xl border border-border p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <Building2 size={18} className="text-[hsl(142,71%,45%)]" />
-                <span className="text-xs text-muted-foreground">Active Subs</span>
-              </div>
-              <p className="text-2xl font-bold text-foreground">{subCount}</p>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-              className="bg-card rounded-xl border border-border p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <UserPlus size={18} className="text-accent" />
-                <span className="text-xs text-muted-foreground">New This Month</span>
-              </div>
-              <p className="text-2xl font-bold text-foreground">{newThisMonth.length}</p>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-              className="bg-card rounded-xl border border-border p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp size={18} className="text-primary" />
-                <span className="text-xs text-muted-foreground">Est. Revenue</span>
-              </div>
-              <p className="text-lg font-bold text-foreground">{formatRupiah(revenue)}</p>
-            </motion.div>
+        <div className="space-y-6">
+          <h2 className="text-lg font-bold text-foreground">Dashboard</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {stats.map((s, i) => (
+              <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-card rounded-xl border border-border p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <s.icon size={18} className={s.color} />
+                  <span className="text-xs text-muted-foreground">{s.label}</span>
+                </div>
+                <p className="text-xl font-bold text-foreground">{s.value}</p>
+              </motion.div>
+            ))}
           </div>
 
-          {/* Recent signups */}
           <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-foreground mb-3">Recent Signups</h2>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Recent Signups</h3>
             <div className="space-y-2">
               {recentSignups.map(u => (
                 <div key={u.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
