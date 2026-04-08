@@ -24,6 +24,7 @@ interface UserRow {
   created_at: string;
   nama: string | null;
   no_hp: string | null;
+  provider?: string;
   property_count?: number;
   room_count?: number;
   sub_status?: string;
@@ -445,6 +446,7 @@ export default function AdminUsers() {
                           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-muted-foreground">
                             <span>{u.property_name}</span>
                             <span>{u.room_count} kamar</span>
+                            <span className={u.provider === "google" ? "text-blue-500 font-medium" : ""}>{u.provider === "google" ? "Google" : "Email"}</span>
                             <span>{new Date(u.created_at).toLocaleDateString("id-ID")}</span>
                             {u.sub_expires && <span>s/d {u.sub_expires}</span>}
                           </div>
@@ -456,9 +458,13 @@ export default function AdminUsers() {
                         <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => openEdit(u)}>
                           <Edit size={12} className="mr-1" /> Edit
                         </Button>
-                        <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { setResetUser(u); setResetMode("email"); setNewPassword(""); }}>
-                          <Key size={12} className="mr-1" /> Password
-                        </Button>
+                        {u.provider === "google" ? (
+                          <span className="text-[10px] text-muted-foreground italic flex items-center h-7 px-2">OAuth — no password</span>
+                        ) : (
+                          <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { setResetUser(u); setResetMode("email"); setNewPassword(""); }}>
+                            <Key size={12} className="mr-1" /> Password
+                          </Button>
+                        )}
                         {u.sub_status === "aktif" ? (
                           <Button size="sm" variant="outline" className="text-xs h-7 text-destructive border-destructive/30" onClick={() => handleDeactivate(u.id)}>
                             <Ban size={12} className="mr-1" /> Off
@@ -498,6 +504,7 @@ export default function AdminUsers() {
                           <div><span className="text-muted-foreground">Berakhir:</span> <span className="font-medium">{u.sub_expires || "-"}</span></div>
                           <div><span className="text-muted-foreground">Terdaftar:</span> <span className="font-medium">{new Date(u.created_at).toLocaleString("id-ID")}</span></div>
                           <div><span className="text-muted-foreground">Last Login:</span> <span className="font-medium">{u.last_login ? new Date(u.last_login).toLocaleString("id-ID") : "Belum pernah"}</span></div>
+                          <div><span className="text-muted-foreground">Provider:</span> <span className="font-medium">{u.provider === "google" ? "Google" : "Email"}</span></div>
                         </div>
                       </div>
                     )}

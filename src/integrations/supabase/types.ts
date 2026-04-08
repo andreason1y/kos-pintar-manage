@@ -564,6 +564,7 @@ export type Database = {
           id: string
           nama: string
           no_hp: string
+          provider: string
         }[]
       }
       delete_tenant: { Args: { p_tenant_id: string }; Returns: Json }
