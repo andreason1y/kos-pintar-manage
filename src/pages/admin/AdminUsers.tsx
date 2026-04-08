@@ -272,6 +272,7 @@ export default function AdminUsers() {
     await supabase.from("subscriptions").delete().eq("user_id", deleteUser.id);
     await supabase.from("profiles").delete().eq("id", deleteUser.id);
     toast.success("Data user dihapus");
+    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "delete_user", detail: deleteUser.email } as any).then(() => {});
     setDeleteUser(null);
     fetchData();
   };
