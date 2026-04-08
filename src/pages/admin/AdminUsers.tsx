@@ -446,6 +446,7 @@ export default function AdminUsers() {
                           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-muted-foreground">
                             <span>{u.property_name}</span>
                             <span>{u.room_count} kamar</span>
+                            <span className={u.provider === "google" ? "text-blue-500 font-medium" : ""}>{u.provider === "google" ? "Google" : "Email"}</span>
                             <span>{new Date(u.created_at).toLocaleDateString("id-ID")}</span>
                             {u.sub_expires && <span>s/d {u.sub_expires}</span>}
                           </div>
