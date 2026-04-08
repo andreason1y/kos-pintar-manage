@@ -24,6 +24,7 @@ interface UserRow {
   created_at: string;
   nama: string | null;
   no_hp: string | null;
+  provider?: string;
   property_count?: number;
   room_count?: number;
   sub_status?: string;
