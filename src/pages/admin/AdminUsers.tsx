@@ -262,6 +262,7 @@ export default function AdminUsers() {
   const handleSwitchPlan = async (userId: string, currentPlan: string) => {
     const newPlan = currentPlan === "mandiri" ? "juragan" : "mandiri";
     await supabase.from("subscriptions").update({ plan: newPlan } as any).eq("user_id", userId);
+    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "switch_plan", detail: `${userId}: ${currentPlan} → ${newPlan}` } as any).then(() => {});
     toast.success(`Paket diubah ke ${newPlan}`);
     fetchData();
   };
