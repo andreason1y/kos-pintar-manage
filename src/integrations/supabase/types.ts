@@ -335,6 +335,27 @@ export type Database = {
         }
         Relationships: []
       }
+      settings_text: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          value?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
