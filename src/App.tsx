@@ -25,6 +25,7 @@ const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminBroadcast = lazy(() => import("./pages/admin/AdminBroadcast"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminSubscriptions = lazy(() => import("./pages/admin/AdminSubscriptions"));
+const AdminActivityLog = lazy(() => import("./pages/admin/AdminActivityLog"));
 
 const queryClient = new QueryClient();
 
