@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { trackEvent } from "@/lib/meta-pixel";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -104,7 +104,17 @@ export default function AuthPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="password">Kata Sandi</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Kata Sandi</Label>
+                {isLogin && (
+                  <Link
+                    to="/lupa-sandi"
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Lupa kata sandi?
+                  </Link>
+                )}
+              </div>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min. 6 karakter" required minLength={6} />
             </div>
             {!isLogin && (
