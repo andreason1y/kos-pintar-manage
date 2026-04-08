@@ -31,6 +31,7 @@ interface UserRow {
   sub_expires?: string;
   sub_started?: string;
   property_name?: string;
+  last_login?: string;
 }
 
 const PAGE_SIZE = 20;
