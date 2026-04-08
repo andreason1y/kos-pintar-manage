@@ -98,20 +98,41 @@ const SCREENSHOTS = [
   { label: "Pembayaran — Tagihan Penyewa", src: "/screenshots/pembayaran.png" },
 ];
 
-const SLOT_TOTAL = 100;
-
 /* ─── Smooth scroll helper ─── */
 function smoothScrollTo(id: string) {
   const el = document.getElementById(id);
   if (el) el.scrollIntoView({ behavior: "smooth" });
 }
 
+/* ─── Default pricing fallback ─── */
+const DEFAULTS = {
+  mandiri_price_normal: 499000,
+  mandiri_price_earlybird: 249000,
+  juragan_price_normal: 999000,
+  juragan_price_earlybird: 499000,
+  earlybird_active: 1,
+  earlybird_slots_total: 100,
+  early_bird_slots_taken: 0,
+  earlybird_label: "Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama",
+  mandiri_sublabel: "Kurang dari Rp 700/hari",
+  juragan_sublabel: "",
+  mandiri_earlybird_badge: "🔥 Early Bird",
+  juragan_earlybird_badge: "🔥 Early Bird — Kos Besar",
+};
+
+function formatRupiahLanding(n: number) {
+  return "Rp " + n.toLocaleString("id-ID");
+}
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const { setIsDemo } = useDemo();
   const [slotsUsed, setSlotsUsed] = useState(0);
-  const [slotsTaken, setSlotsTaken] = useState(0);
   const [slotsLoaded, setSlotsLoaded] = useState(false);
+
+  // Dynamic pricing state
+  const [cfg, setCfg] = useState<Record<string, number>>({});
+  const [cfgText, setCfgText] = useState<Record<string, string>>({});
 
   useEffect(() => {
     initMetaPixel();
@@ -119,12 +140,20 @@ export default function LandingPage() {
 
     Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase.from("settings").select("value").eq("key", "early_bird_slots_taken").single(),
-    ]).then(([profileRes, settingsRes]) => {
+      supabase.from("settings").select("key, value") as any,
+      supabase.from("settings_text").select("key, value") as any,
+    ]).then(([profileRes, settingsRes, textRes]) => {
       const userCount = profileRes.count || 0;
-      const taken = settingsRes.data?.value || 0;
       setSlotsUsed(userCount);
-      setSlotsTaken(taken);
+
+      const numMap: Record<string, number> = {};
+      ((settingsRes.data || []) as any[]).forEach((r: any) => { numMap[r.key] = r.value; });
+      setCfg(numMap);
+
+      const txtMap: Record<string, string> = {};
+      ((textRes.data || []) as any[]).forEach((r: any) => { txtMap[r.key] = r.value; });
+      setCfgText(txtMap);
+
       setSlotsLoaded(true);
     });
   }, []);
@@ -140,8 +169,23 @@ export default function LandingPage() {
   };
   const handleLogin = () => navigate("/login");
 
-  const slotsRemaining = SLOT_TOTAL - (slotsTaken + slotsUsed);
-  const earlyBirdActive = slotsRemaining > 0;
+  // Derived pricing values
+  const ebActive = (cfg.earlybird_active ?? DEFAULTS.earlybird_active) === 1;
+  const slotTotal = cfg.earlybird_slots_total ?? DEFAULTS.earlybird_slots_total;
+  const slotsTaken = cfg.early_bird_slots_taken ?? DEFAULTS.early_bird_slots_taken;
+  const slotsRemaining = slotTotal - (slotsTaken + slotsUsed);
+  const earlyBirdActive = ebActive && slotsRemaining > 0;
+
+  const mandiriPriceNormal = cfg.mandiri_price_normal ?? DEFAULTS.mandiri_price_normal;
+  const mandiriPriceEB = cfg.mandiri_price_earlybird ?? DEFAULTS.mandiri_price_earlybird;
+  const juraganPriceNormal = cfg.juragan_price_normal ?? DEFAULTS.juragan_price_normal;
+  const juraganPriceEB = cfg.juragan_price_earlybird ?? DEFAULTS.juragan_price_earlybird;
+
+  const ebLabel = cfgText.earlybird_label ?? DEFAULTS.earlybird_label;
+  const mandiriSublabel = cfgText.mandiri_sublabel ?? DEFAULTS.mandiri_sublabel;
+  const juraganSublabel = cfgText.juragan_sublabel ?? DEFAULTS.juragan_sublabel;
+  const mandiriBadge = cfgText.mandiri_earlybird_badge ?? DEFAULTS.mandiri_earlybird_badge;
+  const juraganBadge = cfgText.juragan_earlybird_badge ?? DEFAULTS.juragan_earlybird_badge;
 
   const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -388,20 +432,30 @@ export default function LandingPage() {
             {/* Mandiri */}
             <FadeIn delay={0.1} className="flex-1 flex">
               <Card className="border-primary/30 shadow-lg overflow-hidden flex flex-col w-full">
-                <div className="gradient-primary p-2.5 text-center">
-                  <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground border-0 font-bold text-xs">
-                    🔥 Early Bird
-                  </Badge>
-                </div>
+                {earlyBirdActive && (
+                  <div className="gradient-primary p-2.5 text-center">
+                    <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground border-0 font-bold text-xs">
+                      {mandiriBadge}
+                    </Badge>
+                  </div>
+                )}
                 <CardContent className="p-5 flex flex-col flex-1">
                   <div className="text-center">
                     <p className="text-lg font-bold text-foreground">Mandiri</p>
-                    <p className="text-sm text-muted-foreground line-through">Rp 499.000/tahun</p>
-                    <p className="text-3xl font-extrabold text-foreground">
-                      Rp 249.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
-                    </p>
-                    <p className="text-xs text-primary font-semibold mt-1">Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
-                    <p className="text-xs text-muted-foreground mt-1">Kurang dari Rp 700/hari</p>
+                    {earlyBirdActive ? (
+                      <>
+                        <p className="text-sm text-muted-foreground line-through">{formatRupiahLanding(mandiriPriceNormal)}/tahun</p>
+                        <p className="text-3xl font-extrabold text-foreground">
+                          {formatRupiahLanding(mandiriPriceEB)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                        </p>
+                        <p className="text-xs text-primary font-semibold mt-1">{ebLabel}</p>
+                      </>
+                    ) : (
+                      <p className="text-3xl font-extrabold text-foreground">
+                        {formatRupiahLanding(mandiriPriceNormal)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                      </p>
+                    )}
+                    {mandiriSublabel && <p className="text-xs text-muted-foreground mt-1">{mandiriSublabel}</p>}
                   </div>
                   <div className="space-y-2 mt-4 mb-6">
                     {["Maks 40 kamar", "Semua fitur", "Update gratis selamanya"].map((f) => (
@@ -421,19 +475,30 @@ export default function LandingPage() {
             {/* Juragan */}
             <FadeIn delay={0.2} className="flex-1 flex">
               <Card className="border-[#1B2B6B]/30 shadow-lg overflow-hidden flex flex-col w-full">
-                <div className="p-2.5 text-center" style={{ background: "#1B2B6B" }}>
-                  <Badge variant="secondary" className="bg-white/20 text-white border-0 font-bold text-xs">
-                    🔥 Early Bird — Kos Besar
-                  </Badge>
-                </div>
+                {earlyBirdActive && (
+                  <div className="p-2.5 text-center" style={{ background: "#1B2B6B" }}>
+                    <Badge variant="secondary" className="bg-white/20 text-white border-0 font-bold text-xs">
+                      {juraganBadge}
+                    </Badge>
+                  </div>
+                )}
                 <CardContent className="p-5 flex flex-col flex-1">
                   <div className="text-center">
                     <p className="text-lg font-bold text-foreground">Juragan</p>
-                    <p className="text-sm text-muted-foreground line-through">Rp 999.000/tahun</p>
-                    <p className="text-3xl font-extrabold text-foreground">
-                      Rp 499.000<span className="text-base font-semibold text-muted-foreground">/tahun</span>
-                    </p>
-                    <p className="text-xs font-semibold mt-1" style={{ color: "#1B2B6B" }}>Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama</p>
+                    {earlyBirdActive ? (
+                      <>
+                        <p className="text-sm text-muted-foreground line-through">{formatRupiahLanding(juraganPriceNormal)}/tahun</p>
+                        <p className="text-3xl font-extrabold text-foreground">
+                          {formatRupiahLanding(juraganPriceEB)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                        </p>
+                        <p className="text-xs font-semibold mt-1" style={{ color: "#1B2B6B" }}>{ebLabel}</p>
+                      </>
+                    ) : (
+                      <p className="text-3xl font-extrabold text-foreground">
+                        {formatRupiahLanding(juraganPriceNormal)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                      </p>
+                    )}
+                    {juraganSublabel && <p className="text-xs text-muted-foreground mt-1">{juraganSublabel}</p>}
                   </div>
                   <div className="space-y-2 mt-4 mb-6">
                     {["Maks 200 kamar", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
@@ -455,17 +520,17 @@ export default function LandingPage() {
           <FadeIn delay={0.25}>
             <div className="mt-4 space-y-3 md:max-w-lg md:mx-auto">
               <p className="text-[11px] md:text-xs text-muted-foreground text-center">
-                Harga naik setelah 100 pengguna pertama
+                Harga naik setelah {slotTotal} pengguna pertama
               </p>
               {slotsLoaded && earlyBirdActive && (
                 <div className="bg-muted rounded-lg p-3 text-center">
                   <p className="text-xs font-semibold text-foreground">
-                    Tersisa <span className="text-primary font-extrabold">{slotsRemaining}</span> dari {SLOT_TOTAL} slot Early Bird
+                    Tersisa <span className="text-primary font-extrabold">{slotsRemaining}</span> dari {slotTotal} slot Early Bird
                   </p>
-                  <div className="mt-2 h-2 bg-border rounded-full overflow-hidden" role="progressbar" aria-valuenow={SLOT_TOTAL - slotsRemaining} aria-valuemax={SLOT_TOTAL}>
+                  <div className="mt-2 h-2 bg-border rounded-full overflow-hidden" role="progressbar" aria-valuenow={slotTotal - slotsRemaining} aria-valuemax={slotTotal}>
                     <div
                       className="h-full gradient-primary rounded-full transition-all duration-500"
-                      style={{ width: `${((SLOT_TOTAL - slotsRemaining) / SLOT_TOTAL) * 100}%` }}
+                      style={{ width: `${((slotTotal - slotsRemaining) / slotTotal) * 100}%` }}
                     />
                   </div>
                 </div>
