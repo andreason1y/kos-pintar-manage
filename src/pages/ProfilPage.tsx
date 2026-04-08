@@ -46,6 +46,17 @@ export default function ProfilPage() {
   const [editKosAlamat, setEditKosAlamat] = useState("");
   const [editPropertyId, setEditPropertyId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [appVersion, setAppVersion] = useState("1.0.0");
+
+  useEffect(() => {
+    supabase.from("settings_text").select("key, value").eq("key", "app_version").then(({ data }) => {
+      if (data && data.length > 0) setAppVersion((data[0] as any).value);
+    });
+  }, []);
+
+  function AppVersionFooter() {
+    return <p className="text-center text-[10px] text-muted-foreground pb-4">KosPintar v{appVersion}</p>;
+  }
 
   const handleLogout = () => {
     if (demo.isDemo) { demo.setIsDemo(false); return; }
