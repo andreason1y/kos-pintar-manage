@@ -149,6 +149,7 @@ export default function AdminUsers() {
     try {
       await callEdgeFunction({ action: "create_user", ...addForm });
       toast.success("User berhasil dibuat");
+      supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "create_user", detail: addForm.email } as any).then(() => {});
       setShowAdd(false);
       setAddForm({ nama: "", email: "", no_hp: "", password: "", plan: "mandiri", nama_kos: "", started_at: new Date().toISOString().split("T")[0], expires_at: "" });
       fetchData();
