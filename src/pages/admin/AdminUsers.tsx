@@ -31,6 +31,7 @@ interface UserRow {
   sub_expires?: string;
   sub_started?: string;
   property_name?: string;
+  last_login?: string;
 }
 
 const PAGE_SIZE = 20;
@@ -71,11 +72,12 @@ export default function AdminUsers() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [usersRes, statsRes, subsRes, propsRes] = await Promise.all([
+    const [usersRes, statsRes, subsRes, propsRes, profilesRes] = await Promise.all([
       supabase.rpc("admin_get_users") as any,
       supabase.rpc("admin_get_user_stats") as any,
       supabase.from("subscriptions").select("*") as any,
       supabase.from("properties").select("id, user_id, nama_kos") as any,
+      supabase.from("profiles").select("id, last_login") as any,
     ]);
 
     const allUsers = (usersRes.data || []) as UserRow[];
@@ -91,6 +93,10 @@ export default function AdminUsers() {
     ((propsRes.data || []) as any[]).forEach((p: any) => {
       if (!propMap[p.user_id]) propMap[p.user_id] = p.nama_kos;
     });
+    const loginMap: Record<string, string> = {};
+    ((profilesRes.data || []) as any[]).forEach((p: any) => {
+      if (p.last_login) loginMap[p.id] = p.last_login;
+    });
 
     const merged = allUsers.map(u => ({
       ...u,
@@ -101,6 +107,7 @@ export default function AdminUsers() {
       sub_expires: subMap[u.id]?.expires_at || undefined,
       sub_started: subMap[u.id]?.started_at || undefined,
       property_name: propMap[u.id] || "-",
+      last_login: loginMap[u.id] || undefined,
     }));
 
     setUsers(merged);
@@ -142,6 +149,7 @@ export default function AdminUsers() {
     try {
       await callEdgeFunction({ action: "create_user", ...addForm });
       toast.success("User berhasil dibuat");
+      supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "create_user", detail: addForm.email } as any).then(() => {});
       setShowAdd(false);
       setAddForm({ nama: "", email: "", no_hp: "", password: "", plan: "mandiri", nama_kos: "", started_at: new Date().toISOString().split("T")[0], expires_at: "" });
       fetchData();
@@ -230,6 +238,7 @@ export default function AdminUsers() {
 
   const handleDeactivate = async (userId: string) => {
     await supabase.from("subscriptions").update({ status: "expired" } as any).eq("user_id", userId);
+    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "deactivate_user", detail: userId } as any).then(() => {});
     toast.success("Subscription dinonaktifkan");
     fetchData();
   };
@@ -253,6 +262,7 @@ export default function AdminUsers() {
   const handleSwitchPlan = async (userId: string, currentPlan: string) => {
     const newPlan = currentPlan === "mandiri" ? "juragan" : "mandiri";
     await supabase.from("subscriptions").update({ plan: newPlan } as any).eq("user_id", userId);
+    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "switch_plan", detail: `${userId}: ${currentPlan} → ${newPlan}` } as any).then(() => {});
     toast.success(`Paket diubah ke ${newPlan}`);
     fetchData();
   };
@@ -262,6 +272,7 @@ export default function AdminUsers() {
     await supabase.from("subscriptions").delete().eq("user_id", deleteUser.id);
     await supabase.from("profiles").delete().eq("id", deleteUser.id);
     toast.success("Data user dihapus");
+    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "delete_user", detail: deleteUser.email } as any).then(() => {});
     setDeleteUser(null);
     fetchData();
   };
@@ -486,6 +497,7 @@ export default function AdminUsers() {
                           <div><span className="text-muted-foreground">Mulai:</span> <span className="font-medium">{u.sub_started || "-"}</span></div>
                           <div><span className="text-muted-foreground">Berakhir:</span> <span className="font-medium">{u.sub_expires || "-"}</span></div>
                           <div><span className="text-muted-foreground">Terdaftar:</span> <span className="font-medium">{new Date(u.created_at).toLocaleString("id-ID")}</span></div>
+                          <div><span className="text-muted-foreground">Last Login:</span> <span className="font-medium">{u.last_login ? new Date(u.last_login).toLocaleString("id-ID") : "Belum pernah"}</span></div>
                         </div>
                       </div>
                     )}

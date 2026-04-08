@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import {
   LayoutDashboard, Users, Settings, CreditCard, Megaphone,
-  ArrowLeft, Loader2, Menu, X,
+  ArrowLeft, Loader2, Menu, X, ScrollText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -17,6 +17,7 @@ const tabs = [
   { path: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
   { path: "/admin/settings", label: "Settings", icon: Settings },
   { path: "/admin/broadcast", label: "Broadcast", icon: Megaphone },
+  { path: "/admin/activity-log", label: "Activity Log", icon: ScrollText },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

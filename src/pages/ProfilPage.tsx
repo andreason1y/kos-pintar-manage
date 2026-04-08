@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
@@ -46,6 +46,17 @@ export default function ProfilPage() {
   const [editKosAlamat, setEditKosAlamat] = useState("");
   const [editPropertyId, setEditPropertyId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [appVersion, setAppVersion] = useState("1.0.0");
+
+  useEffect(() => {
+    supabase.from("settings_text").select("key, value").eq("key", "app_version").then(({ data }) => {
+      if (data && data.length > 0) setAppVersion((data[0] as any).value);
+    });
+  }, []);
+
+  function AppVersionFooter() {
+    return <p className="text-center text-[10px] text-muted-foreground pb-4">KosPintar v{appVersion}</p>;
+  }
 
   const handleLogout = () => {
     if (demo.isDemo) { demo.setIsDemo(false); return; }
@@ -195,7 +206,7 @@ export default function ProfilPage() {
           </AlertDialogContent>
         </AlertDialog>
 
-        <p className="text-center text-[10px] text-muted-foreground pb-4">KosPintar v1.0.0</p>
+        <AppVersionFooter />
       </div>
 
       <BottomSheet open={showEdit} onClose={() => setShowEdit(false)} title="Edit Profil">
