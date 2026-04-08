@@ -169,6 +169,45 @@ export type Database = {
           },
         ]
       }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          midtrans_response: Json | null
+          order_id: string
+          plan: string
+          snap_token: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          midtrans_response?: Json | null
+          order_id: string
+          plan: string
+          snap_token?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          midtrans_response?: Json | null
+          order_id?: string
+          plan?: string
+          snap_token?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -176,6 +215,10 @@ export type Database = {
           last_login: string | null
           nama: string | null
           no_hp: string | null
+          plan: string
+          subscription_active: boolean
+          subscription_end: string | null
+          subscription_start: string | null
         }
         Insert: {
           created_at?: string
@@ -183,6 +226,10 @@ export type Database = {
           last_login?: string | null
           nama?: string | null
           no_hp?: string | null
+          plan?: string
+          subscription_active?: boolean
+          subscription_end?: string | null
+          subscription_start?: string | null
         }
         Update: {
           created_at?: string
@@ -190,6 +237,10 @@ export type Database = {
           last_login?: string | null
           nama?: string | null
           no_hp?: string | null
+          plan?: string
+          subscription_active?: boolean
+          subscription_end?: string | null
+          subscription_start?: string | null
         }
         Relationships: []
       }
