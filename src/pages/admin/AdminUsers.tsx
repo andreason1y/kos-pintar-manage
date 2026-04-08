@@ -349,9 +349,8 @@ export default function AdminUsers() {
 
       <DeleteConfirmDialog
         open={!!deleteUser}
-        onOpenChange={open => !open && setDeleteUser(null)}
-        title={`Hapus data ${deleteUser?.nama || deleteUser?.email}?`}
-        description="Subscription dan profil user akan dihapus. Data ini tidak dapat dikembalikan."
+        onClose={() => setDeleteUser(null)}
+        itemName={`data ${deleteUser?.nama || deleteUser?.email || "user"}`}
         onConfirm={handleDeleteUser}
       />
     </AdminLayout>
