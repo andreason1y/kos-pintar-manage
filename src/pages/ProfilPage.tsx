@@ -195,7 +195,7 @@ export default function ProfilPage() {
           </AlertDialogContent>
         </AlertDialog>
 
-        <p className="text-center text-[10px] text-muted-foreground pb-4">KosPintar v1.0.0</p>
+        <AppVersionFooter />
       </div>
 
       <BottomSheet open={showEdit} onClose={() => setShowEdit(false)} title="Edit Profil">
