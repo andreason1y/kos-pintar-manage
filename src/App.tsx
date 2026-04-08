@@ -20,6 +20,8 @@ const PembayaranPage = lazy(() => import("./pages/PembayaranPage"));
 const KeuanganPage = lazy(() => import("./pages/KeuanganPage"));
 const ProfilPage = lazy(() => import("./pages/ProfilPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminBroadcast = lazy(() => import("./pages/admin/AdminBroadcast"));
@@ -53,6 +55,7 @@ function MainRoutes() {
         <Route path="/admin/settings" element={<AdminSettings />} />
         <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
         <Route path="/admin/activity-log" element={<AdminActivityLog />} />
+        <Route path="/reset-sandi" element={<ResetPasswordPage />} />
         {/* Redirect old / and /login to /beranda for logged in users */}
         <Route path="/" element={<Navigate to="/beranda" replace />} />
         <Route path="/login" element={<Navigate to="/beranda" replace />} />
@@ -79,6 +82,8 @@ function AppRoutes() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<AuthPage />} />
+          <Route path="/lupa-sandi" element={<ForgotPasswordPage />} />
+          <Route path="/reset-sandi" element={<ResetPasswordPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
