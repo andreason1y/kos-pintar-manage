@@ -98,20 +98,41 @@ const SCREENSHOTS = [
   { label: "Pembayaran — Tagihan Penyewa", src: "/screenshots/pembayaran.png" },
 ];
 
-const SLOT_TOTAL = 100;
-
 /* ─── Smooth scroll helper ─── */
 function smoothScrollTo(id: string) {
   const el = document.getElementById(id);
   if (el) el.scrollIntoView({ behavior: "smooth" });
 }
 
+/* ─── Default pricing fallback ─── */
+const DEFAULTS = {
+  mandiri_price_normal: 499000,
+  mandiri_price_earlybird: 249000,
+  juragan_price_normal: 999000,
+  juragan_price_earlybird: 499000,
+  earlybird_active: 1,
+  earlybird_slots_total: 100,
+  early_bird_slots_taken: 0,
+  earlybird_label: "Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama",
+  mandiri_sublabel: "Kurang dari Rp 700/hari",
+  juragan_sublabel: "",
+  mandiri_earlybird_badge: "🔥 Early Bird",
+  juragan_earlybird_badge: "🔥 Early Bird — Kos Besar",
+};
+
+function formatRupiahLanding(n: number) {
+  return "Rp " + n.toLocaleString("id-ID");
+}
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const { setIsDemo } = useDemo();
   const [slotsUsed, setSlotsUsed] = useState(0);
-  const [slotsTaken, setSlotsTaken] = useState(0);
   const [slotsLoaded, setSlotsLoaded] = useState(false);
+
+  // Dynamic pricing state
+  const [cfg, setCfg] = useState<Record<string, number>>({});
+  const [cfgText, setCfgText] = useState<Record<string, string>>({});
 
   useEffect(() => {
     initMetaPixel();
@@ -119,12 +140,20 @@ export default function LandingPage() {
 
     Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase.from("settings").select("value").eq("key", "early_bird_slots_taken").single(),
-    ]).then(([profileRes, settingsRes]) => {
+      supabase.from("settings").select("key, value") as any,
+      supabase.from("settings_text").select("key, value") as any,
+    ]).then(([profileRes, settingsRes, textRes]) => {
       const userCount = profileRes.count || 0;
-      const taken = settingsRes.data?.value || 0;
       setSlotsUsed(userCount);
-      setSlotsTaken(taken);
+
+      const numMap: Record<string, number> = {};
+      ((settingsRes.data || []) as any[]).forEach((r: any) => { numMap[r.key] = r.value; });
+      setCfg(numMap);
+
+      const txtMap: Record<string, string> = {};
+      ((textRes.data || []) as any[]).forEach((r: any) => { txtMap[r.key] = r.value; });
+      setCfgText(txtMap);
+
       setSlotsLoaded(true);
     });
   }, []);
@@ -140,8 +169,23 @@ export default function LandingPage() {
   };
   const handleLogin = () => navigate("/login");
 
-  const slotsRemaining = SLOT_TOTAL - (slotsTaken + slotsUsed);
-  const earlyBirdActive = slotsRemaining > 0;
+  // Derived pricing values
+  const ebActive = (cfg.earlybird_active ?? DEFAULTS.earlybird_active) === 1;
+  const slotTotal = cfg.earlybird_slots_total ?? DEFAULTS.earlybird_slots_total;
+  const slotsTaken = cfg.early_bird_slots_taken ?? DEFAULTS.early_bird_slots_taken;
+  const slotsRemaining = slotTotal - (slotsTaken + slotsUsed);
+  const earlyBirdActive = ebActive && slotsRemaining > 0;
+
+  const mandiriPriceNormal = cfg.mandiri_price_normal ?? DEFAULTS.mandiri_price_normal;
+  const mandiriPriceEB = cfg.mandiri_price_earlybird ?? DEFAULTS.mandiri_price_earlybird;
+  const juraganPriceNormal = cfg.juragan_price_normal ?? DEFAULTS.juragan_price_normal;
+  const juraganPriceEB = cfg.juragan_price_earlybird ?? DEFAULTS.juragan_price_earlybird;
+
+  const ebLabel = cfgText.earlybird_label ?? DEFAULTS.earlybird_label;
+  const mandiriSublabel = cfgText.mandiri_sublabel ?? DEFAULTS.mandiri_sublabel;
+  const juraganSublabel = cfgText.juragan_sublabel ?? DEFAULTS.juragan_sublabel;
+  const mandiriBadge = cfgText.mandiri_earlybird_badge ?? DEFAULTS.mandiri_earlybird_badge;
+  const juraganBadge = cfgText.juragan_earlybird_badge ?? DEFAULTS.juragan_earlybird_badge;
 
   const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
