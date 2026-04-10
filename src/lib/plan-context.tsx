@@ -51,6 +51,19 @@ const PlanContext = createContext<PlanContextType>({
 
 export const usePlan = () => useContext(PlanContext);
 
+// Migration: Map old plan names to new ones
+function migratePlanType(oldPlan: string): PlanType {
+  const planMap: Record<string, PlanType> = {
+    mandiri: "starter",
+    juragan: "pro",
+    starter: "starter",
+    pro: "pro",
+    bisnis: "bisnis",
+    demo: "demo",
+  };
+  return (planMap[oldPlan] || "starter") as PlanType;
+}
+
 export function PlanProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { isDemo } = useDemo();
@@ -80,7 +93,8 @@ export function PlanProvider({ children }: { children: ReactNode }) {
       .limit(1)
       .then(({ data }) => {
         if (data && data.length > 0) {
-          setPlan((data[0] as any).plan || "starter");
+          const loadedPlan = (data[0] as any).plan || "starter";
+          setPlan(migratePlanType(loadedPlan));
         } else {
           setPlan("starter");
         }
