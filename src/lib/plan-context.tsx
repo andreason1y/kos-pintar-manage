@@ -3,22 +3,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useDemo } from "@/lib/demo-context";
 
-export type PlanType = "mandiri" | "juragan" | "demo";
+export type PlanType = "starter" | "pro" | "bisnis" | "demo";
 
 export interface PlanLimits {
   maxRooms: number;
 }
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
-  mandiri: { maxRooms: 40 },
-  juragan: { maxRooms: 200 },
+  starter: { maxRooms: 10 },
+  pro: { maxRooms: 25 },
+  bisnis: { maxRooms: 60 },
   demo: { maxRooms: 200 },
 };
 
 export const PLAN_LABELS: Record<PlanType, string> = {
-  mandiri: "Mandiri",
-  juragan: "Juragan",
-  demo: "Juragan",
+  starter: "Starter",
+  pro: "Pro",
+  bisnis: "Bisnis",
+  demo: "Bisnis",
 };
 
 interface PlanContextType {
@@ -35,13 +37,13 @@ interface PlanContextType {
 }
 
 const PlanContext = createContext<PlanContextType>({
-  plan: "mandiri",
-  limits: PLAN_LIMITS.mandiri,
-  planLabel: "Mandiri",
+  plan: "starter",
+  limits: PLAN_LIMITS.starter,
+  planLabel: "Starter",
   loading: true,
   showUpgradeModal: false,
   upgradeMessage: "",
-  upgradeCta: "Upgrade ke Juragan →",
+  upgradeCta: "Upgrade rencana Anda →",
   upgradeLink: "",
   triggerUpgrade: () => {},
   dismissUpgrade: () => {},
@@ -52,11 +54,11 @@ export const usePlan = () => useContext(PlanContext);
 export function PlanProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { isDemo } = useDemo();
-  const [plan, setPlan] = useState<PlanType>("mandiri");
+  const [plan, setPlan] = useState<PlanType>("starter");
   const [loading, setLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
-  const [upgradeCta, setUpgradeCta] = useState("Upgrade ke Juragan →");
+  const [upgradeCta, setUpgradeCta] = useState("Upgrade rencana Anda →");
   const [upgradeLink, setUpgradeLink] = useState("");
 
   useEffect(() => {
@@ -78,9 +80,9 @@ export function PlanProvider({ children }: { children: ReactNode }) {
       .limit(1)
       .then(({ data }) => {
         if (data && data.length > 0) {
-          setPlan((data[0] as any).plan || "mandiri");
+          setPlan((data[0] as any).plan || "starter");
         } else {
-          setPlan("mandiri");
+          setPlan("starter");
         }
         setLoading(false);
       });
@@ -88,7 +90,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
 
   const triggerUpgrade = useCallback((message: string, cta?: string, link?: string) => {
     setUpgradeMessage(message);
-    setUpgradeCta(cta || "Upgrade ke Juragan →");
+    setUpgradeCta(cta || "Upgrade rencana Anda →");
     setUpgradeLink(link || "");
     setShowUpgradeModal(true);
   }, []);
