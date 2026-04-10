@@ -44,7 +44,7 @@ export default function AdminSettings() {
   const [inAppAnnouncementActive, setInAppAnnouncementActive] = useState(false);
 
   // Text settings
-  const [earlybirdLabel, setEarlybirdLabel] = useState("Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama");
+  const [earlybirdLabel, setEarlybirdLabel] = useState("Hemat 50% untuk 100 pendaftar pertama");
   const [starterSublabel, setStarterSublabel] = useState("");
   const [proSublabel, setProSublabel] = useState("");
   const [bisnisSublabel, setBisnisSublabel] = useState("");
@@ -101,7 +101,7 @@ export default function AdminSettings() {
 
       const tmap: Record<string, string> = {};
       textRows.forEach(r => { tmap[r.key] = r.value; });
-      setEarlybirdLabel(tmap.earlybird_label ?? "Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama");
+      setEarlybirdLabel(tmap.earlybird_label ?? "Hemat 50% untuk 100 pendaftar pertama");
       setStarterSublabel(tmap.starter_sublabel ?? "");
       setProSublabel(tmap.pro_sublabel ?? "");
       setBisnisSublabel(tmap.bisnis_sublabel ?? "");

@@ -120,7 +120,7 @@ const DEFAULTS = {
 };
 
 const TEXT_DEFAULTS: Record<string, string> = {
-  earlybird_label: "Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama",
+  earlybird_label: "Hemat 50% untuk 100 pendaftar pertama",
   mandiri_sublabel: "Kurang dari Rp 700/hari",
   juragan_sublabel: "",
   mandiri_earlybird_badge: "🔥 Early Bird",
