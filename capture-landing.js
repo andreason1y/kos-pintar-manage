@@ -76,12 +76,13 @@ async function capturePage(page, url) {
     console.log('⚠️  Network idle timeout, continuing with what loaded...');
   }
 
-  // Wait for key sections to appear in the DOM (indicates React rendered successfully)
+  // Wait for the pricing section heading to appear — this renders only after Supabase
+  // data (or DEFAULTS) has been applied by React, confirming the app fully hydrated
   try {
-    await page.waitForSelector('section', { timeout: 10000 });
-    console.log('✅ Page sections detected in DOM');
+    await page.waitForSelector('section#harga h2', { timeout: 20000 });
+    console.log('✅ Pricing section detected — React hydration complete');
   } catch (e) {
-    console.log('⚠️  Section elements not detected, continuing anyway...');
+    console.log('⚠️  Pricing section not detected within 20s, continuing anyway...');
   }
 
   // Extra buffer for Supabase data (pricing, FAQs, testimonials) to render
@@ -115,8 +116,8 @@ async function capturePage(page, url) {
     // Launch headless browser
     console.log('🔄 Launching headless browser...');
     const browser = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
     });
 
     const page = await browser.newPage();
