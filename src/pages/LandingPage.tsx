@@ -60,9 +60,9 @@ const EMOJIS = ["📋", "💰", "🏠", "📄", "📊", "🔔"];
 
 /* ─── COMPARISON ─── */
 const COMPARISON: { feature: string; kp: string | boolean; sk: string | boolean }[] = [
-  { feature: "Harga Starter (10 kamar)", kp: "Rp 199k/tahun*", sk: "TBA" },
-  { feature: "Harga Pro (25 kamar)", kp: "Rp 349k/tahun*", sk: "TBA" },
-  { feature: "Harga Bisnis (60 kamar)", kp: "Rp 599k/tahun*", sk: "TBA" },
+  { feature: "Harga Starter (10 kamar)", kp: "Rp 199k/tahun*", sk: "Rp 600k-1.2jt/bln" },
+  { feature: "Harga Pro (25 kamar)", kp: "Rp 349k/tahun*", sk: "Rp 1.5jt-3jt/bln" },
+  { feature: "Harga Bisnis (60 kamar)", kp: "Rp 599k/tahun*", sk: "Rp 3.6jt-7.2jt/bln" },
   { feature: "Manajemen penyewa", kp: true, sk: true },
   { feature: "Nota PDF", kp: true, sk: true },
   { feature: "Reminder WA ke penyewa", kp: true, sk: true },
