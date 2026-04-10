@@ -7,6 +7,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Minimum HTML size (bytes) to consider capture successful (not just a loading skeleton)
+const MIN_CONTENT_SIZE = 50 * 1024; // 50KB
+
 // Simple HTTP server to serve dist folder
 function startServer(port = 3000) {
   return new Promise((resolve, reject) => {
@@ -22,8 +25,20 @@ function startServer(port = 3000) {
       }
 
       if (fs.existsSync(filePath)) {
+        const ext = path.extname(filePath);
+        const mimeTypes = {
+          '.html': 'text/html',
+          '.js': 'application/javascript',
+          '.css': 'text/css',
+          '.json': 'application/json',
+          '.png': 'image/png',
+          '.jpg': 'image/jpeg',
+          '.svg': 'image/svg+xml',
+          '.ico': 'image/x-icon',
+        };
+        const contentType = mimeTypes[ext] || 'application/octet-stream';
         const content = fs.readFileSync(filePath);
-        res.writeHead(200);
+        res.writeHead(200, { 'Content-Type': contentType });
         res.end(content);
       } else {
         // Fallback to index.html for SPA routing
@@ -47,6 +62,45 @@ function startServer(port = 3000) {
   });
 }
 
+async function capturePage(page, url) {
+  console.log('📄 Loading landing page (waiting for network idle)...');
+
+  try {
+    // networkidle2: waits until no more than 2 network requests for at least 500ms
+    // This ensures Supabase queries have had a chance to fire and complete
+    await page.goto(url, {
+      waitUntil: 'networkidle2',
+      timeout: 30000,
+    });
+  } catch (navError) {
+    console.log('⚠️  Network idle timeout, continuing with what loaded...');
+  }
+
+  // Wait for key sections to appear in the DOM (indicates React rendered successfully)
+  try {
+    await page.waitForSelector('section', { timeout: 10000 });
+    console.log('✅ Page sections detected in DOM');
+  } catch (e) {
+    console.log('⚠️  Section elements not detected, continuing anyway...');
+  }
+
+  // Extra buffer for Supabase data (pricing, FAQs, testimonials) to render
+  console.log('⏳ Waiting for Supabase data to settle (8s)...');
+  await new Promise(resolve => setTimeout(resolve, 8000));
+
+  const html = await page.content();
+
+  // Verify captured content is meaningful (not just a loading skeleton)
+  if (html.length < MIN_CONTENT_SIZE) {
+    throw new Error(
+      `Captured HTML too small: ${html.length} bytes (min: ${MIN_CONTENT_SIZE} bytes). ` +
+      `Likely captured a loading state. Retrying...`
+    );
+  }
+
+  return html;
+}
+
 (async () => {
   let server = null;
   try {
@@ -59,7 +113,7 @@ function startServer(port = 3000) {
     console.log(`✅ Server running on http://localhost:${port}`);
 
     // Launch headless browser
-    console.log('🔄 Launching browser...');
+    console.log('🔄 Launching headless browser...');
     const browser = await puppeteer.launch({
       headless: 'new',
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -70,26 +124,30 @@ function startServer(port = 3000) {
     // Set viewport for consistent rendering
     await page.setViewport({ width: 1920, height: 1080 });
 
-    // Navigate to landing page
-    // Use 'domcontentloaded' instead of 'networkidle2' since Supabase calls may take time
-    console.log('📄 Loading landing page...');
-    try {
-      await page.goto(`http://localhost:${port}`, {
-        waitUntil: 'domcontentloaded',
-        timeout: 15000,
-      });
-    } catch (navError) {
-      // If navigation fails, still try to wait a bit and capture what we have
-      console.log('⚠️  Navigation took longer than expected, continuing anyway...');
-      await new Promise(resolve => setTimeout(resolve, 3000));
+    const url = `http://localhost:${port}`;
+    const MAX_RETRIES = 3;
+    let html = null;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        console.log(`\n🔁 Capture attempt ${attempt}/${MAX_RETRIES}...`);
+        html = await capturePage(page, url);
+        console.log(`✅ Capture successful on attempt ${attempt}`);
+        break;
+      } catch (err) {
+        console.log(`❌ Attempt ${attempt} failed: ${err.message}`);
+        if (attempt < MAX_RETRIES) {
+          console.log('⏳ Waiting 5s before retry...');
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+      }
     }
 
-    console.log('✅ Page content loaded, waiting for data to settle...');
-    // Wait for Supabase queries to complete (pricing, content, etc.)
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await browser.close();
 
-    // Get rendered HTML
-    const html = await page.content();
+    if (!html) {
+      throw new Error(`All ${MAX_RETRIES} capture attempts failed. Build continues without snapshot.`);
+    }
 
     // Ensure dist directory exists
     const distDir = path.join(__dirname, 'dist');
@@ -97,15 +155,13 @@ function startServer(port = 3000) {
       fs.mkdirSync(distDir, { recursive: true });
     }
 
-    // Save to dist/index.html (overwrites SPA HTML with static snapshot)
+    // Save to dist/index.html (overwrites SPA HTML with rendered snapshot)
     const distPath = path.join(distDir, 'index.html');
     fs.writeFileSync(distPath, html);
 
-    console.log('✅ Landing page captured successfully!');
+    console.log('\n✅ Landing page captured successfully!');
     console.log(`📍 Location: ${distPath}`);
     console.log(`📊 File size: ${(html.length / 1024).toFixed(2)} KB`);
-
-    await browser.close();
 
     // Close the server
     server.close(() => {
@@ -114,7 +170,7 @@ function startServer(port = 3000) {
     });
   } catch (error) {
     console.error('❌ Failed to capture landing page:', error.message);
-    console.log('ℹ️  Build will continue - bot readability not affected');
+    console.log('ℹ️  Build will continue — static fallback in index.html will serve bots');
 
     if (server) {
       server.close(() => process.exit(0));
