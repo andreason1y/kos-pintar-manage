@@ -1,5 +1,8 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(?!robots\\.txt|sitemap\\.xml|_next|api)(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
