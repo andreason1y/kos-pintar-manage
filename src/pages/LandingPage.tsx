@@ -60,9 +60,9 @@ const EMOJIS = ["📋", "💰", "🏠", "📄", "📊", "🔔"];
 
 /* ─── COMPARISON ─── */
 const COMPARISON: { feature: string; kp: string | boolean; sk: string | boolean }[] = [
-  { feature: "Harga (Mandiri)", kp: "Rp 249k/tahun (flat)", sk: "Rp 9.000/kamar/bulan" },
-  { feature: "10 kamar setahun", kp: "Rp 249.000", sk: "Rp 1.080.000" },
-  { feature: "20 kamar setahun", kp: "Rp 249.000", sk: "Rp 2.160.000" },
+  { feature: "Harga Starter (10 kamar)", kp: "Rp 199k/tahun*", sk: "TBA" },
+  { feature: "Harga Pro (25 kamar)", kp: "Rp 349k/tahun*", sk: "TBA" },
+  { feature: "Harga Bisnis (60 kamar)", kp: "Rp 599k/tahun*", sk: "TBA" },
   { feature: "Manajemen penyewa", kp: true, sk: true },
   { feature: "Nota PDF", kp: true, sk: true },
   { feature: "Reminder WA ke penyewa", kp: true, sk: true },
@@ -78,7 +78,7 @@ const COMPETITOR_LABEL = "Aplikasi Lain";
 /* ─── Default FAQ/Testimonial fallbacks ─── */
 const DEFAULT_FAQS = [
   { q: "Apakah data saya aman?", a: "Ya, data disimpan di server terenkripsi dan hanya bisa diakses oleh Anda." },
-  { q: "Apa beda paket Mandiri dan Juragan?", a: "Paket Mandiri mendukung hingga 40 kamar. Paket Juragan mendukung hingga 200 kamar, plus prioritas support. Masing-masing 1 properti per akun." },
+  { q: "Apa beda paket Starter, Pro, dan Bisnis?", a: "Starter mendukung hingga 10 kamar (Rp 199k early bird / 399k normal). Pro mendukung hingga 25 kamar (Rp 349k/699k). Bisnis mendukung hingga 60 kamar (Rp 599k/1.199k) dengan prioritas support." },
   { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga sudah termasuk semua fitur untuk kelola kos-kosan Anda." },
   { q: "Bagaimana cara perpanjang langganan?", a: "Kami akan kirim notifikasi sebelum masa langganan habis. Perpanjang langsung dari aplikasi." },
   { q: "Apakah bisa dicoba dulu?", a: "Ya, tersedia mode demo tanpa perlu daftar. Klik \"Coba Demo\" di halaman utama." },
@@ -486,6 +486,9 @@ export default function LandingPage() {
                 </tbody>
               </table>
             </div>
+            <p className="text-xs text-muted-foreground mt-3 text-center max-w-3xl mx-auto">
+              *Harga Early Bird untuk 100 pendaftar pertama. Harga normal: Starter Rp 399k, Pro Rp 699k, Bisnis Rp 1.199k per tahun
+            </p>
           </FadeIn>
         </section>
 
