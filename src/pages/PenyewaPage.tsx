@@ -25,6 +25,8 @@ interface Tenant {
   id: string;
   nama: string;
   no_hp: string | null;
+  email?: string | null;
+  send_email_notifications?: boolean;
   gender: string;
   tanggal_masuk: string;
   tanggal_keluar: string | null;
@@ -57,6 +59,8 @@ export default function PenyewaPage() {
 
   const [nama, setNama] = useState("");
   const [noHp, setNoHp] = useState("");
+  const [email, setEmail] = useState("");
+  const [sendEmailNotifications, setSendEmailNotifications] = useState(false);
   const [gender, setGender] = useState("L");
   const [roomId, setRoomId] = useState("");
   const [tanggalMasuk, setTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
@@ -142,11 +146,11 @@ export default function PenyewaPage() {
 
     if (demo.isDemo) {
       demo.demoAddTenantAtomic({
-        roomId, nama, noHp: noHp || null, gender: gender as "L" | "P",
+        roomId, nama, noHp: noHp || null, email: email || null, sendEmailNotifications, gender: gender as "L" | "P",
         tanggalMasuk, tanggalKeluar: keluarStr, depositAmount: parseInt(deposit) || 0,
       });
       toast.success("Penyewa berhasil ditambahkan!");
-      setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1"); setDeposit("");
+      setShowAdd(false); setNama(""); setNoHp(""); setEmail(""); setSendEmailNotifications(false); setRoomId(""); setGender("L"); setDurasi("1"); setDeposit("");
       return;
     }
 
@@ -156,6 +160,8 @@ export default function PenyewaPage() {
       p_room_id: roomId,
       p_nama: nama,
       p_no_hp: noHp || null,
+      p_email: email || null,
+      p_send_email_notifications: sendEmailNotifications,
       p_gender: gender,
       p_tanggal_masuk: tanggalMasuk,
       p_tanggal_keluar: keluarStr,
@@ -163,7 +169,7 @@ export default function PenyewaPage() {
     } as any);
     if (error) { toast.error(error.message); return; }
     toast.success("Penyewa berhasil ditambahkan!");
-    setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1"); setDeposit("");
+    setShowAdd(false); setNama(""); setNoHp(""); setEmail(""); setSendEmailNotifications(false); setRoomId(""); setGender("L"); setDurasi("1"); setDeposit("");
     refetchAll();
   };
 
@@ -171,12 +177,12 @@ export default function PenyewaPage() {
     e.preventDefault();
     if (!showEdit) return;
     if (demo.isDemo) {
-      demo.updateTenant(showEdit.id, { nama, no_hp: noHp || null, gender: gender as "L" | "P" });
+      demo.updateTenant(showEdit.id, { nama, no_hp: noHp || null, email: email || null, send_email_notifications: sendEmailNotifications, gender: gender as "L" | "P" });
       toast.success("Data penyewa diperbarui!");
       setShowEdit(null);
       return;
     }
-    const { error } = await supabase.from("tenants").update({ nama, no_hp: noHp || null, gender } as any).eq("id", showEdit.id);
+    const { error } = await supabase.from("tenants").update({ nama, no_hp: noHp || null, email: email || null, send_email_notifications: sendEmailNotifications, gender } as any).eq("id", showEdit.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Data penyewa diperbarui!");
     setShowEdit(null);
@@ -308,6 +314,8 @@ export default function PenyewaPage() {
                               setShowEdit(t);
                               setNama(t.nama);
                               setNoHp(t.no_hp || "");
+                              setEmail(t.email || "");
+                              setSendEmailNotifications(t.send_email_notifications || false);
                               setGender(t.gender);
                             }}>
                               <Pencil size={14} className="mr-2" /> Edit
@@ -333,7 +341,7 @@ export default function PenyewaPage() {
       </div>
 
       {/* Add tenant */}
-      <BottomSheet open={showAdd} onClose={() => setShowAdd(false)} title="Tambah Penyewa">
+      <BottomSheet open={showAdd} onClose={() => { setShowAdd(false); setEmail(""); setSendEmailNotifications(false); }} title="Tambah Penyewa">
         <form onSubmit={handleAdd} className="bottom-sheet-form">
           <div className="bottom-sheet-body">
             <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
@@ -355,6 +363,13 @@ export default function PenyewaPage() {
             </div>
           </div>
           <div className="space-y-2"><Label>Deposit (Rp)</Label><Input type="number" value={deposit} onChange={e => setDeposit(e.target.value)} placeholder="0 (opsional)" /></div>
+          <div className="space-y-2"><Label>Email (opsional)</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="penyewa@email.com" /></div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="sendNotif" checked={sendEmailNotifications} onChange={e => setSendEmailNotifications(e.target.checked)} className="w-4 h-4" />
+              <Label htmlFor="sendNotif" className="cursor-pointer">Kirim notif email jatuh tempo</Label>
+            </div>
+          </div>
           </div>
           <div className="bottom-sheet-footer">
             <Button type="submit" className="w-full">Tambah Penyewa</Button>
@@ -363,12 +378,19 @@ export default function PenyewaPage() {
       </BottomSheet>
 
       {/* Edit tenant */}
-      <BottomSheet open={!!showEdit} onClose={() => setShowEdit(null)} title="Edit Penyewa">
+      <BottomSheet open={!!showEdit} onClose={() => { setShowEdit(null); setEmail(""); setSendEmailNotifications(false); }} title="Edit Penyewa">
         {showEdit && (
           <form onSubmit={handleEditTenant} className="bottom-sheet-form">
             <div className="bottom-sheet-body">
               <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
               <div className="space-y-2"><Label>No. HP</Label><Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" /></div>
+              <div className="space-y-2"><Label>Email (opsional)</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="penyewa@email.com" /></div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="sendNotifEdit" checked={sendEmailNotifications} onChange={e => setSendEmailNotifications(e.target.checked)} className="w-4 h-4" />
+                  <Label htmlFor="sendNotifEdit" className="cursor-pointer">Kirim notif email jatuh tempo</Label>
+                </div>
+              </div>
               <div className="space-y-2"><Label>Gender</Label>
               <Select value={gender} onValueChange={setGender}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="L">Laki-laki</SelectItem><SelectItem value="P">Perempuan</SelectItem></SelectContent></Select>
             </div>
