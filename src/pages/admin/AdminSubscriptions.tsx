@@ -29,7 +29,7 @@ export default function AdminSubscriptions() {
 
   // Activate form
   const [activateEmail, setActivateEmail] = useState("");
-  const [activatePlan, setActivatePlan] = useState("mandiri");
+  const [activatePlan, setActivatePlan] = useState("starter");
   const [activateMonths, setActivateMonths] = useState("12");
   const [saving, setSaving] = useState(false);
 
@@ -224,8 +224,9 @@ export default function AdminSubscriptions() {
               <Select value={activatePlan} onValueChange={setActivatePlan}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mandiri">Mandiri</SelectItem>
-                  <SelectItem value="juragan">Juragan</SelectItem>
+                  <SelectItem value="starter">Starter (10 kamar)</SelectItem>
+                  <SelectItem value="pro">Pro (25 kamar)</SelectItem>
+                  <SelectItem value="bisnis">Bisnis (60 kamar)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

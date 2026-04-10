@@ -30,20 +30,27 @@ export default function AdminSettings() {
   const [earlyBirdEnabled, setEarlyBirdEnabled] = useState(true);
   const [earlyBirdSlotsTaken, setEarlyBirdSlotsTaken] = useState(0);
   const [earlyBirdTotalSlots, setEarlyBirdTotalSlots] = useState(100);
-  const [priceMandiriNormal, setPriceMandiriNormal] = useState(499000);
-  const [priceJuraganNormal, setPriceJuraganNormal] = useState(999000);
-  const [priceMandiriEarly, setPriceMandiriEarly] = useState(249000);
-  const [priceJuraganEarly, setPriceJuraganEarly] = useState(499000);
+  // Starter plan
+  const [priceStarterNormal, setPriceStarterNormal] = useState(399000);
+  const [priceStarterEarly, setPriceStarterEarly] = useState(199000);
+  // Pro plan
+  const [priceProNormal, setPriceProNormal] = useState(699000);
+  const [priceProEarly, setPriceProEarly] = useState(349000);
+  // Bisnis plan
+  const [priceBisnisNormal, setPriceBisnisNormal] = useState(1199000);
+  const [priceBisnisEarly, setPriceBisnisEarly] = useState(599000);
   const [announcementBannerActive, setAnnouncementBannerActive] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [inAppAnnouncementActive, setInAppAnnouncementActive] = useState(false);
 
   // Text settings
   const [earlybirdLabel, setEarlybirdLabel] = useState("Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama");
-  const [mandiriSublabel, setMandiriSublabel] = useState("Kurang dari Rp 700/hari");
-  const [juraganSublabel, setJuraganSublabel] = useState("");
-  const [mandiriBadge, setMandiriBadge] = useState("🔥 Early Bird");
-  const [juraganBadge, setJuraganBadge] = useState("🔥 Early Bird — Kos Besar");
+  const [starterSublabel, setStarterSublabel] = useState("");
+  const [proSublabel, setProSublabel] = useState("");
+  const [bisnisSublabel, setBisnisSublabel] = useState("");
+  const [starterBadge, setStarterBadge] = useState("🔥 Early Bird");
+  const [proBadge, setProBadge] = useState("🔥 Early Bird");
+  const [bisnisBadge, setBisnisBadge] = useState("🔥 Early Bird");
   const [announcementBannerText, setAnnouncementBannerText] = useState("🔥 Early Bird: Tersisa {slots} slot — Hemat 50% hari ini");
   const [pricingFooterText, setPricingFooterText] = useState("Harga naik setelah 100 pengguna pertama");
   const [heroHeadline, setHeroHeadline] = useState("Aplikasi Manajemen Kos Terbaik di Indonesia");
@@ -76,10 +83,12 @@ export default function AdminSettings() {
       setEarlyBirdEnabled((map.earlybird_active ?? 1) === 1);
       setEarlyBirdSlotsTaken(map.early_bird_slots_taken ?? 0);
       setEarlyBirdTotalSlots(map.earlybird_slots_total ?? 100);
-      setPriceMandiriNormal(map.mandiri_price_normal ?? 499000);
-      setPriceJuraganNormal(map.juragan_price_normal ?? 999000);
-      setPriceMandiriEarly(map.mandiri_price_earlybird ?? 249000);
-      setPriceJuraganEarly(map.juragan_price_earlybird ?? 499000);
+      setPriceStarterNormal(map.starter_price_normal ?? 399000);
+      setPriceStarterEarly(map.starter_price_earlybird ?? 199000);
+      setPriceProNormal(map.pro_price_normal ?? 699000);
+      setPriceProEarly(map.pro_price_earlybird ?? 349000);
+      setPriceBisnisNormal(map.bisnis_price_normal ?? 1199000);
+      setPriceBisnisEarly(map.bisnis_price_earlybird ?? 599000);
       setAnnouncementBannerActive((map.announcement_banner_active ?? 1) === 1);
       setMaintenanceMode((map.maintenance_mode ?? 0) === 1);
       setInAppAnnouncementActive((map.in_app_announcement_active ?? 0) === 1);
@@ -87,10 +96,12 @@ export default function AdminSettings() {
       const tmap: Record<string, string> = {};
       textRows.forEach(r => { tmap[r.key] = r.value; });
       setEarlybirdLabel(tmap.earlybird_label ?? "Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama");
-      setMandiriSublabel(tmap.mandiri_sublabel ?? "Kurang dari Rp 700/hari");
-      setJuraganSublabel(tmap.juragan_sublabel ?? "");
-      setMandiriBadge(tmap.mandiri_earlybird_badge ?? "🔥 Early Bird");
-      setJuraganBadge(tmap.juragan_earlybird_badge ?? "🔥 Early Bird — Kos Besar");
+      setStarterSublabel(tmap.starter_sublabel ?? "");
+      setProSublabel(tmap.pro_sublabel ?? "");
+      setBisnisSublabel(tmap.bisnis_sublabel ?? "");
+      setStarterBadge(tmap.starter_earlybird_badge ?? "🔥 Early Bird");
+      setProBadge(tmap.pro_earlybird_badge ?? "🔥 Early Bird");
+      setBisnisBadge(tmap.bisnis_earlybird_badge ?? "🔥 Early Bird");
       setAnnouncementBannerText(tmap.announcement_banner_text ?? "🔥 Early Bird: Tersisa {slots} slot — Hemat 50% hari ini");
       setPricingFooterText(tmap.pricing_footer_text ?? "Harga naik setelah 100 pengguna pertama");
       setHeroHeadline(tmap.hero_headline ?? "Aplikasi Manajemen Kos Terbaik di Indonesia");
@@ -136,10 +147,12 @@ export default function AdminSettings() {
       earlybird_active: earlyBirdEnabled ? 1 : 0,
       early_bird_slots_taken: earlyBirdSlotsTaken,
       earlybird_slots_total: earlyBirdTotalSlots,
-      mandiri_price_normal: priceMandiriNormal,
-      juragan_price_normal: priceJuraganNormal,
-      mandiri_price_earlybird: priceMandiriEarly,
-      juragan_price_earlybird: priceJuraganEarly,
+      starter_price_normal: priceStarterNormal,
+      starter_price_earlybird: priceStarterEarly,
+      pro_price_normal: priceProNormal,
+      pro_price_earlybird: priceProEarly,
+      bisnis_price_normal: priceBisnisNormal,
+      bisnis_price_earlybird: priceBisnisEarly,
       announcement_banner_active: announcementBannerActive ? 1 : 0,
       maintenance_mode: maintenanceMode ? 1 : 0,
       in_app_announcement_active: inAppAnnouncementActive ? 1 : 0,
@@ -151,10 +164,12 @@ export default function AdminSettings() {
 
     const textUpdates: Record<string, string> = {
       earlybird_label: earlybirdLabel,
-      mandiri_sublabel: mandiriSublabel,
-      juragan_sublabel: juraganSublabel,
-      mandiri_earlybird_badge: mandiriBadge,
-      juragan_earlybird_badge: juraganBadge,
+      starter_sublabel: starterSublabel,
+      pro_sublabel: proSublabel,
+      bisnis_sublabel: bisnisSublabel,
+      starter_earlybird_badge: starterBadge,
+      pro_earlybird_badge: proBadge,
+      bisnis_earlybird_badge: bisnisBadge,
       announcement_banner_text: announcementBannerText,
       pricing_footer_text: pricingFooterText,
       hero_headline: heroHeadline,
@@ -250,33 +265,50 @@ export default function AdminSettings() {
           </div>
         </Section>
 
-        {/* Harga */}
-        <Section title="💰 Harga Early Bird">
+        {/* Pricing - Starter */}
+        <Section title="💰 Starter Plan">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">Mandiri Early Bird</Label>
-              <Input type="number" value={priceMandiriEarly} onChange={e => setPriceMandiriEarly(Number(e.target.value))} />
-              <p className="text-[10px] text-muted-foreground">{formatRupiah(priceMandiriEarly)}</p>
+              <Label className="text-xs">Early Bird Price</Label>
+              <Input type="number" value={priceStarterEarly} onChange={e => setPriceStarterEarly(Number(e.target.value))} />
+              <p className="text-[10px] text-muted-foreground">{formatRupiah(priceStarterEarly)}</p>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Juragan Early Bird</Label>
-              <Input type="number" value={priceJuraganEarly} onChange={e => setPriceJuraganEarly(Number(e.target.value))} />
-              <p className="text-[10px] text-muted-foreground">{formatRupiah(priceJuraganEarly)}</p>
+              <Label className="text-xs">Normal Price</Label>
+              <Input type="number" value={priceStarterNormal} onChange={e => setPriceStarterNormal(Number(e.target.value))} />
+              <p className="text-[10px] text-muted-foreground">{formatRupiah(priceStarterNormal)}</p>
             </div>
           </div>
         </Section>
 
-        <Section title="💰 Harga Normal">
+        {/* Pricing - Pro */}
+        <Section title="💰 Pro Plan">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">Mandiri Normal</Label>
-              <Input type="number" value={priceMandiriNormal} onChange={e => setPriceMandiriNormal(Number(e.target.value))} />
-              <p className="text-[10px] text-muted-foreground">{formatRupiah(priceMandiriNormal)}</p>
+              <Label className="text-xs">Early Bird Price</Label>
+              <Input type="number" value={priceProEarly} onChange={e => setPriceProEarly(Number(e.target.value))} />
+              <p className="text-[10px] text-muted-foreground">{formatRupiah(priceProEarly)}</p>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Juragan Normal</Label>
-              <Input type="number" value={priceJuraganNormal} onChange={e => setPriceJuraganNormal(Number(e.target.value))} />
-              <p className="text-[10px] text-muted-foreground">{formatRupiah(priceJuraganNormal)}</p>
+              <Label className="text-xs">Normal Price</Label>
+              <Input type="number" value={priceProNormal} onChange={e => setPriceProNormal(Number(e.target.value))} />
+              <p className="text-[10px] text-muted-foreground">{formatRupiah(priceProNormal)}</p>
+            </div>
+          </div>
+        </Section>
+
+        {/* Pricing - Bisnis */}
+        <Section title="💰 Bisnis Plan">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Early Bird Price</Label>
+              <Input type="number" value={priceBisnisEarly} onChange={e => setPriceBisnisEarly(Number(e.target.value))} />
+              <p className="text-[10px] text-muted-foreground">{formatRupiah(priceBisnisEarly)}</p>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Normal Price</Label>
+              <Input type="number" value={priceBisnisNormal} onChange={e => setPriceBisnisNormal(Number(e.target.value))} />
+              <p className="text-[10px] text-muted-foreground">{formatRupiah(priceBisnisNormal)}</p>
             </div>
           </div>
         </Section>
@@ -288,27 +320,53 @@ export default function AdminSettings() {
               <Label className="text-xs">Promo Label</Label>
               <Input value={earlybirdLabel} onChange={e => setEarlybirdLabel(e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Mandiri Badge</Label>
-                <Input value={mandiriBadge} onChange={e => setMandiriBadge(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Juragan Badge</Label>
-                <Input value={juraganBadge} onChange={e => setJuraganBadge(e.target.value)} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Mandiri Sublabel</Label>
-                <Input value={mandiriSublabel} onChange={e => setMandiriSublabel(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Juragan Sublabel</Label>
-                <Input value={juraganSublabel} onChange={e => setJuraganSublabel(e.target.value)} />
+
+            {/* Starter Plan */}
+            <div className="pt-3 border-t border-border">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">Starter Plan</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Badge</Label>
+                  <Input value={starterBadge} onChange={e => setStarterBadge(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Sublabel</Label>
+                  <Input value={starterSublabel} onChange={e => setStarterSublabel(e.target.value)} placeholder="e.g., Rp 1.095/hari" />
+                </div>
               </div>
             </div>
-            <div className="space-y-1">
+
+            {/* Pro Plan */}
+            <div className="pt-3 border-t border-border">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">Pro Plan</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Badge</Label>
+                  <Input value={proBadge} onChange={e => setProBadge(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Sublabel</Label>
+                  <Input value={proSublabel} onChange={e => setProSublabel(e.target.value)} placeholder="e.g., Rp 1.916/hari" />
+                </div>
+              </div>
+            </div>
+
+            {/* Bisnis Plan */}
+            <div className="pt-3 border-t border-border">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">Bisnis Plan</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Badge</Label>
+                  <Input value={bisnisBadge} onChange={e => setBisnisBadge(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Sublabel</Label>
+                  <Input value={bisnisSublabel} onChange={e => setBisnisSublabel(e.target.value)} placeholder="e.g., Rp 3.287/hari" />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-border space-y-1">
               <Label className="text-xs">Pricing Footer Text</Label>
               <Input value={pricingFooterText} onChange={e => setPricingFooterText(e.target.value)} />
             </div>
