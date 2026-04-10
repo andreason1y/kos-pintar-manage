@@ -120,13 +120,13 @@ const DEFAULTS = {
 };
 
 const TEXT_DEFAULTS: Record<string, string> = {
-  earlybird_label: "Hemat 50% untuk 100 pendaftar pertama",
+  earlybird_label: "🔥 Early Bird - Hemat 50%",
   mandiri_sublabel: "Kurang dari Rp 700/hari",
   juragan_sublabel: "",
   mandiri_earlybird_badge: "🔥 Early Bird",
   juragan_earlybird_badge: "🔥 Early Bird — Kos Besar",
-  announcement_banner_text: "🔥 Early Bird: Tersisa {slots} slot — Hemat 50% hari ini",
-  pricing_footer_text: "Harga naik setelah 100 pengguna pertama",
+  announcement_banner_text: "🔥 Early Bird Terbatas — Hemat 50%",
+  pricing_footer_text: "Early Bird berakhir setelah slot penuh",
   hero_headline: "Aplikasi Manajemen Kos Terbaik di Indonesia",
   hero_subheadline: "Kelola Penyewa, Tagihan & Keuangan Kos dalam Satu Aplikasi",
   hero_subtext: "Tagihan otomatis, reminder WA, nota PDF, dan laporan keuangan lengkap. Hemat hingga Rp 1.800.000/tahun dibanding aplikasi kos lain.",
@@ -640,7 +640,7 @@ export default function LandingPage() {
               {slotsLoaded && earlyBirdActive && (
                 <div className="bg-muted rounded-lg p-3 text-center">
                   <p className="text-xs font-semibold text-foreground">
-                    Tersisa <span className="text-primary font-extrabold">{slotsRemaining}</span> dari {slotTotal} slot Early Bird
+                    Tersisa <span className="text-primary font-extrabold">{slotsRemaining}</span> slot — Penawaran terbatas
                   </p>
                   <div className="mt-2 h-2 bg-border rounded-full overflow-hidden" role="progressbar" aria-valuenow={slotTotal - slotsRemaining} aria-valuemax={slotTotal}>
                     <div

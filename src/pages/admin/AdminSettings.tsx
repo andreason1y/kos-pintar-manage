@@ -44,7 +44,7 @@ export default function AdminSettings() {
   const [inAppAnnouncementActive, setInAppAnnouncementActive] = useState(false);
 
   // Text settings
-  const [earlybirdLabel, setEarlybirdLabel] = useState("Hemat 50% untuk 100 pendaftar pertama");
+  const [earlybirdLabel, setEarlybirdLabel] = useState("🔥 Early Bird - Hemat 50%");
   const [starterSublabel, setStarterSublabel] = useState("");
   const [proSublabel, setProSublabel] = useState("");
   const [bisnisSublabel, setBisnisSublabel] = useState("");
@@ -52,7 +52,7 @@ export default function AdminSettings() {
   const [proBadge, setProBadge] = useState("🔥 Early Bird");
   const [bisnisBadge, setBisnisBadge] = useState("🔥 Early Bird");
   const [announcementBannerText, setAnnouncementBannerText] = useState("🔥 Early Bird: Tersisa {slots} slot — Hemat 50% hari ini");
-  const [pricingFooterText, setPricingFooterText] = useState("Harga naik setelah 100 pengguna pertama");
+  const [pricingFooterText, setPricingFooterText] = useState("Early Bird berakhir setelah slot penuh");
   const [heroHeadline, setHeroHeadline] = useState("Aplikasi Manajemen Kos Terbaik di Indonesia");
   const [heroSubheadline, setHeroSubheadline] = useState("Kelola Penyewa, Tagihan & Keuangan Kos dalam Satu Aplikasi");
   const [heroSubtext, setHeroSubtext] = useState("");
