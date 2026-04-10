@@ -14,17 +14,77 @@
     <meta property="og:description" content="Kelola kos-kosan lebih mudah dengan KosPintar. Catat penyewa, tagihan otomatis, laporan keuangan, dan nota PDF. Mulai Rp 249.000/tahun." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://kospintar.id/" />
-    <meta property="og:image" content="https://kospintar.id/og-image.jpg" />
+    <meta property="og:image" content="https://kospintar.id/og-image.svg" />
     <meta property="og:locale" content="id_ID" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="KosPintar — Aplikasi Manajemen Kos Terbaik di Indonesia" />
     <meta name="twitter:description" content="Kelola kos-kosan lebih mudah dengan KosPintar. Catat penyewa, tagihan otomatis, laporan keuangan, dan nota PDF." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "KosPintar",
+      "description": "Aplikasi manajemen kos terbaik di Indonesia. Kelola penyewa, tagihan otomatis, laporan keuangan, dan nota PDF dengan mudah.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "inLanguage": "id-ID",
+      "url": "https://kospintar.id",
+      "offers": {
+        "@type": "Offer",
+        "price": "249000",
+        "priceCurrency": "IDR",
+        "description": "Paket Starter per tahun"
+      },
+      "featureList": [
+        "Manajemen Penyewa",
+        "Tagihan Otomatis",
+        "Manajemen Kamar",
+        "Nota PDF",
+        "Laporan Keuangan",
+        "Pengingat Jatuh Tempo"
+      ]
+    }
+    </script>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static fallback content for crawlers/bots without JavaScript.
+           React will replace this on hydration. -->
+      <header style="font-family:sans-serif;max-width:900px;margin:0 auto;padding:2rem 1rem">
+        <h1>KosPintar — Aplikasi Manajemen Kos Terbaik di Indonesia</h1>
+        <p>Kelola kos-kosan lebih mudah dengan KosPintar. Catat penyewa, tagihan otomatis, laporan keuangan, dan nota PDF. Mulai Rp 249.000/tahun.</p>
+        <p><a href="https://kospintar.id/daftar">Daftar Sekarang</a> &nbsp;|&nbsp; <a href="https://kospintar.id/login">Masuk</a></p>
+      </header>
+      <main style="font-family:sans-serif;max-width:900px;margin:0 auto;padding:0 1rem 2rem">
+        <section>
+          <h2>Fitur Unggulan</h2>
+          <ul>
+            <li><strong>Manajemen Penyewa</strong> — Tambah, edit, dan lacak status penyewa dengan mudah</li>
+            <li><strong>Tagihan Otomatis</strong> — Generate tagihan bulanan secara otomatis tanpa repot</li>
+            <li><strong>Manajemen Kamar</strong> — Kelola setiap kamar dengan informasi lengkap</li>
+            <li><strong>Nota PDF</strong> — Buat nota pembayaran profesional dalam hitungan detik</li>
+            <li><strong>Laporan Keuangan</strong> — Analitik pendapatan dan pengeluaran lengkap</li>
+            <li><strong>Pengingat Jatuh Tempo</strong> — Notifikasi otomatis untuk penyewa yang hampir jatuh tempo</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Harga</h2>
+          <p>Tersedia 3 pilihan paket untuk kebutuhan Anda:</p>
+          <ul>
+            <li><strong>Starter</strong> — Mulai Rp 249.000/tahun, cocok untuk 1 properti</li>
+            <li><strong>Pro</strong> — Untuk beberapa properti dengan fitur lengkap</li>
+            <li><strong>Bisnis</strong> — Untuk pengelola kos skala besar</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Tentang KosPintar</h2>
+          <p>KosPintar adalah platform manajemen properti kos yang dirancang khusus untuk pasar Indonesia. Dengan antarmuka yang mudah digunakan, pemilik kos dapat mengelola penyewa, pembayaran, dan laporan keuangan dalam satu aplikasi.</p>
+        </section>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

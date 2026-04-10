@@ -85,12 +85,14 @@ export default function AdminDashboard() {
   }, []);
 
   const activeSubs = subs.filter(s => s.status === "aktif");
-  const mandiriCount = activeSubs.filter(s => s.plan === "mandiri").length;
-  const juraganCount = activeSubs.filter(s => s.plan === "juragan").length;
+  const starterCount = activeSubs.filter(s => s.plan === "starter").length;
+  const proCount = activeSubs.filter(s => s.plan === "pro").length;
+  const bisnisCount = activeSubs.filter(s => s.plan === "bisnis").length;
 
-  const priceMandiri = settings.mandiri_price_earlybird || settings.price_mandiri_early || 249000;
-  const priceJuragan = settings.juragan_price_earlybird || settings.price_juragan_early || 499000;
-  const revenue = mandiriCount * priceMandiri + juraganCount * priceJuragan;
+  const priceStarter = settings.starter_price_earlybird || 199000;
+  const pricePro = settings.pro_price_earlybird || 349000;
+  const priceBisnis = settings.bisnis_price_earlybird || 599000;
+  const revenue = starterCount * priceStarter + proCount * pricePro + bisnisCount * priceBisnis;
 
   const newThisMonth = users.filter(u => {
     const d = new Date(u.created_at);
@@ -116,7 +118,7 @@ export default function AdminDashboard() {
 
   const statCards = [
     { label: "Total Users", value: users.length, icon: Users, color: "text-primary" },
-    { label: "Active Subs", value: `${activeSubs.length} (M:${mandiriCount} J:${juraganCount})`, icon: CreditCard, color: "text-[hsl(var(--success))]" },
+    { label: "Active Subs", value: `${activeSubs.length} (S:${starterCount} P:${proCount} B:${bisnisCount})`, icon: CreditCard, color: "text-[hsl(var(--success))]" },
     { label: "Est. Revenue", value: formatRupiah(revenue), icon: TrendingUp, color: "text-primary" },
     { label: "New This Month", value: newThisMonth.length, icon: UserPlus, color: "text-accent" },
     { label: "Early Bird Left", value: slotsRemaining, icon: Ticket, color: "text-[hsl(var(--warning))]" },

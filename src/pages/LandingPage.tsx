@@ -60,9 +60,9 @@ const EMOJIS = ["📋", "💰", "🏠", "📄", "📊", "🔔"];
 
 /* ─── COMPARISON ─── */
 const COMPARISON: { feature: string; kp: string | boolean; sk: string | boolean }[] = [
-  { feature: "Harga (Mandiri)", kp: "Rp 249k/tahun (flat)", sk: "Rp 9.000/kamar/bulan" },
-  { feature: "10 kamar setahun", kp: "Rp 249.000", sk: "Rp 1.080.000" },
-  { feature: "20 kamar setahun", kp: "Rp 249.000", sk: "Rp 2.160.000" },
+  { feature: "Harga Starter (10 kamar)", kp: "Rp 199k/tahun*", sk: "Rp 600k-1.2jt/bln" },
+  { feature: "Harga Pro (25 kamar)", kp: "Rp 349k/tahun*", sk: "Rp 1.5jt-3jt/bln" },
+  { feature: "Harga Bisnis (60 kamar)", kp: "Rp 599k/tahun*", sk: "Rp 3.6jt-7.2jt/bln" },
   { feature: "Manajemen penyewa", kp: true, sk: true },
   { feature: "Nota PDF", kp: true, sk: true },
   { feature: "Reminder WA ke penyewa", kp: true, sk: true },
@@ -78,7 +78,7 @@ const COMPETITOR_LABEL = "Aplikasi Lain";
 /* ─── Default FAQ/Testimonial fallbacks ─── */
 const DEFAULT_FAQS = [
   { q: "Apakah data saya aman?", a: "Ya, data disimpan di server terenkripsi dan hanya bisa diakses oleh Anda." },
-  { q: "Apa beda paket Mandiri dan Juragan?", a: "Paket Mandiri mendukung hingga 40 kamar. Paket Juragan mendukung hingga 200 kamar, plus prioritas support. Masing-masing 1 properti per akun." },
+  { q: "Apa beda paket Starter, Pro, dan Bisnis?", a: "Starter mendukung hingga 10 kamar (Rp 199k early bird / 399k normal). Pro mendukung hingga 25 kamar (Rp 349k/699k). Bisnis mendukung hingga 60 kamar (Rp 599k/1.199k) dengan prioritas support." },
   { q: "Apakah ada biaya tambahan?", a: "Tidak ada. Harga sudah termasuk semua fitur untuk kelola kos-kosan Anda." },
   { q: "Bagaimana cara perpanjang langganan?", a: "Kami akan kirim notifikasi sebelum masa langganan habis. Perpanjang langsung dari aplikasi." },
   { q: "Apakah bisa dicoba dulu?", a: "Ya, tersedia mode demo tanpa perlu daftar. Klik \"Coba Demo\" di halaman utama." },
@@ -120,13 +120,13 @@ const DEFAULTS = {
 };
 
 const TEXT_DEFAULTS: Record<string, string> = {
-  earlybird_label: "Hemat 50% + bonus 3 bulan untuk 100 pendaftar pertama",
+  earlybird_label: "🔥 Early Bird - Hemat 50%",
   mandiri_sublabel: "Kurang dari Rp 700/hari",
   juragan_sublabel: "",
   mandiri_earlybird_badge: "🔥 Early Bird",
   juragan_earlybird_badge: "🔥 Early Bird — Kos Besar",
-  announcement_banner_text: "🔥 Early Bird: Tersisa {slots} slot — Hemat 50% hari ini",
-  pricing_footer_text: "Harga naik setelah 100 pengguna pertama",
+  announcement_banner_text: "🔥 Early Bird Terbatas — Hemat 50%",
+  pricing_footer_text: "Early Bird berakhir setelah slot penuh",
   hero_headline: "Aplikasi Manajemen Kos Terbaik di Indonesia",
   hero_subheadline: "Kelola Penyewa, Tagihan & Keuangan Kos dalam Satu Aplikasi",
   hero_subtext: "Tagihan otomatis, reminder WA, nota PDF, dan laporan keuangan lengkap. Hemat hingga Rp 1.800.000/tahun dibanding aplikasi kos lain.",
@@ -230,16 +230,20 @@ export default function LandingPage() {
   const slotsRemaining = Math.max(0, slotTotal - (slotsTaken + slotsUsed));
   const earlyBirdActive = ebActive && slotsRemaining > 0;
 
-  const mandiriPriceNormal = cfg.mandiri_price_normal ?? DEFAULTS.mandiri_price_normal;
-  const mandiriPriceEB = cfg.mandiri_price_earlybird ?? DEFAULTS.mandiri_price_earlybird;
-  const juraganPriceNormal = cfg.juragan_price_normal ?? DEFAULTS.juragan_price_normal;
-  const juraganPriceEB = cfg.juragan_price_earlybird ?? DEFAULTS.juragan_price_earlybird;
+  const starterPriceNormal = cfg.starter_price_normal ?? 399000;
+  const starterPriceEB = cfg.starter_price_earlybird ?? 199000;
+  const proPriceNormal = cfg.pro_price_normal ?? 699000;
+  const proPriceEB = cfg.pro_price_earlybird ?? 349000;
+  const bisnisPriceNormal = cfg.bisnis_price_normal ?? 1199000;
+  const bisnisPriceEB = cfg.bisnis_price_earlybird ?? 599000;
 
   const ebLabel = t("earlybird_label");
-  const mandiriSublabel = t("mandiri_sublabel");
-  const juraganSublabel = t("juragan_sublabel");
-  const mandiriBadge = t("mandiri_earlybird_badge");
-  const juraganBadge = t("juragan_earlybird_badge");
+  const starterSublabel = t("starter_sublabel");
+  const proSublabel = t("pro_sublabel");
+  const bisnisSublabel = t("bisnis_sublabel");
+  const starterBadge = t("starter_earlybird_badge");
+  const proBadge = t("pro_earlybird_badge");
+  const bisnisBadge = t("bisnis_earlybird_badge");
 
   // Announcement banner
   const bannerActive = (cfg.announcement_banner_active ?? DEFAULTS.announcement_banner_active) === 1;
@@ -482,6 +486,9 @@ export default function LandingPage() {
                 </tbody>
               </table>
             </div>
+            <p className="text-xs text-muted-foreground mt-3 text-center max-w-3xl mx-auto">
+              *Harga Early Bird untuk 100 pendaftar pertama. Harga normal: Starter Rp 399k, Pro Rp 699k, Bisnis Rp 1.199k per tahun
+            </p>
           </FadeIn>
         </section>
 
@@ -493,37 +500,37 @@ export default function LandingPage() {
             </h2>
           </FadeIn>
 
-          <div className="md:max-w-3xl md:mx-auto md:mt-10 flex flex-col md:flex-row md:items-stretch gap-4 md:gap-6 mt-6">
-            {/* Mandiri */}
-            <FadeIn delay={0.1} className="flex-1 flex">
+          <div className="md:max-w-6xl md:mx-auto md:mt-10 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-6">
+            {/* Starter */}
+            <FadeIn delay={0.1} className="flex">
               <Card className="border-primary/30 shadow-lg overflow-hidden flex flex-col w-full">
                 {earlyBirdActive && (
                   <div className="gradient-primary p-2.5 text-center">
                     <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground border-0 font-bold text-xs">
-                      {mandiriBadge}
+                      {starterBadge}
                     </Badge>
                   </div>
                 )}
                 <CardContent className="p-5 flex flex-col flex-1">
                   <div className="text-center">
-                    <p className="text-lg font-bold text-foreground">Mandiri</p>
+                    <p className="text-lg font-bold text-foreground">Starter</p>
                     {earlyBirdActive ? (
                       <>
-                        <p className="text-sm text-muted-foreground line-through">{formatRupiahLanding(mandiriPriceNormal)}/tahun</p>
+                        <p className="text-sm text-muted-foreground line-through">{formatRupiahLanding(starterPriceNormal)}/tahun</p>
                         <p className="text-3xl font-extrabold text-foreground">
-                          {formatRupiahLanding(mandiriPriceEB)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                          {formatRupiahLanding(starterPriceEB)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
                         </p>
                         <p className="text-xs text-primary font-semibold mt-1">{ebLabel}</p>
                       </>
                     ) : (
                       <p className="text-3xl font-extrabold text-foreground">
-                        {formatRupiahLanding(mandiriPriceNormal)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                        {formatRupiahLanding(starterPriceNormal)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
                       </p>
                     )}
-                    {mandiriSublabel && <p className="text-xs text-muted-foreground mt-1">{mandiriSublabel}</p>}
+                    {starterSublabel && <p className="text-xs text-muted-foreground mt-1">{starterSublabel}</p>}
                   </div>
                   <div className="space-y-2 mt-4 mb-6">
-                    {["Maks 40 kamar", "Semua fitur", "Update gratis selamanya"].map((f) => (
+                    {["Maks 10 kamar", "Semua fitur", "Update gratis selamanya"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
                         <span className="text-sm text-foreground">{f}</span>
@@ -531,42 +538,85 @@ export default function LandingPage() {
                     ))}
                   </div>
                   <Button className="w-full font-bold mt-auto flex items-center justify-center" size="lg" onClick={handleRegister}>
-                    Daftar Paket Mandiri →
+                    Daftar Paket Starter →
                   </Button>
                 </CardContent>
               </Card>
             </FadeIn>
 
-            {/* Juragan */}
-            <FadeIn delay={0.2} className="flex-1 flex">
-              <Card className="border-[#1B2B6B]/30 shadow-lg overflow-hidden flex flex-col w-full">
+            {/* Pro */}
+            <FadeIn delay={0.15} className="flex">
+              <Card className="border-orange-500/30 shadow-lg overflow-hidden flex flex-col w-full">
                 {earlyBirdActive && (
-                  <div className="p-2.5 text-center" style={{ background: "#1B2B6B" }}>
+                  <div className="p-2.5 text-center" style={{ background: "#FF8C42" }}>
                     <Badge variant="secondary" className="bg-white/20 text-white border-0 font-bold text-xs">
-                      {juraganBadge}
+                      {proBadge}
                     </Badge>
                   </div>
                 )}
                 <CardContent className="p-5 flex flex-col flex-1">
                   <div className="text-center">
-                    <p className="text-lg font-bold text-foreground">Juragan</p>
+                    <p className="text-lg font-bold text-foreground">Pro</p>
                     {earlyBirdActive ? (
                       <>
-                        <p className="text-sm text-muted-foreground line-through">{formatRupiahLanding(juraganPriceNormal)}/tahun</p>
+                        <p className="text-sm text-muted-foreground line-through">{formatRupiahLanding(proPriceNormal)}/tahun</p>
                         <p className="text-3xl font-extrabold text-foreground">
-                          {formatRupiahLanding(juraganPriceEB)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                          {formatRupiahLanding(proPriceEB)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                        </p>
+                        <p className="text-xs font-semibold mt-1" style={{ color: "#FF8C42" }}>{ebLabel}</p>
+                      </>
+                    ) : (
+                      <p className="text-3xl font-extrabold text-foreground">
+                        {formatRupiahLanding(proPriceNormal)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                      </p>
+                    )}
+                    {proSublabel && <p className="text-xs text-muted-foreground mt-1">{proSublabel}</p>}
+                  </div>
+                  <div className="space-y-2 mt-4 mb-6">
+                    {["Maks 25 kamar", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
+                      <div key={f} className="flex items-center gap-2">
+                        <Check className="w-4 h-4 flex-shrink-0" style={{ color: "#FF8C42" }} aria-hidden="true" />
+                        <span className="text-sm text-foreground">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button className="w-full font-bold mt-auto text-white hover:opacity-90 flex items-center justify-center" size="lg" style={{ background: "#FF8C42" }} onClick={handleRegister}>
+                    Daftar Paket Pro →
+                  </Button>
+                </CardContent>
+              </Card>
+            </FadeIn>
+
+            {/* Bisnis */}
+            <FadeIn delay={0.2} className="flex">
+              <Card className="border-[#1B2B6B]/30 shadow-lg overflow-hidden flex flex-col w-full">
+                {earlyBirdActive && (
+                  <div className="p-2.5 text-center" style={{ background: "#1B2B6B" }}>
+                    <Badge variant="secondary" className="bg-white/20 text-white border-0 font-bold text-xs">
+                      {bisnisBadge}
+                    </Badge>
+                  </div>
+                )}
+                <CardContent className="p-5 flex flex-col flex-1">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-foreground">Bisnis</p>
+                    {earlyBirdActive ? (
+                      <>
+                        <p className="text-sm text-muted-foreground line-through">{formatRupiahLanding(bisnisPriceNormal)}/tahun</p>
+                        <p className="text-3xl font-extrabold text-foreground">
+                          {formatRupiahLanding(bisnisPriceEB)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
                         </p>
                         <p className="text-xs font-semibold mt-1" style={{ color: "#1B2B6B" }}>{ebLabel}</p>
                       </>
                     ) : (
                       <p className="text-3xl font-extrabold text-foreground">
-                        {formatRupiahLanding(juraganPriceNormal)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
+                        {formatRupiahLanding(bisnisPriceNormal)}<span className="text-base font-semibold text-muted-foreground">/tahun</span>
                       </p>
                     )}
-                    {juraganSublabel && <p className="text-xs text-muted-foreground mt-1">{juraganSublabel}</p>}
+                    {bisnisSublabel && <p className="text-xs text-muted-foreground mt-1">{bisnisSublabel}</p>}
                   </div>
                   <div className="space-y-2 mt-4 mb-6">
-                    {["Maks 200 kamar", "Semua fitur", "Update gratis selamanya", "Prioritas support"].map((f) => (
+                    {["Maks 60 kamar", "Semua fitur", "Update gratis selamanya", "Prioritas support", "Konsultasi bisnis"].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <Check className="w-4 h-4 flex-shrink-0" style={{ color: "#1B2B6B" }} aria-hidden="true" />
                         <span className="text-sm text-foreground">{f}</span>
@@ -574,7 +624,7 @@ export default function LandingPage() {
                     ))}
                   </div>
                   <Button className="w-full font-bold mt-auto text-white hover:opacity-90 flex items-center justify-center" size="lg" style={{ background: "#1B2B6B" }} onClick={handleRegister}>
-                    Daftar Paket Juragan →
+                    Daftar Paket Bisnis →
                   </Button>
                 </CardContent>
               </Card>
@@ -590,7 +640,7 @@ export default function LandingPage() {
               {slotsLoaded && earlyBirdActive && (
                 <div className="bg-muted rounded-lg p-3 text-center">
                   <p className="text-xs font-semibold text-foreground">
-                    Tersisa <span className="text-primary font-extrabold">{slotsRemaining}</span> dari {slotTotal} slot Early Bird
+                    Tersisa <span className="text-primary font-extrabold">{slotsRemaining}</span> slot — Penawaran terbatas
                   </p>
                   <div className="mt-2 h-2 bg-border rounded-full overflow-hidden" role="progressbar" aria-valuenow={slotTotal - slotsRemaining} aria-valuemax={slotTotal}>
                     <div

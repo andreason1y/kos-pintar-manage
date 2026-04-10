@@ -29,7 +29,7 @@ export default function UpgradeModal() {
           </div>
           <AlertDialogTitle className="text-center">Batas Paket Tercapai</AlertDialogTitle>
           <AlertDialogDescription className="text-center">
-            {upgradeMessage || "Upgrade ke paket Juragan untuk kelola lebih banyak kamar."}
+            {upgradeMessage || "Upgrade rencana Anda untuk kelola lebih banyak kamar."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
