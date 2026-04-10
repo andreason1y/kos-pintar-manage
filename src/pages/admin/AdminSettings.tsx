@@ -63,6 +63,12 @@ export default function AdminSettings() {
   const [appVersion, setAppVersion] = useState("1.0.0");
   const [inAppAnnouncementText, setInAppAnnouncementText] = useState("");
 
+  // Email notification settings
+  const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(false);
+  const [emailSenderAddress, setEmailSenderAddress] = useState("noreply@kospintar.id");
+  const [emailNotificationSubject, setEmailNotificationSubject] = useState("Notifikasi Tagihan Jatuh Tempo - {property_name}");
+  const [emailNotificationTemplate, setEmailNotificationTemplate] = useState("");
+
   // FAQ & Testimonials
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
@@ -113,6 +119,10 @@ export default function AdminSettings() {
       setAdminEmail(tmap.admin_email ?? "andreassina9a@gmail.com");
       setAppVersion(tmap.app_version ?? "1.0.0");
       setInAppAnnouncementText(tmap.in_app_announcement_text ?? "");
+      setEmailNotificationsEnabled((map.email_notifications_enabled ?? 0) === 1);
+      setEmailSenderAddress(tmap.email_sender_address ?? "noreply@kospintar.id");
+      setEmailNotificationSubject(tmap.email_notification_subject ?? "Notifikasi Tagihan Jatuh Tempo - {property_name}");
+      setEmailNotificationTemplate(tmap.email_notification_template ?? "");
 
       try { setFaqs(JSON.parse(tmap.faq_data || "[]")); } catch { setFaqs([]); }
       try { setTestimonials(JSON.parse(tmap.testimonials_data || "[]")); } catch { setTestimonials([]); }
@@ -156,6 +166,7 @@ export default function AdminSettings() {
       announcement_banner_active: announcementBannerActive ? 1 : 0,
       maintenance_mode: maintenanceMode ? 1 : 0,
       in_app_announcement_active: inAppAnnouncementActive ? 1 : 0,
+      email_notifications_enabled: emailNotificationsEnabled ? 1 : 0,
     };
 
     for (const [key, value] of Object.entries(numUpdates)) {
@@ -181,6 +192,9 @@ export default function AdminSettings() {
       admin_email: adminEmail,
       app_version: appVersion,
       in_app_announcement_text: inAppAnnouncementText,
+      email_sender_address: emailSenderAddress,
+      email_notification_subject: emailNotificationSubject,
+      email_notification_template: emailNotificationTemplate,
       faq_data: JSON.stringify(faqs),
       testimonials_data: JSON.stringify(testimonials),
     };
@@ -472,6 +486,32 @@ export default function AdminSettings() {
               </div>
             </div>
           </div>
+        </Section>
+
+        {/* Email Notifications */}
+        <Section title="📧 Email Notifications">
+          <div className="flex items-center justify-between">
+            <Label>Enable Email Notifications</Label>
+            <Switch checked={emailNotificationsEnabled} onCheckedChange={setEmailNotificationsEnabled} />
+          </div>
+          {emailNotificationsEnabled && (
+            <div className="space-y-3 mt-3 pt-3 border-t border-border">
+              <div className="space-y-1">
+                <Label className="text-xs">Sender Email Address</Label>
+                <Input value={emailSenderAddress} onChange={e => setEmailSenderAddress(e.target.value)} placeholder="noreply@kospintar.id" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Email Subject Template</Label>
+                <Input value={emailNotificationSubject} onChange={e => setEmailNotificationSubject(e.target.value)} placeholder="Notifikasi Tagihan Jatuh Tempo - {property_name}" />
+                <p className="text-[10px] text-muted-foreground">Available variables: {"{property_name}"}, {"{tenant_name}"}, {"{due_date}"}</p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Email Body Template</Label>
+                <Textarea value={emailNotificationTemplate} onChange={e => setEmailNotificationTemplate(e.target.value)} placeholder="Halo {tenant_name},&#10;&#10;Tagihan Anda akan jatuh tempo pada {due_date}.&#10;Jumlah: {amount_due}&#10;&#10;Mohon lakukan pembayaran segera." rows={6} />
+                <p className="text-[10px] text-muted-foreground">Available variables: {"{tenant_name}"}, {"{amount_due}"}, {"{due_date}"}, {"{property_name}"}</p>
+              </div>
+            </div>
+          )}
         </Section>
 
         {/* Admin & App */}
