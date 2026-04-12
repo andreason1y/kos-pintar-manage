@@ -212,9 +212,29 @@ export default function LandingPage() {
   // Show loading while auth/properties load
   if (authLoading || propLoading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-muted-foreground">Memuat...</p>
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "1rem",
+        backgroundColor: "#ffffff",
+      }}>
+        <div style={{
+          width: "2rem",
+          height: "2rem",
+          border: "2px solid #0d9488",
+          borderTopColor: "transparent",
+          borderRadius: "50%",
+          animation: "spin 1s linear infinite",
+        }} />
+        <p style={{
+          fontSize: "0.875rem",
+          color: "#6b7280",
+          margin: 0,
+        }}>Memuat...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
