@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { useDemo } from "@/lib/demo-context";
 import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
+import { useDemo } from "@/lib/demo-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ClipboardList, Wallet, Home, FileText, BarChart3, Bell,
@@ -143,36 +143,22 @@ function formatRupiahLanding(n: number) {
 }
 
 export default function LandingPage() {
+  // Auth and context hooks - must be before any early returns
   const navigate = useNavigate();
-  const { setIsDemo } = useDemo();
   const { user, loading: authLoading } = useAuth();
   const { properties, loading: propLoading } = useProperty();
-  const { isDemo } = useDemo();
+  const { setIsDemo, isDemo } = useDemo();
 
-  // Redirect authenticated users away from landing page
-  if (!authLoading && !propLoading && user && !isDemo) {
-    return <Navigate to={properties.length > 0 ? "/beranda" : "/onboarding"} replace />;
-  }
-
-  // Show loading while auth/properties load
-  if (authLoading || propLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
+  // State hooks - must be before any early returns
   const [slotsUsed, setSlotsUsed] = useState(0);
   const [slotsLoaded, setSlotsLoaded] = useState(false);
-
-  // Dynamic pricing state
   const [cfg, setCfg] = useState<Record<string, number>>({});
   const [cfgText, setCfgText] = useState<Record<string, string>>({});
   const [faqs, setFaqs] = useState<{ q: string; a: string }[]>(DEFAULT_FAQS);
   const [testimonials, setTestimonials] = useState<{ quote: string; name: string; kos: string; stars: number }[]>(DEFAULT_TESTIMONIALS);
   const [isMaintenance, setIsMaintenance] = useState(false);
 
+  // Effects - must be before any early returns
   useEffect(() => {
     initMetaPixel();
     trackEvent("ViewContent");
@@ -217,6 +203,21 @@ export default function LandingPage() {
       setSlotsLoaded(true);
     });
   }, []);
+
+  // Redirect authenticated users away from landing page
+  if (!authLoading && !propLoading && user && !isDemo) {
+    return <Navigate to={properties.length > 0 ? "/beranda" : "/onboarding"} replace />;
+  }
+
+  // Show loading while auth/properties load
+  if (authLoading || propLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-muted-foreground">Memuat...</p>
+      </div>
+    );
+  }
 
   // Maintenance mode
   if (isMaintenance) {
