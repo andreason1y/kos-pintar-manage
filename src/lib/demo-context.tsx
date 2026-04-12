@@ -196,6 +196,8 @@ interface DemoContextType {
     roomId: string;
     nama: string;
     noHp: string | null;
+    email?: string | null;
+    sendEmailNotifications?: boolean;
     gender: "L" | "P";
     tanggalMasuk: string;
     tanggalKeluar: string;
@@ -304,6 +306,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     roomId: string;
     nama: string;
     noHp: string | null;
+    email?: string | null;
+    sendEmailNotifications?: boolean;
     gender: "L" | "P";
     tanggalMasuk: string;
     tanggalKeluar: string;
