@@ -244,6 +244,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     setTenants(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
   }, []);
   const deleteTenant = useCallback((id: string) => {
+    // Clean up associated deposits and transactions when deleting a tenant
+    setDeposits(prev => prev.filter(d => d.tenant_id !== id));
+    setTransactions(prev => prev.filter(tx => tx.tenant_id !== id));
     setTenants(prev => prev.filter(t => t.id !== id));
   }, []);
 
@@ -254,8 +257,22 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     setRooms(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
   }, []);
   const deleteRoom = useCallback((id: string) => {
+    // When deleting a room, also clean up all tenants and their associated data
+    const room = rooms.find(r => r.id === id);
+    if (room) {
+      // Find all tenants in this room
+      const tenantsInRoom = tenants.filter(t => t.room_id === id);
+
+      // Delete all their data (deposits, transactions, reminders)
+      const tenantIds = tenantsInRoom.map(t => t.id);
+      setDeposits(prev => prev.filter(d => !tenantIds.includes(d.tenant_id)));
+      setTransactions(prev => prev.filter(tx => !tenantIds.includes(tx.tenant_id)));
+      setTenants(prev => prev.filter(t => t.room_id !== id));
+    }
+
+    // Delete the room
     setRooms(prev => prev.filter(r => r.id !== id));
-  }, []);
+  }, [rooms, tenants]);
 
   const addRoomType = useCallback((rt: Omit<DemoRoomType, "id">) => {
     setRoomTypes(prev => [...prev, { ...rt, id: genId("rt") }]);
@@ -264,8 +281,21 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     setRoomTypes(prev => prev.map(rt => rt.id === id ? { ...rt, ...updates } : rt));
   }, []);
   const deleteRoomType = useCallback((id: string) => {
+    // When deleting a room type, cascade delete rooms of that type and their tenants' data
+    const roomsOfType = rooms.filter(r => r.room_type_id === id);
+    const roomIds = roomsOfType.map(r => r.id);
+
+    // Find all tenants in these rooms
+    const tenantsInRooms = tenants.filter(t => t.room_id && roomIds.includes(t.room_id));
+    const tenantIds = tenantsInRooms.map(t => t.id);
+
+    // Delete cascade
+    setDeposits(prev => prev.filter(d => !tenantIds.includes(d.tenant_id)));
+    setTransactions(prev => prev.filter(tx => !tenantIds.includes(tx.tenant_id)));
+    setTenants(prev => prev.filter(t => !tenantIds.includes(t.id)));
+    setRooms(prev => prev.filter(r => r.room_type_id !== id));
     setRoomTypes(prev => prev.filter(rt => rt.id !== id));
-  }, []);
+  }, [rooms, tenants]);
 
   const addTransaction = useCallback((tx: Omit<DemoTransaction, "id">) => {
     setTransactions(prev => [{ ...tx, id: genId("tx") }, ...prev]);
