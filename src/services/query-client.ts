@@ -36,9 +36,10 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
 
       /**
-       * Disable automatic refetch when component mounts if data exists
+       * Refetch stale/invalidated data when component mounts
+       * This ensures fresh data after mutations (e.g., delete tenant)
        */
-      refetchOnMount: false,
+      refetchOnMount: true,
 
       /**
        * Disable automatic refetch when internet reconnects

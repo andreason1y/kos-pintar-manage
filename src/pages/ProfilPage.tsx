@@ -25,7 +25,7 @@ export default function ProfilPage() {
   const { user, signOut } = useAuth();
   const { properties, activeProperty, refetch: refetchProperties } = useProperty();
   const demo = useDemo();
-  const { plan, planLabel, limits } = usePlan();
+  const { plan, planLabel, limits, expiresAt } = usePlan();
   const invalidate = useInvalidate();
   const navigate = useNavigate();
 
@@ -150,6 +150,11 @@ export default function ProfilPage() {
                 <span className="px-2 py-0.5 rounded-full bg-[hsl(142,71%,45%)]/15 text-[hsl(142,71%,45%)] text-[10px] font-bold">AKTIF</span>
               </div>
               <p className="text-xs text-muted-foreground">Kamar: {roomCount}/{limits.maxRooms}</p>
+              {expiresAt && !demo.isDemo && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Berlaku s/d: <span className="font-medium text-foreground">{new Date(expiresAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
+                </p>
+              )}
             </div>
             <Sparkles size={16} className="text-accent" />
           </div>

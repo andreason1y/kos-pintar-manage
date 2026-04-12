@@ -28,6 +28,7 @@ interface PlanContextType {
   limits: PlanLimits;
   planLabel: string;
   loading: boolean;
+  expiresAt: string | null;
   showUpgradeModal: boolean;
   upgradeMessage: string;
   upgradeCta: string;
@@ -41,6 +42,7 @@ const PlanContext = createContext<PlanContextType>({
   limits: PLAN_LIMITS.starter,
   planLabel: "Starter",
   loading: true,
+  expiresAt: null,
   showUpgradeModal: false,
   upgradeMessage: "",
   upgradeCta: "Upgrade rencana Anda →",
@@ -69,6 +71,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   const { isDemo } = useDemo();
   const [plan, setPlan] = useState<PlanType>("starter");
   const [loading, setLoading] = useState(true);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
   const [upgradeCta, setUpgradeCta] = useState("Upgrade rencana Anda →");
@@ -86,17 +89,19 @@ export function PlanProvider({ children }: { children: ReactNode }) {
     }
     supabase
       .from("subscriptions")
-      .select("plan")
+      .select("plan, expires_at")
       .eq("user_id", user.id)
       .eq("status", "aktif")
       .order("created_at", { ascending: false })
       .limit(1)
       .then(({ data }) => {
         if (data && data.length > 0) {
-          const loadedPlan = (data[0] as any).plan || "starter";
-          setPlan(migratePlanType(loadedPlan));
+          const sub = data[0] as any;
+          setPlan(migratePlanType(sub.plan || "starter"));
+          setExpiresAt(sub.expires_at || null);
         } else {
           setPlan("starter");
+          setExpiresAt(null);
         }
         setLoading(false);
       });
@@ -118,7 +123,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   const planLabel = PLAN_LABELS[plan];
 
   return (
-    <PlanContext.Provider value={{ plan, limits, planLabel, loading, showUpgradeModal, upgradeMessage, upgradeCta, upgradeLink, triggerUpgrade, dismissUpgrade }}>
+    <PlanContext.Provider value={{ plan, limits, planLabel, loading, expiresAt, showUpgradeModal, upgradeMessage, upgradeCta, upgradeLink, triggerUpgrade, dismissUpgrade }}>
       {children}
     </PlanContext.Provider>
   );
