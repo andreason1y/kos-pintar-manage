@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/react";
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
+import { App } from "@/app/App";
 import "./index.css";
 
 // Initialize Sentry only in production when DSN is configured
@@ -21,23 +21,23 @@ if (sentryDsn && import.meta.env.PROD) {
   });
 }
 
-function ErrorFallback() {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
-      <p className="text-lg font-semibold text-foreground">Terjadi kesalahan</p>
-      <p className="text-sm text-muted-foreground">Silakan muat ulang halaman atau coba beberapa saat lagi.</p>
-      <button
-        onClick={() => window.location.reload()}
-        className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium"
-      >
-        Muat Ulang
-      </button>
-    </div>
-  );
-}
-
 createRoot(document.getElementById("root")!).render(
-  <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
+  <Sentry.ErrorBoundary
+    fallback={
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <p className="text-lg font-semibold text-foreground">Terjadi kesalahan</p>
+        <p className="text-sm text-muted-foreground">
+          Silakan muat ulang halaman atau coba beberapa saat lagi.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium"
+        >
+          Muat Ulang
+        </button>
+      </div>
+    }
+  >
     <App />
   </Sentry.ErrorBoundary>
 );
