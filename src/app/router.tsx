@@ -28,12 +28,7 @@ export function Router() {
   const { properties, loading: propLoading } = useProperty();
   const { isDemo } = useDemo();
 
-  // Show loading while auth AND properties are being resolved
-  // This ensures we never route based on incomplete state
-  if (authLoading || propLoading) {
-    return <LoadingScreen />;
-  }
-
+  // Build routes based on auth state - must be before useRoutes hook
   let routes: RouteObject[] = [];
 
   // Demo mode - all routes available
@@ -65,7 +60,14 @@ export function Router() {
     ];
   }
 
+  // Call useRoutes before any early returns
   const element = useRoutes(routes);
+
+  // Show loading while auth AND properties are being resolved
+  // This ensures we never route based on incomplete state
+  if (authLoading || propLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <Suspense fallback={<LoadingScreen />}>
