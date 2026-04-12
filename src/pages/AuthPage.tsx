@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDemo } from "@/lib/demo-context";
+import { useWaitForProperties } from "@/hooks/useWaitForProperties";
 import logoIcon from "@/assets/logo-icon.png";
 
 export default function AuthPage() {
@@ -30,7 +31,7 @@ export default function AuthPage() {
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
-      else navigate("/beranda", { replace: true });
+      else navigate("/", { replace: true });
     } else {
       if (password !== confirmPassword) {
         toast.error("Kata sandi dan konfirmasi tidak cocok");

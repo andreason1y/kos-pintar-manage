@@ -27,8 +27,9 @@ export function Router() {
   const { properties, loading: propLoading } = useProperty();
   const { isDemo } = useDemo();
 
-  // Show loading while auth is being resolved
-  if (authLoading || (user && propLoading)) {
+  // Show loading while auth AND properties are being resolved
+  // This ensures we never route based on incomplete state
+  if (authLoading || propLoading) {
     return <LoadingScreen />;
   }
 

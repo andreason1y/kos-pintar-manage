@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +11,19 @@ import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
 
 export default function OnboardingPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const { refetch } = useProperty();
+  const { properties, refetch } = useProperty();
   const [namaKos, setNamaKos] = useState("");
   const [alamat, setAlamat] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Auto-redirect to dashboard once user creates first property
+  useEffect(() => {
+    if (properties && properties.length > 0) {
+      navigate("/beranda", { replace: true });
+    }
+  }, [properties, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
