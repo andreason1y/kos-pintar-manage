@@ -133,7 +133,7 @@ export default function PenyewaPage() {
     return list;
   }, [tenants, activeTab, search]);
 
-  const refetchAll = () => { invalidate.all(); };
+  const refetchAll = () => invalidate.all();
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,7 +201,7 @@ export default function PenyewaPage() {
     // Invalidate all queries to refresh data, especially deposits
     await refetchAll();
     // Extra: explicitly refetch deposits to ensure they're cleared
-    invalidate.deposits();
+    await invalidate.deposits();
   };
 
   const handleEndContract = async (tenant: Tenant) => {
@@ -251,7 +251,7 @@ export default function PenyewaPage() {
     // Invalidate all queries to refresh data, especially deposits
     await refetchAll();
     // Extra: explicitly refetch deposits to ensure they're cleared/updated
-    invalidate.deposits();
+    await invalidate.deposits();
   };
 
   return (
