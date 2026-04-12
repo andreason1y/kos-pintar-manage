@@ -29,6 +29,8 @@ export interface DemoTenant {
   room_id: string | null;
   nama: string;
   no_hp: string | null;
+  email?: string | null;
+  send_email_notifications?: boolean;
   gender: "L" | "P";
   tanggal_masuk: string;
   tanggal_keluar: string | null;
@@ -194,6 +196,8 @@ interface DemoContextType {
     roomId: string;
     nama: string;
     noHp: string | null;
+    email?: string | null;
+    sendEmailNotifications?: boolean;
     gender: "L" | "P";
     tanggalMasuk: string;
     tanggalKeluar: string;
@@ -302,6 +306,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     roomId: string;
     nama: string;
     noHp: string | null;
+    email?: string | null;
+    sendEmailNotifications?: boolean;
     gender: "L" | "P";
     tanggalMasuk: string;
     tanggalKeluar: string;

@@ -36,7 +36,15 @@ export type Database = {
           detail?: string | null
           id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_admin_activity_log_admin_email"
+            columns: ["admin_email"]
+            isOneToOne: false
+            referencedRelation: "admins"
+            referencedColumns: ["email"]
+          },
+        ]
       }
       admins: {
         Row: {
@@ -85,7 +93,7 @@ export type Database = {
           jumlah: number
           jumlah_dikembalikan: number
           property_id: string
-          status: string
+          status: Database["public"]["Enums"]["deposit_status_enum"] | null
           tanggal_kembali: string | null
           tenant_id: string
         }
@@ -96,7 +104,7 @@ export type Database = {
           jumlah?: number
           jumlah_dikembalikan?: number
           property_id: string
-          status?: string
+          status?: Database["public"]["Enums"]["deposit_status_enum"] | null
           tanggal_kembali?: string | null
           tenant_id: string
         }
@@ -107,7 +115,7 @@ export type Database = {
           jumlah?: number
           jumlah_dikembalikan?: number
           property_id?: string
-          status?: string
+          status?: Database["public"]["Enums"]["deposit_status_enum"] | null
           tanggal_kembali?: string | null
           tenant_id?: string
         }
@@ -178,7 +186,9 @@ export type Database = {
           order_id: string
           plan: string
           snap_token: string | null
-          status: string
+          status:
+            | Database["public"]["Enums"]["payment_transaction_status_enum"]
+            | null
           updated_at: string
           user_id: string
         }
@@ -190,7 +200,9 @@ export type Database = {
           order_id: string
           plan: string
           snap_token?: string | null
-          status?: string
+          status?:
+            | Database["public"]["Enums"]["payment_transaction_status_enum"]
+            | null
           updated_at?: string
           user_id: string
         }
@@ -202,7 +214,9 @@ export type Database = {
           order_id?: string
           plan?: string
           snap_token?: string | null
-          status?: string
+          status?:
+            | Database["public"]["Enums"]["payment_transaction_status_enum"]
+            | null
           updated_at?: string
           user_id?: string
         }
@@ -215,7 +229,7 @@ export type Database = {
           last_login: string | null
           nama: string | null
           no_hp: string | null
-          plan: string
+          plan: Database["public"]["Enums"]["plan_enum"] | null
           subscription_active: boolean
           subscription_end: string | null
           subscription_start: string | null
@@ -226,7 +240,7 @@ export type Database = {
           last_login?: string | null
           nama?: string | null
           no_hp?: string | null
-          plan?: string
+          plan?: Database["public"]["Enums"]["plan_enum"] | null
           subscription_active?: boolean
           subscription_end?: string | null
           subscription_start?: string | null
@@ -237,7 +251,7 @@ export type Database = {
           last_login?: string | null
           nama?: string | null
           no_hp?: string | null
-          plan?: string
+          plan?: Database["public"]["Enums"]["plan_enum"] | null
           subscription_active?: boolean
           subscription_end?: string | null
           subscription_start?: string | null
@@ -394,42 +408,78 @@ export type Database = {
       }
       settings: {
         Row: {
+          bisnis_price_earlybird: number | null
+          bisnis_price_normal: number | null
           created_at: string
           id: string
           key: string
+          pro_price_earlybird: number | null
+          pro_price_normal: number | null
+          starter_price_earlybird: number | null
+          starter_price_normal: number | null
           value: number
         }
         Insert: {
+          bisnis_price_earlybird?: number | null
+          bisnis_price_normal?: number | null
           created_at?: string
           id?: string
           key: string
+          pro_price_earlybird?: number | null
+          pro_price_normal?: number | null
+          starter_price_earlybird?: number | null
+          starter_price_normal?: number | null
           value?: number
         }
         Update: {
+          bisnis_price_earlybird?: number | null
+          bisnis_price_normal?: number | null
           created_at?: string
           id?: string
           key?: string
+          pro_price_earlybird?: number | null
+          pro_price_normal?: number | null
+          starter_price_earlybird?: number | null
+          starter_price_normal?: number | null
           value?: number
         }
         Relationships: []
       }
       settings_text: {
         Row: {
+          bisnis_earlybird_badge: string | null
+          bisnis_sublabel: string | null
           created_at: string
           id: string
           key: string
+          pro_earlybird_badge: string | null
+          pro_sublabel: string | null
+          starter_earlybird_badge: string | null
+          starter_sublabel: string | null
           value: string
         }
         Insert: {
+          bisnis_earlybird_badge?: string | null
+          bisnis_sublabel?: string | null
           created_at?: string
           id?: string
           key: string
+          pro_earlybird_badge?: string | null
+          pro_sublabel?: string | null
+          starter_earlybird_badge?: string | null
+          starter_sublabel?: string | null
           value?: string
         }
         Update: {
+          bisnis_earlybird_badge?: string | null
+          bisnis_sublabel?: string | null
           created_at?: string
           id?: string
           key?: string
+          pro_earlybird_badge?: string | null
+          pro_sublabel?: string | null
+          starter_earlybird_badge?: string | null
+          starter_sublabel?: string | null
           value?: string
         }
         Relationships: []
@@ -439,7 +489,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
-          plan: string
+          plan: Database["public"]["Enums"]["plan_enum"] | null
           started_at: string
           status: string
           user_id: string
@@ -448,7 +498,7 @@ export type Database = {
           created_at?: string
           expires_at: string
           id?: string
-          plan?: string
+          plan?: Database["public"]["Enums"]["plan_enum"] | null
           started_at?: string
           status?: string
           user_id: string
@@ -457,7 +507,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
-          plan?: string
+          plan?: Database["public"]["Enums"]["plan_enum"] | null
           started_at?: string
           status?: string
           user_id?: string
@@ -642,9 +692,12 @@ export type Database = {
       }
     }
     Enums: {
+      deposit_status_enum: "ditahan" | "dikembalikan"
       gender_type: "L" | "P"
       payment_method: "tunai" | "transfer" | "qris"
       payment_status: "belum_bayar" | "belum_lunas" | "lunas"
+      payment_transaction_status_enum: "pending" | "success" | "failed"
+      plan_enum: "mandiri" | "juragan" | "starter" | "pro" | "bisnis" | "demo"
       room_status: "kosong" | "terisi"
       tenant_status: "aktif" | "keluar"
     }
@@ -774,9 +827,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      deposit_status_enum: ["ditahan", "dikembalikan"],
       gender_type: ["L", "P"],
       payment_method: ["tunai", "transfer", "qris"],
       payment_status: ["belum_bayar", "belum_lunas", "lunas"],
+      payment_transaction_status_enum: ["pending", "success", "failed"],
+      plan_enum: ["mandiri", "juragan", "starter", "pro", "bisnis", "demo"],
       room_status: ["kosong", "terisi"],
       tenant_status: ["aktif", "keluar"],
     },
