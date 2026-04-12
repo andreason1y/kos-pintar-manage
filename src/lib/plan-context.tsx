@@ -3,24 +3,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useDemo } from "@/lib/demo-context";
 
-export type PlanType = "starter" | "pro" | "bisnis" | "demo";
+export type PlanType = "mandiri" | "juragan" | "demo";
 
 export interface PlanLimits {
   maxRooms: number;
 }
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
-  starter: { maxRooms: 10 },
-  pro: { maxRooms: 25 },
-  bisnis: { maxRooms: 60 },
+  mandiri: { maxRooms: 40 },
+  juragan: { maxRooms: 200 },
   demo: { maxRooms: 200 },
 };
 
 export const PLAN_LABELS: Record<PlanType, string> = {
-  starter: "Starter",
-  pro: "Pro",
-  bisnis: "Bisnis",
-  demo: "Bisnis",
+  mandiri: "Mandiri",
+  juragan: "Juragan",
+  demo: "Juragan",
 };
 
 interface PlanContextType {
@@ -37,9 +35,9 @@ interface PlanContextType {
 }
 
 const PlanContext = createContext<PlanContextType>({
-  plan: "starter",
-  limits: PLAN_LIMITS.starter,
-  planLabel: "Starter",
+  plan: "mandiri",
+  limits: PLAN_LIMITS.mandiri,
+  planLabel: "Mandiri",
   loading: true,
   showUpgradeModal: false,
   upgradeMessage: "",
@@ -54,20 +52,20 @@ export const usePlan = () => useContext(PlanContext);
 // Migration: Map old plan names to new ones
 function migratePlanType(oldPlan: string): PlanType {
   const planMap: Record<string, PlanType> = {
-    mandiri: "starter",
-    juragan: "pro",
-    starter: "starter",
-    pro: "pro",
-    bisnis: "bisnis",
+    mandiri: "mandiri",
+    juragan: "juragan",
+    starter: "mandiri",
+    pro: "juragan",
+    bisnis: "juragan",
     demo: "demo",
   };
-  return (planMap[oldPlan] || "starter") as PlanType;
+  return (planMap[oldPlan] || "mandiri") as PlanType;
 }
 
 export function PlanProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { isDemo } = useDemo();
-  const [plan, setPlan] = useState<PlanType>("starter");
+  const [plan, setPlan] = useState<PlanType>("mandiri");
   const [loading, setLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
@@ -96,7 +94,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
           const loadedPlan = (data[0] as any).plan || "starter";
           setPlan(migratePlanType(loadedPlan));
         } else {
-          setPlan("starter");
+          setPlan("mandiri");
         }
         setLoading(false);
       });

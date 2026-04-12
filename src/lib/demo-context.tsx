@@ -29,6 +29,8 @@ export interface DemoTenant {
   room_id: string | null;
   nama: string;
   no_hp: string | null;
+  email?: string | null;
+  send_email_notifications?: boolean;
   gender: "L" | "P";
   tanggal_masuk: string;
   tanggal_keluar: string | null;
