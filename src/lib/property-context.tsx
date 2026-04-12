@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth-context";
+import { useDemo } from "./demo-context";
 
 interface Property {
   id: string;
@@ -28,11 +29,25 @@ export const useProperty = () => useContext(PropertyContext);
 
 export function PropertyProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { isDemo } = useDemo();
   const [properties, setProperties] = useState<Property[]>([]);
   const [activeProperty, setActiveProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchProperties = async () => {
+    // Demo mode - provide a fake property
+    if (isDemo) {
+      const demoProperty: Property = {
+        id: "demo-property-1",
+        nama_kos: "Kos Demo",
+        alamat: "Alamat Demo"
+      };
+      setProperties([demoProperty]);
+      setActiveProperty(demoProperty);
+      setLoading(false);
+      return;
+    }
+
     if (!user) { setProperties([]); setActiveProperty(null); setLoading(false); return; }
     const { data } = await supabase
       .from("properties")
@@ -46,7 +61,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   };
 
-  useEffect(() => { fetchProperties(); }, [user]);
+  useEffect(() => { fetchProperties(); }, [user, isDemo]);
 
   return (
     <PropertyContext.Provider value={{ properties, activeProperty, setActiveProperty, loading, refetch: fetchProperties }}>
