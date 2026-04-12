@@ -248,7 +248,10 @@ export default function PenyewaPage() {
     if (error) { toast.error(error.message); return; }
     toast.success("Kontrak berakhir, penyewa dikeluarkan");
     setShowEndContract(null); setDepositInfo(null);
-    refetchAll();
+    // Invalidate all queries to refresh data, especially deposits
+    await refetchAll();
+    // Extra: explicitly refetch deposits to ensure they're cleared/updated
+    invalidate.deposits();
   };
 
   return (
