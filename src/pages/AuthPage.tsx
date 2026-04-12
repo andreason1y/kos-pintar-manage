@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { trackEvent } from "@/lib/meta-pixel";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,13 +9,32 @@ import { motion } from "framer-motion";
 import { Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDemo } from "@/lib/demo-context";
+import { useAuth } from "@/lib/auth-context";
+import { useProperty } from "@/lib/property-context";
 import { useWaitForProperties } from "@/hooks/useWaitForProperties";
 import logoIcon from "@/assets/logo-icon.png";
 
 export default function AuthPage() {
   const { setIsDemo } = useDemo();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { properties, loading: propLoading } = useProperty();
   const [searchParams] = useSearchParams();
+
+  // Redirect already-authenticated users
+  if (!authLoading && !propLoading && user) {
+    return <Navigate to={properties.length > 0 ? "/beranda" : "/onboarding"} replace />;
+  }
+
+  // Show loading while auth/properties load
+  if (authLoading || propLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   const [isLogin, setIsLogin] = useState(!searchParams.get("tab") || searchParams.get("tab") !== "register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

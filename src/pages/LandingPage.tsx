@@ -1,12 +1,14 @@
 import { useRef, useEffect, useState } from "react";
 import { initMetaPixel, trackEvent } from "@/lib/meta-pixel";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useDemo } from "@/lib/demo-context";
+import { useAuth } from "@/lib/auth-context";
+import { useProperty } from "@/lib/property-context";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ClipboardList, Wallet, Home, FileText, BarChart3, Bell,
@@ -143,6 +145,24 @@ function formatRupiahLanding(n: number) {
 export default function LandingPage() {
   const navigate = useNavigate();
   const { setIsDemo } = useDemo();
+  const { user, loading: authLoading } = useAuth();
+  const { properties, loading: propLoading } = useProperty();
+  const { isDemo } = useDemo();
+
+  // Redirect authenticated users away from landing page
+  if (!authLoading && !propLoading && user && !isDemo) {
+    return <Navigate to={properties.length > 0 ? "/beranda" : "/onboarding"} replace />;
+  }
+
+  // Show loading while auth/properties load
+  if (authLoading || propLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   const [slotsUsed, setSlotsUsed] = useState(0);
   const [slotsLoaded, setSlotsLoaded] = useState(false);
 
