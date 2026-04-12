@@ -191,10 +191,10 @@ export default function KamarPage() {
     const lt = parseInt(lantai) || 1;
     const currentRoomCount = roomTypes.reduce((sum, rt) => sum + rt.rooms.length, 0);
     if (currentRoomCount + n > limits.maxRooms) {
-      if (plan === "juragan" || plan === "demo") {
+      if (plan === "bisnis" || plan === "demo") {
         triggerUpgrade(`Batas ${limits.maxRooms} kamar tercapai. Hubungi kami untuk solusi enterprise.`, "Hubungi Kami →", "https://wa.me/62818477620");
       } else {
-        triggerUpgrade(`Batas ${limits.maxRooms} kamar tercapai. Upgrade ke paket Juragan untuk kelola hingga 200 kamar.`);
+        triggerUpgrade(`Batas ${limits.maxRooms} kamar tercapai. Upgrade ke paket Bisnis untuk kelola lebih banyak kamar.`);
       }
       return;
     }

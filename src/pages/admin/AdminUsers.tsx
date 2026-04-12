@@ -51,7 +51,7 @@ export default function AdminUsers() {
   // Add user modal
   const [showAdd, setShowAdd] = useState(false);
   const [addForm, setAddForm] = useState({
-    nama: "", email: "", no_hp: "", password: "", plan: "mandiri",
+    nama: "", email: "", no_hp: "", password: "", plan: "starter",
     nama_kos: "", started_at: new Date().toISOString().split("T")[0],
     expires_at: "",
   });
@@ -59,7 +59,7 @@ export default function AdminUsers() {
   // Edit user modal
   const [editUser, setEditUser] = useState<UserRow | null>(null);
   const [editForm, setEditForm] = useState({
-    nama: "", no_hp: "", nama_kos: "", plan: "mandiri", status: "aktif", expires_at: "",
+    nama: "", no_hp: "", nama_kos: "", plan: "starter", status: "aktif", expires_at: "",
   });
 
   // Reset password modal
@@ -122,8 +122,9 @@ export default function AdminUsers() {
       u.nama?.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filterPlan === "Semua" ||
-      (filterPlan === "Mandiri" && u.sub_plan === "mandiri") ||
-      (filterPlan === "Juragan" && u.sub_plan === "juragan") ||
+      (filterPlan === "Starter" && u.sub_plan === "starter") ||
+      (filterPlan === "Pro" && u.sub_plan === "pro") ||
+      (filterPlan === "Bisnis" && u.sub_plan === "bisnis") ||
       (filterPlan === "Belum" && u.sub_status === "none");
     return matchSearch && matchFilter;
   });
@@ -152,7 +153,7 @@ export default function AdminUsers() {
       toast.success("User berhasil dibuat");
       supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "create_user", detail: addForm.email } as any).then(() => {});
       setShowAdd(false);
-      setAddForm({ nama: "", email: "", no_hp: "", password: "", plan: "mandiri", nama_kos: "", started_at: new Date().toISOString().split("T")[0], expires_at: "" });
+      setAddForm({ nama: "", email: "", no_hp: "", password: "", plan: "starter", nama_kos: "", started_at: new Date().toISOString().split("T")[0], expires_at: "" });
       fetchData();
     } catch (err: any) {
       toast.error(err.message);
@@ -229,7 +230,7 @@ export default function AdminUsers() {
         .eq("user_id", showExtend.id);
     } else {
       await supabase.from("subscriptions")
-        .insert({ user_id: showExtend.id, plan: "mandiri", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any);
+        .insert({ user_id: showExtend.id, plan: "starter", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any);
     }
     toast.success(`Subscription diperpanjang ${months} bulan`);
     setSaving(false);
@@ -250,7 +251,7 @@ export default function AdminUsers() {
     const existing = users.find(u => u.id === userId);
     if (existing?.sub_status === "none") {
       await supabase.from("subscriptions")
-        .insert({ user_id: userId, plan: "mandiri", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any);
+        .insert({ user_id: userId, plan: "starter", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any);
     } else {
       await supabase.from("subscriptions")
         .update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any)
@@ -261,7 +262,14 @@ export default function AdminUsers() {
   };
 
   const handleSwitchPlan = async (userId: string, currentPlan: string) => {
-    const newPlan = currentPlan === "mandiri" ? "juragan" : "mandiri";
+    const planCycle: Record<string, string> = {
+      starter: "pro",
+      pro: "bisnis",
+      bisnis: "starter",
+      mandiri: "pro", // Legacy migration
+      juragan: "bisnis", // Legacy migration
+    };
+    const newPlan = planCycle[currentPlan] || "starter";
     await supabase.from("subscriptions").update({ plan: newPlan } as any).eq("user_id", userId);
     supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "switch_plan", detail: `${userId}: ${currentPlan} → ${newPlan}` } as any).then(() => {});
     toast.success(`Paket diubah ke ${newPlan}`);
@@ -302,7 +310,7 @@ export default function AdminUsers() {
     for (const id of selectedIds) {
       const u = users.find(u => u.id === id);
       if (u?.sub_status === "none") {
-        await supabase.from("subscriptions").insert({ user_id: id, plan: "mandiri", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any);
+        await supabase.from("subscriptions").insert({ user_id: id, plan: "starter", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any);
       } else {
         await supabase.from("subscriptions").update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any).eq("user_id", id);
       }
@@ -356,7 +364,7 @@ export default function AdminUsers() {
       nama: u.nama || "",
       no_hp: u.no_hp || "",
       nama_kos: u.property_name || "",
-      plan: u.sub_plan || "mandiri",
+      plan: u.sub_plan || "starter",
       status: u.sub_status === "aktif" ? "aktif" : "nonaktif",
       expires_at: u.sub_expires || "",
     });
@@ -385,7 +393,7 @@ export default function AdminUsers() {
             <Input value={search} onChange={e => { setSearch(e.target.value); setPage(0); }} placeholder="Cari nama atau email..." className="pl-9" />
           </div>
           <div className="flex gap-2 overflow-x-auto">
-            {["Semua", "Mandiri", "Juragan", "Belum"].map(tab => (
+            {["Semua", "Starter", "Pro", "Bisnis", "Belum"].map(tab => (
               <button key={tab} onClick={() => { setFilterPlan(tab); setPage(0); }}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
                   filterPlan === tab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
@@ -475,7 +483,7 @@ export default function AdminUsers() {
                           </Button>
                         )}
                         {u.sub_status !== "none" && (
-                          <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => handleSwitchPlan(u.id, u.sub_plan || "mandiri")}>
+                          <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => handleSwitchPlan(u.id, u.sub_plan || "starter")}>
                             <ArrowLeftRight size={12} className="mr-1" /> Switch
                           </Button>
                         )}
@@ -560,8 +568,9 @@ export default function AdminUsers() {
                 <Select value={addForm.plan} onValueChange={v => setAddForm(p => ({ ...p, plan: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="mandiri">Mandiri</SelectItem>
-                    <SelectItem value="juragan">Juragan</SelectItem>
+                    <SelectItem value="starter">Starter (10 kamar)</SelectItem>
+                    <SelectItem value="pro">Pro (25 kamar)</SelectItem>
+                    <SelectItem value="bisnis">Bisnis (60 kamar)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -615,8 +624,9 @@ export default function AdminUsers() {
                   <Select value={editForm.plan} onValueChange={v => setEditForm(p => ({ ...p, plan: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="mandiri">Mandiri</SelectItem>
-                      <SelectItem value="juragan">Juragan</SelectItem>
+                      <SelectItem value="starter">Starter (10 kamar)</SelectItem>
+                      <SelectItem value="pro">Pro (25 kamar)</SelectItem>
+                      <SelectItem value="bisnis">Bisnis (60 kamar)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
