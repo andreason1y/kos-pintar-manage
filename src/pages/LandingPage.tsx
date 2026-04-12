@@ -159,6 +159,13 @@ export default function LandingPage() {
   const [isMaintenance, setIsMaintenance] = useState(false);
 
   // Effects - must be before any early returns
+  // Handle demo mode redirect when isDemo changes
+  useEffect(() => {
+    if (isDemo) {
+      navigate("/beranda", { replace: true });
+    }
+  }, [isDemo, navigate]);
+
   useEffect(() => {
     initMetaPixel();
     trackEvent("ViewContent");
@@ -251,8 +258,8 @@ export default function LandingPage() {
   }
 
   const handleDemo = () => {
+    // Just set demo mode - navigation will be handled by useEffect above
     setIsDemo(true);
-    navigate("/beranda");
   };
 
   const handleRegister = () => {
