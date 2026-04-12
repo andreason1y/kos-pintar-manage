@@ -1,49 +1,44 @@
 
 
-## Database & Code Audit — Issues Found
+## Plan: Switch from Mandiri/Juragan to Starter/Pro/Bisnis
 
-### Critical Issue: Plan Name Mismatch
+The landing page and admin settings already use starter/pro/bisnis. The plan context, admin user management, admin subscriptions, KamarPage, and DB settings rows still reference mandiri/juragan. This plan aligns everything to starter/pro/bisnis.
 
-The **database** uses `plan_enum` with values `mandiri` and `juragan`, but the **code** (`src/lib/plan-context.tsx`) defines `PlanType` as `starter | pro | bisnis | demo`. This means:
-- The plan context will never match DB values
-- Room limits, labels, and plan gating are all broken
-- The settings table has duplicate pricing keys for both naming schemes (mandiri/juragan AND starter/pro/bisnis)
+### 1. Update `plan-context.tsx`
+- Change `PlanType` to `"starter" | "pro" | "bisnis" | "demo"`
+- Update `PLAN_LIMITS`: Starter = 10, Pro = 25, Bisnis = 60
+- Update `PLAN_LABELS`: Starter, Pro, Bisnis
+- Update defaults from "mandiri" to "starter"
+- Update `migratePlanType` to map mandiri→starter, juragan→pro
 
-**Fix:** Align `plan-context.tsx` back to `mandiri | juragan | demo` to match the DB enum. Update `PLAN_LIMITS` and `PLAN_LABELS` accordingly. Remove the starter/pro/bisnis pricing columns and settings keys.
+### 2. Update `AdminUsers.tsx`
+- Replace all `"mandiri"` defaults with `"starter"`
+- Replace `"juragan"` with `"pro"` 
+- Update filter tabs: "Starter", "Pro", "Bisnis", "Belum"
+- Update Select dropdowns to show Starter/Pro/Bisnis options
+- Fix `handleSwitchPlan` to cycle starter→pro→bisnis→starter
 
-### Build Errors to Fix (6 total)
+### 3. Update `AdminSubscriptions.tsx`
+- Replace `activatePlan` default from `"starter"` (already correct)
+- Update Select options from Starter(10)/Pro(25)/Bisnis(60)
 
-1. **`vite.config.ts`** — imports `vite-plugin-singlefile` which is not installed. Remove the unused import (line 6).
+### 4. Update `KamarPage.tsx` (line 194)
+- Change `plan === "juragan"` to `plan === "bisnis"`
+- Update upgrade message to reference "Bisnis" instead of "Juragan"
 
-2. **`supabase/functions/admin-manage-user/index.ts`** — `err` is type `unknown`. Fix: `(err as Error).message`.
+### 5. Update DB settings rows (via insert tool)
+- Rename `mandiri_price_normal` → `starter_price_normal` (value 399000)
+- Rename `mandiri_price_earlybird` → `starter_price_earlybird` (value 199000)  
+- Rename `juragan_price_normal` → `pro_price_normal` (value 699000)
+- Rename `juragan_price_earlybird` → `pro_price_earlybird` (value 349000)
+- Add bisnis pricing rows if not present
+- Update settings_text: rename mandiri/juragan sublabel/badge keys to starter/pro/bisnis
 
-3. **`supabase/functions/daily-billing/index.ts`** — `error` is type `unknown`. Fix: `(error as Error).message`.
+### 6. Update `handle_new_user` trigger (migration)
+- Change default plan from `'mandiri'` to `'starter'`
 
-4. **`src/lib/notification-service.ts`** — references table `pembayaran` which doesn't exist (table is `transactions`). Also filters by `status: "belum_lunas"` which doesn't match the enum. Needs rewrite to use correct table/column names.
+### 7. Update `profiles.plan` default
+- Change column default from `'starter'::plan_enum` — already correct in schema
 
-5. **`src/pages/KamarPage.tsx` (line 194)** — compares `plan === "juragan"` but `PlanType` doesn't include `juragan`. Will be fixed when we realign PlanType.
-
-6. **`src/pages/PenyewaPage.tsx` (lines 149, 180)** — passes `email` and `sendEmailNotifications` to `DemoTenant` type which doesn't have those fields. Fix: add `email` and `send_email_notifications` to `DemoTenant` interface in `demo-context.tsx`.
-
-### Duplicate Settings Keys
-
-The `settings` table has redundant pricing keys from different iterations:
-- `mandiri_price_normal/earlybird` + `juragan_price_normal/earlybird` (original)
-- `price_mandiri_normal/early` + `price_juragan_normal/early` (older)
-- `starter_price_normal/earlybird` + `pro_price_normal/earlybird` + `bisnis_price_normal/earlybird` (mismatched rename)
-
-Plus the `settings` table schema has columns like `starter_price_normal`, `pro_price_normal`, `bisnis_price_normal` baked into the table structure — these are unused since pricing is stored via key-value rows.
-
-**Fix:** Clean up by deleting the unused key-value rows (`starter_*`, `pro_*`, `bisnis_*`, `price_*` prefixed keys). Keep only `mandiri_*` and `juragan_*`. The extra columns on the settings table are harmless but could be dropped via migration.
-
-### Implementation Steps
-
-1. **Fix `vite.config.ts`** — remove `vite-plugin-singlefile` import
-2. **Fix `plan-context.tsx`** — change PlanType back to `mandiri | juragan | demo`, update limits (mandiri: 40, juragan: 200) and labels
-3. **Fix `demo-context.tsx`** — add `email?: string | null` and `send_email_notifications?: boolean` to `DemoTenant`
-4. **Fix `notification-service.ts`** — update table name from `pembayaran` to `transactions` and fix column references
-5. **Fix edge functions** — cast `err`/`error` to `Error` type in catch blocks
-6. **Fix `KamarPage.tsx`** — the comparison will auto-resolve once PlanType includes `juragan`
-7. **Clean up settings data** — delete duplicate/orphaned pricing keys from settings table
-8. **Clean up settings_text data** — delete `starter_*`, `pro_*`, `bisnis_*` prefixed keys
+No changes needed for LandingPage or AdminSettings — they already use starter/pro/bisnis naming.
 
