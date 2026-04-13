@@ -167,7 +167,7 @@ export default function AuthPage() {
             <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">atau</span></div>
           </div>
 
-          <Button variant="outline" className="w-full" onClick={() => setIsDemo(true)}>
+          <Button variant="outline" className="w-full" onClick={() => { setIsDemo(true); navigate("/beranda"); }}>
             <Play size={16} className="mr-2" /> Coba Mode Demo
           </Button>
         </div>
