@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { trackEvent } from "@/lib/meta-pixel";
 import { useNavigate, useSearchParams, Link, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { Play, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useDemo } from "@/lib/demo-context";
 import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
 import { useWaitForProperties } from "@/hooks/useWaitForProperties";
@@ -16,7 +15,6 @@ import logoIcon from "@/assets/logo-icon.png";
 
 export default function AuthPage() {
   // All hooks must be declared at the top, before any conditional returns
-  const { isDemo, setIsDemo } = useDemo();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { properties, loading: propLoading } = useProperty();
@@ -28,13 +26,6 @@ export default function AuthPage() {
   const [nama, setNama] = useState("");
   const [noHp, setNoHp] = useState("");
   const [formLoading, setFormLoading] = useState(false);
-
-  // Handle demo mode redirect when isDemo changes (same pattern as LandingPage)
-  useEffect(() => {
-    if (isDemo) {
-      navigate("/beranda", { replace: true });
-    }
-  }, [isDemo, navigate]);
 
   // Redirect already-authenticated users
   if (!authLoading && !propLoading && user) {
@@ -168,15 +159,6 @@ export default function AuthPage() {
               {formLoading ? <><Loader2 size={16} className="mr-2 animate-spin" /> Memproses...</> : isLogin ? "Masuk" : "Daftar"}
             </Button>
           </form>
-
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-            <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">atau</span></div>
-          </div>
-
-          <Button variant="outline" className="w-full" onClick={() => setIsDemo(true)}>
-            <Play size={16} className="mr-2" /> Coba Mode Demo
-          </Button>
         </div>
       </motion.div>
     </div>

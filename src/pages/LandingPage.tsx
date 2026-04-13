@@ -147,7 +147,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { properties, loading: propLoading } = useProperty();
-  const { setIsDemo, isDemo } = useDemo();
+  const { isDemo } = useDemo();
 
   // State hooks - must be before any early returns
   const [slotsUsed, setSlotsUsed] = useState(0);
@@ -257,11 +257,6 @@ export default function LandingPage() {
     );
   }
 
-  const handleDemo = () => {
-    // Just set demo mode - navigation will be handled by useEffect above
-    setIsDemo(true);
-  };
-
   const handleRegister = () => {
     trackEvent("InitiateCheckout");
     navigate("/login?tab=register");
@@ -363,7 +358,7 @@ export default function LandingPage() {
                     Daftar Sekarang
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
-                  <Button size="lg" variant="outline" className="flex-1 font-bold" onClick={handleDemo}>
+                  <Button size="lg" variant="outline" className="flex-1 font-bold" onClick={() => window.open("https://wa.me/628184776220?text=Halo%2C%20saya%20tertarik%20ingin%20mencoba%20demo%20KosPintar%20%F0%9F%8F%A0", "_blank")}>
                     Coba Demo
                   </Button>
                 </div>
