@@ -15,11 +15,26 @@ import { useWaitForProperties } from "@/hooks/useWaitForProperties";
 import logoIcon from "@/assets/logo-icon.png";
 
 export default function AuthPage() {
-  const { setIsDemo } = useDemo();
+  // All hooks must be declared at the top, before any conditional returns
+  const { isDemo, setIsDemo } = useDemo();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { properties, loading: propLoading } = useProperty();
   const [searchParams] = useSearchParams();
+  const [isLogin, setIsLogin] = useState(!searchParams.get("tab") || searchParams.get("tab") !== "register");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [nama, setNama] = useState("");
+  const [noHp, setNoHp] = useState("");
+  const [formLoading, setFormLoading] = useState(false);
+
+  // Handle demo mode redirect when isDemo changes (same pattern as LandingPage)
+  useEffect(() => {
+    if (isDemo) {
+      navigate("/beranda", { replace: true });
+    }
+  }, [isDemo, navigate]);
 
   // Redirect already-authenticated users
   if (!authLoading && !propLoading && user) {
@@ -49,17 +64,9 @@ export default function AuthPage() {
     );
   }
 
-  const [isLogin, setIsLogin] = useState(!searchParams.get("tab") || searchParams.get("tab") !== "register");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [nama, setNama] = useState("");
-  const [noHp, setNoHp] = useState("");
-  const [loading, setLoading] = useState(false);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
 
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -68,7 +75,7 @@ export default function AuthPage() {
     } else {
       if (password !== confirmPassword) {
         toast.error("Kata sandi dan konfirmasi tidak cocok");
-        setLoading(false);
+        setFormLoading(false);
         return;
       }
       const { error } = await supabase.auth.signUp({
@@ -82,7 +89,7 @@ export default function AuthPage() {
         toast.success("Akun berhasil dibuat! Silakan cek email untuk verifikasi.");
       }
     }
-    setLoading(false);
+    setFormLoading(false);
   };
 
   return (
@@ -157,8 +164,8 @@ export default function AuthPage() {
                 <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Ulangi kata sandi" required minLength={6} />
               </div>
             )}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? <><Loader2 size={16} className="mr-2 animate-spin" /> Memproses...</> : isLogin ? "Masuk" : "Daftar"}
+            <Button type="submit" className="w-full" disabled={formLoading}>
+              {formLoading ? <><Loader2 size={16} className="mr-2 animate-spin" /> Memproses...</> : isLogin ? "Masuk" : "Daftar"}
             </Button>
           </form>
 
@@ -167,7 +174,7 @@ export default function AuthPage() {
             <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">atau</span></div>
           </div>
 
-          <Button variant="outline" className="w-full" onClick={() => { setIsDemo(true); navigate("/beranda"); }}>
+          <Button variant="outline" className="w-full" onClick={() => setIsDemo(true)}>
             <Play size={16} className="mr-2" /> Coba Mode Demo
           </Button>
         </div>
