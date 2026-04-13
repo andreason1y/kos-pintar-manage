@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { formatRupiah, getMonthName, waTagihanLink } from "@/lib/helpers";
-import { useRoomTypesAndRooms, useTenants, useTransactions, useExpenses, usePrefetchRoutes } from "@/hooks/use-queries";
+import { useRoomTypesAndRooms, useTenants, useTransactions, useExpenses, useOverduePaymentStats, usePrefetchRoutes } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import NotificationBell from "@/components/NotificationBell";
@@ -11,7 +11,7 @@ import SkeletonCard from "@/components/SkeletonCard";
 import BottomSheet from "@/components/BottomSheet";
 import { Button } from "@/components/ui/button";
 import {
-  Users, DoorOpen, DoorClosed, AlertTriangle,
+  DoorOpen, DoorClosed, AlertTriangle, AlertCircle,
   UserPlus, CreditCard, Send, Receipt, LayoutGrid, FileText,
   TrendingUp, TrendingDown, MessageCircle,
 } from "lucide-react";
@@ -23,6 +23,7 @@ interface DashboardStats {
   kamarTerisi: number;
   kamarKosong: number;
   tagihanBelumLunas: number;
+  overduePayments: number;
   pemasukanBulanIni: number;
   pengeluaranBulanIni: number;
   pemasukanBulanLalu: number;
@@ -59,10 +60,11 @@ export default function DashboardPage() {
   const { data: roomData, isLoading: roomsLoading } = useRoomTypesAndRooms();
   const { data: tenantData, isLoading: tenantsLoading } = useTenants();
   const { data: txData, isLoading: txLoading } = useTransactions();
+  const { data: overdueData, isLoading: overdueLoading } = useOverduePaymentStats();
   const { data: expData, isLoading: expLoading } = useExpenses(bulanIni, tahunIni);
   const { data: expLastData, isLoading: expLastLoading } = useExpenses(bulanLalu, tahunLalu);
 
-  const loading = !demo.isDemo && (roomsLoading || tenantsLoading || txLoading || expLoading || expLastLoading);
+  const loading = !demo.isDemo && (roomsLoading || tenantsLoading || txLoading || overdueLoading || expLoading || expLastLoading);
 
   const { stats, unpaidTenants } = useMemo(() => {
     if (demo.isDemo) {
@@ -75,6 +77,7 @@ export default function DashboardPage() {
       const pemasukan = txBulanIni.reduce((s, t) => s + t.jumlah_dibayar, 0);
       const pengeluaran = expBulanIni.reduce((s, e) => s + e.jumlah, 0);
       const pemasukanLalu = txBulanLalu.reduce((s, t) => s + t.jumlah_dibayar, 0);
+      const overdue = demo.transactions.filter(t => t.is_overdue === true).length;
 
       const unpaid: UnpaidTenant[] = txBulanIni
         .filter(tx => tx.status !== "lunas")
@@ -96,6 +99,7 @@ export default function DashboardPage() {
           kamarTerisi: terisi,
           kamarKosong: kosong,
           tagihanBelumLunas: txBulanIni.filter(t => t.status !== "lunas").length,
+          overduePayments: overdue,
           pemasukanBulanIni: pemasukan,
           pengeluaranBulanIni: pengeluaran,
           pemasukanBulanLalu: pemasukanLalu,
@@ -138,6 +142,7 @@ export default function DashboardPage() {
         kamarTerisi: allRooms.filter((r: any) => r.status === "terisi").length,
         kamarKosong: allRooms.filter((r: any) => r.status === "kosong").length,
         tagihanBelumLunas: txThisMonth.filter((t: any) => t.status !== "lunas").length,
+        overduePayments: overdueData?.count || 0,
         pemasukanBulanIni: pemasukan,
         pengeluaranBulanIni: pengeluaran,
         pemasukanBulanLalu: txLastMonth.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0),
@@ -147,7 +152,7 @@ export default function DashboardPage() {
       } as DashboardStats,
       unpaidTenants: unpaid,
     };
-  }, [demo.isDemo, roomData, tenantData, txData, expData, expLastData]);
+  }, [demo.isDemo, roomData, tenantData, txData, overdueData, expData, expLastData]);
 
   const quickActions = [
     { icon: UserPlus, label: "Tambah Penyewa", action: () => navigate("/penyewa?action=add"), color: "bg-primary/10 text-primary" },
@@ -210,17 +215,35 @@ export default function DashboardPage() {
             {/* Stat Cards */}
             <div className="grid grid-cols-2 gap-3">
               {[
-                { icon: Users, label: "Total Penyewa", value: stats.totalPenyewa, color: "text-primary" },
-                { icon: DoorOpen, label: "Kamar Terisi", value: stats.kamarTerisi, color: "text-[hsl(142,71%,45%)]" },
-                { icon: DoorClosed, label: "Kamar Kosong", value: stats.kamarKosong, color: "text-muted-foreground" },
-                { icon: AlertTriangle, label: "Belum Lunas", value: stats.tagihanBelumLunas, color: "text-[hsl(38,92%,50%)]" },
+                {
+                  icon: DoorOpen,
+                  label: "Kamar Terisi",
+                  value: `${stats.kamarTerisi}/${stats.kamarTerisi + stats.kamarKosong}`,
+                  color: "text-[hsl(142,71%,45%)]",
+                  action: null
+                },
+                {
+                  icon: AlertCircle,
+                  label: "Overdue",
+                  value: stats.overduePayments,
+                  color: "text-destructive",
+                  action: () => navigate("/pembayaran?filter=overdue")
+                },
+                {
+                  icon: AlertTriangle,
+                  label: "Belum Lunas",
+                  value: stats.tagihanBelumLunas,
+                  color: "text-[hsl(38,92%,50%)]",
+                  action: null
+                },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03, duration: 0.15 }}
-                  className="bg-card rounded-xl p-4 border border-border shadow-sm"
+                  className={`bg-card rounded-xl p-4 border border-border shadow-sm ${stat.action ? "cursor-pointer hover:bg-muted transition-colors" : ""}`}
+                  onClick={stat.action}
                 >
                   <stat.icon size={20} className={stat.color} />
                   <p className="text-2xl font-bold text-foreground mt-2">{stat.value}</p>

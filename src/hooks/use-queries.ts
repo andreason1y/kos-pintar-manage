@@ -96,6 +96,21 @@ async function fetchProfile(userId: string) {
   return data;
 }
 
+async function fetchOverduePaymentStats(propertyId: string) {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("id, is_overdue, overdue_days")
+    .eq("property_id", propertyId)
+    .eq("is_overdue", true) as any;
+  if (error) Sentry.captureException(error, { tags: { source: "fetchOverduePaymentStats", propertyId } });
+
+  const overduePayments = (data || []) as any[];
+  return {
+    count: overduePayments.length,
+    totalDays: overduePayments.reduce((sum, tx) => sum + (tx.overdue_days || 0), 0),
+  };
+}
+
 // ---- Hooks ----
 
 export function useRoomTypesAndRooms() {
@@ -194,6 +209,18 @@ export function useProfile(userId: string | undefined) {
   });
 }
 
+export function useOverduePaymentStats() {
+  const { activeProperty } = useProperty();
+  const { isDemo } = useDemo();
+  const pid = activeProperty?.id;
+  return useQuery({
+    queryKey: ["overdueStats", pid],
+    queryFn: () => fetchOverduePaymentStats(pid!),
+    enabled: !isDemo && !!pid,
+    staleTime: STALE_TIME,
+  });
+}
+
 // ---- Invalidation helpers ----
 export function useInvalidate() {
   const qc = useQueryClient();
@@ -201,6 +228,7 @@ export function useInvalidate() {
     rooms: () => qc.invalidateQueries({ queryKey: ["roomTypesAndRooms"] }),
     tenants: () => qc.invalidateQueries({ queryKey: ["tenants"] }),
     transactions: () => qc.invalidateQueries({ queryKey: ["transactions"] }),
+    overdueStats: () => qc.invalidateQueries({ queryKey: ["overdueStats"] }),
     expenses: () => qc.invalidateQueries({ queryKey: ["expenses"] }),
     deposits: () => qc.invalidateQueries({ queryKey: ["deposits"] }),
     profile: () => qc.invalidateQueries({ queryKey: ["profile"] }),
