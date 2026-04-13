@@ -15,11 +15,18 @@ import { useWaitForProperties } from "@/hooks/useWaitForProperties";
 import logoIcon from "@/assets/logo-icon.png";
 
 export default function AuthPage() {
-  const { setIsDemo } = useDemo();
+  const { isDemo, setIsDemo } = useDemo();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { properties, loading: propLoading } = useProperty();
   const [searchParams] = useSearchParams();
+
+  // Handle demo mode redirect when isDemo changes (same pattern as LandingPage)
+  useEffect(() => {
+    if (isDemo) {
+      navigate("/beranda", { replace: true });
+    }
+  }, [isDemo, navigate]);
 
   // Redirect already-authenticated users
   if (!authLoading && !propLoading && user) {
@@ -167,7 +174,7 @@ export default function AuthPage() {
             <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">atau</span></div>
           </div>
 
-          <Button variant="outline" className="w-full" onClick={() => { setIsDemo(true); navigate("/beranda"); }}>
+          <Button variant="outline" className="w-full" onClick={() => setIsDemo(true)}>
             <Play size={16} className="mr-2" /> Coba Mode Demo
           </Button>
         </div>
