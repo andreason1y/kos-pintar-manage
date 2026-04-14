@@ -12,7 +12,6 @@ export interface TenantPaymentDue {
   tenant_id: string;
   tenant_name: string;
   tenant_email: string | null;
-  send_email_notifications: boolean;
   property_name: string;
   amount_due: number;
   due_date: string;
@@ -26,7 +25,8 @@ export async function sendPaymentReminders(paymentsDue: TenantPaymentDue[]): Pro
 
   for (const payment of paymentsDue) {
     try {
-      if (payment.send_email_notifications && payment.tenant_email) {
+      // Only send email if tenant has an email address on file
+      if (payment.tenant_email) {
         await queueEmailNotification({
           to: payment.tenant_email,
           tenant_name: payment.tenant_name,
@@ -35,8 +35,6 @@ export async function sendPaymentReminders(paymentsDue: TenantPaymentDue[]): Pro
           property_name: payment.property_name,
         });
         console.log(`[Notification Service] Email queued for ${payment.tenant_name}`);
-      } else if (!payment.tenant_email && payment.send_email_notifications) {
-        console.warn(`[Notification Service] Email enabled for ${payment.tenant_name} but no email on file`);
       }
     } catch (error) {
       console.error(`[Notification Service] Failed to send reminder to ${payment.tenant_name}:`, error);
@@ -83,11 +81,11 @@ export async function getPaymentsDue(
 
   if (!txns || txns.length === 0) return [];
 
-  // Get tenant details for each transaction
+  // Get tenant details including email for each transaction
   const tenantIds = [...new Set(txns.map((t) => t.tenant_id))];
   const { data: tenants } = await supabase
     .from("tenants")
-    .select("id, nama, no_hp, property_id")
+    .select("id, nama, no_hp, email, property_id")
     .in("id", tenantIds);
 
   // Get property names
@@ -105,8 +103,7 @@ export async function getPaymentsDue(
       return {
         tenant_id: tenant.id,
         tenant_name: tenant.nama,
-        tenant_email: null,
-        send_email_notifications: false,
+        tenant_email: tenant.email ?? null,
         property_name: prop?.nama_kos || "Unknown Property",
         amount_due: tx.total_tagihan - tx.jumlah_dibayar,
         due_date: `${tx.periode_tahun}-${String(tx.periode_bulan).padStart(2, "0")}-01`,

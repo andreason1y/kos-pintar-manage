@@ -198,7 +198,7 @@ export default function DashboardPage() {
         nama: formData.nama,
         noHp: formData.no_hp,
         email: formData.email,
-        sendEmailNotifications: false,
+        jatuhTempoHari: formData.jatuh_tempo,
         gender: "L" as "L" | "P",
         tanggalMasuk: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
         tanggalKeluar: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
@@ -216,13 +216,12 @@ export default function DashboardPage() {
       p_nama: formData.nama,
       p_no_hp: formData.no_hp,
       p_email: formData.email,
-      p_send_email_notifications: false,
       p_gender: "L",
       p_tanggal_masuk: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
       p_tanggal_keluar: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
       p_deposit_amount: formData.deposit,
       p_jatuh_tempo: formData.jatuh_tempo,
-    } as any);
+    });
     if (error) {
       toast.error(error.message);
       return;
