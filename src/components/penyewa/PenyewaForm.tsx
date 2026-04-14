@@ -56,9 +56,11 @@ export default function PenyewaForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!roomId) {
-      alert("Kamar harus dipilih");
-      return;
+    if (mode === "create") {
+      if (!roomId) {
+        alert("Kamar harus dipilih");
+        return;
+      }
     }
 
     if (!jatuhTempo) {
@@ -70,7 +72,7 @@ export default function PenyewaForm({
       nama,
       no_hp: noHp || null,
       email: email || null,
-      room_id: roomId,
+      room_id: roomId || "",
       jatuh_tempo: parseInt(jatuhTempo),
       deposit: parseInt(deposit) || 0,
       ...(mode === "create" && { tanggal_masuk: tanggalMasuk }),
@@ -106,22 +108,24 @@ export default function PenyewaForm({
           />
         </div>
 
-        {/* Kamar */}
-        <div className="space-y-2">
-          <Label>Kamar</Label>
-          <Select value={roomId} onValueChange={setRoomId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih kamar kosong" />
-            </SelectTrigger>
-            <SelectContent>
-              {roomsToDisplay.map((r) => (
-                <SelectItem key={r.id} value={r.id}>
-                  {r.room_type?.nama} - No. {r.nomor} (Lt. {r.lantai})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Kamar - only in create mode */}
+        {mode === "create" && (
+          <div className="space-y-2">
+            <Label>Kamar</Label>
+            <Select value={roomId} onValueChange={setRoomId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih kamar kosong" />
+              </SelectTrigger>
+              <SelectContent>
+                {roomsToDisplay.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.room_type?.nama} - No. {r.nomor} (Lt. {r.lantai})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* Tanggal Masuk - only in create mode */}
         {mode === "create" && (
@@ -157,16 +161,18 @@ export default function PenyewaForm({
           </p>
         </div>
 
-        {/* Deposit */}
-        <div className="space-y-2">
-          <Label>Deposit (Rp)</Label>
-          <Input
-            type="number"
-            value={deposit}
-            onChange={(e) => setDeposit(e.target.value)}
-            placeholder="0 (opsional)"
-          />
-        </div>
+        {/* Deposit - only in create mode */}
+        {mode === "create" && (
+          <div className="space-y-2">
+            <Label>Deposit (Rp)</Label>
+            <Input
+              type="number"
+              value={deposit}
+              onChange={(e) => setDeposit(e.target.value)}
+              placeholder="0 (opsional)"
+            />
+          </div>
+        )}
 
         {/* Email */}
         <div className="space-y-2">
