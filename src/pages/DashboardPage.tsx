@@ -358,24 +358,10 @@ export default function DashboardPage() {
                 },
                 {
                   icon: AlertCircle,
-                  label: "Overdue",
+                  label: "Telat Bayar",
                   value: stats.overduePayments,
                   color: "text-destructive",
                   action: () => navigate("/pembayaran?filter=overdue")
-                },
-                {
-                  icon: AlertTriangle,
-                  label: "Belum Lunas",
-                  value: stats.tagihanBelumLunas,
-                  color: "text-[hsl(38,92%,50%)]",
-                  action: null
-                },
-                {
-                  icon: TrendingDown,
-                  label: "Pengeluaran Bulan Ini",
-                  value: formatRupiah(stats.pengeluaranBulanIni),
-                  color: "text-destructive",
-                  action: () => navigate("/keuangan")
                 },
               ].map((stat, i) => (
                 <motion.div
