@@ -370,6 +370,13 @@ export default function DashboardPage() {
                   color: "text-[hsl(38,92%,50%)]",
                   action: null
                 },
+                {
+                  icon: TrendingDown,
+                  label: "Pengeluaran Bulan Ini",
+                  value: formatRupiah(stats.pengeluaranBulanIni),
+                  color: "text-destructive",
+                  action: () => navigate("/keuangan")
+                },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}
