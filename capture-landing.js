@@ -170,17 +170,20 @@ async function capturePage(page, url) {
     console.log(`📍 Location: ${distPath}`);
     console.log(`📊 File size: ${(html.length / 1024).toFixed(2)} KB`);
 
-    // Close the server
+    // Close the server (with hard-exit fallback to prevent hanging)
     server.close(() => {
       console.log('🛑 Server closed');
       process.exit(0);
     });
+    // Force exit after 5s if server.close callback never fires (e.g. open keep-alive connections)
+    setTimeout(() => process.exit(0), 5000).unref();
   } catch (error) {
     console.error('❌ Failed to capture landing page:', error.message);
     console.log('ℹ️  Build will continue — static fallback in index.html will serve bots');
 
     if (server) {
       server.close(() => process.exit(0));
+      setTimeout(() => process.exit(0), 5000).unref();
     } else {
       process.exit(0);
     }

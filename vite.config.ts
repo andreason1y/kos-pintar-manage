@@ -22,6 +22,9 @@ export default defineConfig(({ mode }) => ({
       project: process.env.SENTRY_PROJECT,
       authToken: process.env.SENTRY_AUTH_TOKEN,
       telemetry: false,
+      errorHandler: (err) => {
+        console.warn('Sentry source map upload failed (non-fatal):', err.message);
+      },
     }) : undefined,
   ].filter(Boolean),
   build: {
