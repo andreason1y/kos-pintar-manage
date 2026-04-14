@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
+import PenyewaForm from "@/components/penyewa/PenyewaForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
@@ -57,13 +58,6 @@ export default function PenyewaPage() {
     }
   }, []);
 
-  const [nama, setNama] = useState("");
-  const [noHp, setNoHp] = useState("");
-  const [email, setEmail] = useState("");
-  const [roomId, setRoomId] = useState("");
-  const [tanggalMasuk, setTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
-  const [jatuhTempo, setJatuhTempo] = useState("");
-  const [deposit, setDeposit] = useState("");
   const [showEndContract, setShowEndContract] = useState<Tenant | null>(null);
   const [depositInfo, setDepositInfo] = useState<any>(null);
   const [returnAmount, setReturnAmount] = useState("");
@@ -81,7 +75,7 @@ export default function PenyewaPage() {
 
   const loading = !demo.isDemo && (roomsLoading || tenantsLoading || txLoading);
 
-  const { tenants, emptyRooms } = useMemo(() => {
+  const { tenants, emptyRooms, allRooms } = useMemo(() => {
     if (demo.isDemo) {
       const mapped: Tenant[] = demo.tenants.map(t => {
         const room = demo.rooms.find(r => r.id === t.room_id);
@@ -94,10 +88,14 @@ export default function PenyewaPage() {
         const rt = demo.roomTypes.find(rr => rr.id === r.room_type_id);
         return { ...r, room_type: rt };
       });
-      return { tenants: mapped, emptyRooms: empty };
+      const all = demo.rooms.map(r => {
+        const rt = demo.roomTypes.find(rr => rr.id === r.room_type_id);
+        return { ...r, room_type: rt };
+      });
+      return { tenants: mapped, emptyRooms: empty, allRooms: all };
     }
 
-    if (!roomData || !tenantData || !txData) return { tenants: [] as Tenant[], emptyRooms: [] as any[] };
+    if (!roomData || !tenantData || !txData) return { tenants: [] as Tenant[], emptyRooms: [] as any[], allRooms: [] as any[] };
 
     const { roomTypes, rooms } = roomData;
     const transactions = txData.filter((tx: any) => tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni);
@@ -112,7 +110,10 @@ export default function PenyewaPage() {
     const empty = rooms.filter((r: any) => r.status === "kosong").map((r: any) => ({
       ...r, room_type: roomTypes.find((rt: any) => rt.id === r.room_type_id)
     }));
-    return { tenants: mapped, emptyRooms: empty };
+    const all = rooms.map((r: any) => ({
+      ...r, room_type: roomTypes.find((rt: any) => rt.id === r.room_type_id)
+    }));
+    return { tenants: mapped, emptyRooms: empty, allRooms: all };
   }, [demo.isDemo, roomData, tenantData, txData, demo.tenants, demo.rooms, demo.roomTypes, demo.transactions]);
 
   const filtered = useMemo(() => {
@@ -133,62 +134,84 @@ export default function PenyewaPage() {
 
   const refetchAll = () => invalidate.all();
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!roomId || !jatuhTempo) return;
+  const handleAdd = async (formData: {
+    nama: string;
+    no_hp: string | null;
+    email: string | null;
+    room_id: string;
+    tanggal_masuk?: string;
+    jatuh_tempo?: number;
+    deposit: number;
+  }) => {
+    if (!formData.room_id || !formData.jatuh_tempo) return;
 
     if (demo.isDemo) {
       demo.demoAddTenantAtomic({
-        roomId, nama, noHp: noHp || null, email: email || null, sendEmailNotifications: false, gender: "L" as "L" | "P",
-        tanggalMasuk, tanggalKeluar: tanggalMasuk, depositAmount: parseInt(deposit) || 0,
+        roomId: formData.room_id,
+        nama: formData.nama,
+        noHp: formData.no_hp,
+        email: formData.email,
+        sendEmailNotifications: false,
+        gender: "L" as "L" | "P",
+        tanggalMasuk: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
+        tanggalKeluar: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
+        depositAmount: formData.deposit,
       });
       toast.success("Penyewa berhasil ditambahkan!");
       setShowAdd(false);
-      setNama("");
-      setNoHp("");
-      setEmail("");
-      setRoomId("");
-      setJatuhTempo("");
-      setDeposit("");
       return;
     }
 
     if (!activeProperty) return;
     const { data, error } = await supabase.rpc("add_tenant", {
       p_property_id: activeProperty.id,
-      p_room_id: roomId,
-      p_nama: nama,
-      p_no_hp: noHp || null,
-      p_email: email || null,
+      p_room_id: formData.room_id,
+      p_nama: formData.nama,
+      p_no_hp: formData.no_hp,
+      p_email: formData.email,
       p_send_email_notifications: false,
       p_gender: "L",
-      p_tanggal_masuk: tanggalMasuk,
-      p_tanggal_keluar: tanggalMasuk,
-      p_deposit_amount: parseInt(deposit) || 0,
-      p_jatuh_tempo: parseInt(jatuhTempo),
+      p_tanggal_masuk: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
+      p_tanggal_keluar: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
+      p_deposit_amount: formData.deposit,
+      p_jatuh_tempo: formData.jatuh_tempo,
     } as any);
     if (error) { toast.error(error.message); return; }
     toast.success("Penyewa berhasil ditambahkan!");
     setShowAdd(false);
-    setNama("");
-    setNoHp("");
-    setEmail("");
-    setRoomId("");
-    setJatuhTempo("");
-    setDeposit("");
     refetchAll();
   };
 
-  const handleEditTenant = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEditTenant = async (formData: {
+    nama: string;
+    no_hp: string | null;
+    email: string | null;
+    room_id: string;
+    jatuh_tempo?: number;
+    deposit: number;
+  }) => {
     if (!showEdit) return;
     if (demo.isDemo) {
-      demo.updateTenant(showEdit.id, { nama, no_hp: noHp || null, email: email || null, send_email_notifications: false, gender: "L" as "L" | "P" });
+      demo.updateTenant(showEdit.id, {
+        nama: formData.nama,
+        no_hp: formData.no_hp,
+        email: formData.email,
+        send_email_notifications: false,
+        gender: "L" as "L" | "P",
+      });
       toast.success("Data penyewa diperbarui!");
       setShowEdit(null);
       return;
     }
-    const { error } = await supabase.from("tenants").update({ nama, no_hp: noHp || null, email: email || null, send_email_notifications: false } as any).eq("id", showEdit.id);
+    const { error } = await supabase
+      .from("tenants")
+      .update({
+        nama: formData.nama,
+        no_hp: formData.no_hp,
+        email: formData.email,
+        send_email_notifications: false,
+      } as any)
+      .eq("id", showEdit.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Data penyewa diperbarui!");
     setShowEdit(null);
@@ -338,12 +361,7 @@ export default function PenyewaPage() {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => {
-                              setShowEdit(t);
-                              setNama(t.nama);
-                              setNoHp(t.no_hp || "");
-                              setEmail(t.email || "");
-                            }}>
+                            <DropdownMenuItem onClick={() => setShowEdit(t)}>
                               <Pencil size={14} className="mr-2" /> Edit
                             </DropdownMenuItem>
                             {t.status === "aktif" && (
@@ -367,46 +385,25 @@ export default function PenyewaPage() {
       </div>
 
       {/* Add tenant */}
-      <BottomSheet open={showAdd} onClose={() => { setShowAdd(false); setEmail(""); }} title="Tambah Penyewa">
-        <form onSubmit={handleAdd} className="bottom-sheet-form">
-          <div className="bottom-sheet-body">
-            <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
-            <div className="space-y-2"><Label>No. HP</Label><Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" /></div>
-            <div className="space-y-2"><Label>Kamar</Label>
-              <Select value={roomId} onValueChange={setRoomId}><SelectTrigger><SelectValue placeholder="Pilih kamar kosong" /></SelectTrigger><SelectContent>
-                {emptyRooms.map((r: any) => <SelectItem key={r.id} value={r.id}>{r.room_type?.nama} - No. {r.nomor} (Lt. {r.lantai})</SelectItem>)}
-              </SelectContent></Select>
-            </div>
-            <div className="space-y-2"><Label>Tanggal Masuk</Label><Input type="date" value={tanggalMasuk} onChange={e => setTanggalMasuk(e.target.value)} /></div>
-            <div className="space-y-2">
-              <Label>Jatuh Tempo Bayar <span className="text-destructive">*</span></Label>
-              <Select value={jatuhTempo} onValueChange={setJatuhTempo}><SelectTrigger><SelectValue placeholder="Pilih tanggal..." /></SelectTrigger><SelectContent>
-                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => <SelectItem key={day} value={String(day)}>{day}</SelectItem>)}
-              </SelectContent></Select>
-              <p className="text-xs text-muted-foreground">Tanggal tagihan otomatis setiap bulannya</p>
-            </div>
-            <div className="space-y-2"><Label>Deposit (Rp)</Label><Input type="number" value={deposit} onChange={e => setDeposit(e.target.value)} placeholder="0 (opsional)" /></div>
-            <div className="space-y-2"><Label>Email (opsional)</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="penyewa@email.com" /></div>
-          </div>
-          <div className="bottom-sheet-footer">
-            <Button type="submit" className="w-full">Tambah Penyewa</Button>
-          </div>
-        </form>
+      <BottomSheet open={showAdd} onClose={() => setShowAdd(false)} title="Tambah Penyewa">
+        <PenyewaForm mode="create" emptyRooms={emptyRooms} onSubmit={handleAdd} />
       </BottomSheet>
 
       {/* Edit tenant */}
-      <BottomSheet open={!!showEdit} onClose={() => { setShowEdit(null); setEmail(""); }} title="Edit Penyewa">
+      <BottomSheet open={!!showEdit} onClose={() => setShowEdit(null)} title="Edit Penyewa">
         {showEdit && (
-          <form onSubmit={handleEditTenant} className="bottom-sheet-form">
-            <div className="bottom-sheet-body">
-              <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
-              <div className="space-y-2"><Label>No. HP</Label><Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" /></div>
-              <div className="space-y-2"><Label>Email (opsional)</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="penyewa@email.com" /></div>
-            </div>
-            <div className="bottom-sheet-footer">
-              <Button type="submit" className="w-full">Simpan Perubahan</Button>
-            </div>
-          </form>
+          <PenyewaForm
+            mode="edit"
+            initialData={{
+              id: showEdit.id,
+              nama: showEdit.nama,
+              no_hp: showEdit.no_hp,
+              email: showEdit.email,
+              room_id: showEdit.room_id,
+            }}
+            allRooms={allRooms}
+            onSubmit={handleEditTenant}
+          />
         )}
       </BottomSheet>
 
