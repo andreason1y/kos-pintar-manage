@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import PenyewaForm, { PenyewaFormData } from "@/components/penyewa/PenyewaForm";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { formatRupiah, getMonthName, waTagihanLink } from "@/lib/helpers";
@@ -63,17 +64,7 @@ export default function DashboardPage() {
   const [showTagihan, setShowTagihan] = useState(false);
   const [showAddTenant, setShowAddTenant] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
-
-  // Form states for Add Tenant
-  const [nama, setNama] = useState("");
-  const [noHp, setNoHp] = useState("");
-  const [email, setEmail] = useState("");
-  const [sendEmailNotifications, setSendEmailNotifications] = useState(false);
-  const [gender, setGender] = useState("L");
-  const [roomId, setRoomId] = useState("");
-  const [tanggalMasuk, setTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
-  const [durasi, setDurasi] = useState("1");
-  const [deposit, setDeposit] = useState("");
+  const [isSubmittingTenant, setIsSubmittingTenant] = useState(false);
 
   // Form states for Add Expense
   const [judul, setJudul] = useState("");
@@ -188,50 +179,68 @@ export default function DashboardPage() {
   }, [demo.isDemo, roomData, tenantData, txData, overdueData, expData, expLastData]);
 
   // Handler for adding tenant
-  const handleAddTenant = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!roomId) {
-      toast.error("Silakan pilih kamar");
-      return;
-    }
-    const d = parseInt(durasi);
-    const masuk = new Date(tanggalMasuk);
-    const keluar = new Date(masuk);
-    keluar.setMonth(keluar.getMonth() + d);
-    const keluarStr = keluar.toISOString().split("T")[0];
+  const handleAddTenant = async (formData: PenyewaFormData) => {
+    setIsSubmittingTenant(true);
+    try {
+      if (!formData.room_id) {
+        toast.error("Silakan pilih kamar");
+        return;
+      }
 
-    if (demo.isDemo) {
-      demo.demoAddTenantAtomic({
-        roomId, nama, noHp: noHp || null, email: email || null, sendEmailNotifications, gender: gender as "L" | "P",
-        tanggalMasuk, tanggalKeluar: keluarStr, depositAmount: parseInt(deposit) || 0,
-      });
+      // Calculate tanggal_keluar from tanggal_masuk + 1 month (default duration)
+      const tanggalMasuk = formData.tanggal_masuk || new Date().toISOString().split("T")[0];
+      const masuk = new Date(tanggalMasuk);
+      const keluar = new Date(masuk);
+      keluar.setMonth(keluar.getMonth() + 1);
+      const keluarStr = keluar.toISOString().split("T")[0];
+
+      if (demo.isDemo) {
+        demo.demoAddTenantAtomic({
+          roomId: formData.room_id,
+          nama: formData.nama,
+          noHp: formData.no_hp || null,
+          email: formData.email || null,
+          sendEmailNotifications: false,
+          gender: "L" as "L" | "P",
+          tanggalMasuk,
+          tanggalKeluar: keluarStr,
+          depositAmount: formData.deposit || 0,
+        });
+        toast.success("Penyewa berhasil ditambahkan!");
+        setShowAddTenant(false);
+        return;
+      }
+
+      if (!activeProperty) {
+        toast.error("Properti tidak ditemukan");
+        return;
+      }
+
+      const { error } = await supabase.rpc("add_tenant", {
+        p_property_id: activeProperty.id,
+        p_room_id: formData.room_id,
+        p_nama: formData.nama,
+        p_no_hp: formData.no_hp || null,
+        p_email: formData.email || null,
+        p_send_email_notifications: false,
+        p_gender: "L",
+        p_tanggal_masuk: tanggalMasuk,
+        p_tanggal_keluar: keluarStr,
+        p_deposit_amount: formData.deposit || 0,
+        p_jatuh_tempo: formData.jatuh_tempo || 1,
+      } as any);
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
       toast.success("Penyewa berhasil ditambahkan!");
       setShowAddTenant(false);
-      resetTenantForm();
-      return;
+      refetchAll();
+    } finally {
+      setIsSubmittingTenant(false);
     }
-
-    if (!activeProperty) return;
-    const { error } = await supabase.rpc("add_tenant", {
-      p_property_id: activeProperty.id,
-      p_room_id: roomId,
-      p_nama: nama,
-      p_no_hp: noHp || null,
-      p_email: email || null,
-      p_send_email_notifications: sendEmailNotifications,
-      p_gender: gender,
-      p_tanggal_masuk: tanggalMasuk,
-      p_tanggal_keluar: keluarStr,
-      p_deposit_amount: parseInt(deposit) || 0,
-    } as any);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success("Penyewa berhasil ditambahkan!");
-    setShowAddTenant(false);
-    resetTenantForm();
-    refetchAll();
   };
 
   // Handler for adding expense
@@ -267,18 +276,6 @@ export default function DashboardPage() {
     setShowAddExpense(false);
     resetExpenseForm();
     refetchAll();
-  };
-
-  const resetTenantForm = () => {
-    setNama("");
-    setNoHp("");
-    setEmail("");
-    setSendEmailNotifications(false);
-    setRoomId("");
-    setGender("L");
-    setDurasi("1");
-    setDeposit("");
-    setTanggalMasuk(new Date().toISOString().split("T")[0]);
   };
 
   const resetExpenseForm = () => {
@@ -512,89 +509,12 @@ export default function DashboardPage() {
             <DialogTitle>Tambah Penyewa</DialogTitle>
             <DialogDescription>Tambahkan penyewa baru ke properti Anda</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleAddTenant} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nama</Label>
-              <Input value={nama} onChange={e => setNama(e.target.value)} placeholder="Nama penyewa" required />
-            </div>
-            <div className="space-y-2">
-              <Label>No. HP</Label>
-              <Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" />
-            </div>
-            <div className="space-y-2">
-              <Label>Gender</Label>
-              <Select value={gender} onValueChange={setGender}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="L">Laki-laki</SelectItem>
-                  <SelectItem value="P">Perempuan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Kamar</Label>
-              <Select value={roomId} onValueChange={setRoomId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih kamar kosong" />
-                </SelectTrigger>
-                <SelectContent>
-                  {emptyRooms.map((r: any) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      {r.room_type?.nama} - No. {r.nomor} (Lt. {r.lantai})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Tanggal Masuk</Label>
-                <Input type="date" value={tanggalMasuk} onChange={e => setTanggalMasuk(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Durasi (bulan)</Label>
-                <Select value={durasi} onValueChange={setDurasi}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 3, 6, 12].map(d => (
-                      <SelectItem key={d} value={String(d)}>
-                        {d} bulan
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Deposit (Rp)</Label>
-              <Input type="number" value={deposit} onChange={e => setDeposit(e.target.value)} placeholder="0 (opsional)" />
-            </div>
-            <div className="space-y-2">
-              <Label>Email (opsional)</Label>
-              <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="penyewa@email.com" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="sendNotif"
-                  checked={sendEmailNotifications}
-                  onChange={e => setSendEmailNotifications(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <Label htmlFor="sendNotif" className="cursor-pointer">
-                  Kirim notif email jatuh tempo
-                </Label>
-              </div>
-            </div>
-            <Button type="submit" className="w-full">
-              Tambah Penyewa
-            </Button>
-          </form>
+          <PenyewaForm
+            mode="create"
+            emptyRooms={emptyRooms}
+            onSubmit={handleAddTenant}
+            isLoading={isSubmittingTenant}
+          />
         </DialogContent>
       </Dialog>
 
