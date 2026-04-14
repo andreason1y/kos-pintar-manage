@@ -159,6 +159,16 @@ export default function AuthPage() {
               {formLoading ? <><Loader2 size={16} className="mr-2 animate-spin" /> Memproses...</> : isLogin ? "Masuk" : "Daftar"}
             </Button>
           </form>
+
+          {isLogin && (
+            <Button
+              variant="outline"
+              className="w-full mt-3"
+              onClick={() => window.open("https://wa.me/628184776220?text=Halo%2C%20saya%20tertarik%20ingin%20mencoba%20demo%20KosPintar%20%F0%9F%8F%A0", "_blank")}
+            >
+              Coba Demo
+            </Button>
+          )}
         </div>
       </motion.div>
     </div>
