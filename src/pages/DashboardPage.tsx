@@ -358,17 +358,10 @@ export default function DashboardPage() {
                 },
                 {
                   icon: AlertCircle,
-                  label: "Overdue",
+                  label: "Jatuh Tempo",
                   value: stats.overduePayments,
                   color: "text-destructive",
                   action: () => navigate("/pembayaran?filter=overdue")
-                },
-                {
-                  icon: AlertTriangle,
-                  label: "Belum Lunas",
-                  value: stats.tagihanBelumLunas,
-                  color: "text-[hsl(38,92%,50%)]",
-                  action: null
                 },
               ].map((stat, i) => (
                 <motion.div
