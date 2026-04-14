@@ -192,15 +192,26 @@ export default function PenyewaPage() {
     no_hp: string | null;
     email: string | null;
     room_id: string;
+    durasi_bulan?: number;
     jatuh_tempo?: number;
     deposit: number;
   }) => {
     if (!showEdit) return;
+
+    // Recalculate tanggal_keluar from tanggal_masuk + new durasi
+    let tanggalKeluar: string | undefined;
+    if (formData.durasi_bulan && showEdit.tanggal_masuk) {
+      const masuk = new Date(showEdit.tanggal_masuk);
+      masuk.setMonth(masuk.getMonth() + formData.durasi_bulan);
+      tanggalKeluar = masuk.toISOString().split("T")[0];
+    }
+
     if (demo.isDemo) {
       demo.updateTenant(showEdit.id, {
         no_hp: formData.no_hp,
         email: formData.email,
         jatuh_tempo_hari: formData.jatuh_tempo ?? null,
+        ...(tanggalKeluar && { tanggal_keluar: tanggalKeluar }),
       });
       toast.success("Data penyewa diperbarui!");
       setShowEdit(null);
@@ -212,6 +223,7 @@ export default function PenyewaPage() {
         no_hp: formData.no_hp,
         email: formData.email,
         jatuh_tempo_hari: formData.jatuh_tempo ?? null,
+        ...(tanggalKeluar && { tanggal_keluar: tanggalKeluar }),
       })
       .eq("id", showEdit.id);
     if (error) { toast.error(error.message); return; }
@@ -384,21 +396,33 @@ export default function PenyewaPage() {
 
       {/* Edit tenant */}
       <BottomSheet open={!!showEdit} onClose={() => setShowEdit(null)} title="Edit Penyewa">
-        {showEdit && (
-          <PenyewaForm
-            mode="edit"
-            initialData={{
-              id: showEdit.id,
-              nama: showEdit.nama,
-              no_hp: showEdit.no_hp,
-              email: showEdit.email,
-              room_id: showEdit.room_id,
-              jatuh_tempo: showEdit.jatuh_tempo_hari ?? undefined,
-            }}
-            allRooms={allRooms}
-            onSubmit={handleEditTenant}
-          />
-        )}
+        {showEdit && (() => {
+          // Calculate current durasi in months from tanggal_masuk -> tanggal_keluar
+          let currentDurasi: number | undefined;
+          if (showEdit.tanggal_masuk && showEdit.tanggal_keluar) {
+            const masuk = new Date(showEdit.tanggal_masuk);
+            const keluar = new Date(showEdit.tanggal_keluar);
+            const diff = (keluar.getFullYear() - masuk.getFullYear()) * 12 + (keluar.getMonth() - masuk.getMonth());
+            currentDurasi = Math.max(1, Math.min(36, diff));
+          }
+          return (
+            <PenyewaForm
+              mode="edit"
+              initialData={{
+                id: showEdit.id,
+                nama: showEdit.nama,
+                no_hp: showEdit.no_hp,
+                email: showEdit.email,
+                room_id: showEdit.room_id,
+                jatuh_tempo: showEdit.jatuh_tempo_hari ?? undefined,
+                tanggal_masuk: showEdit.tanggal_masuk,
+                durasi: currentDurasi,
+              }}
+              allRooms={allRooms}
+              onSubmit={handleEditTenant}
+            />
+          );
+        })()}
       </BottomSheet>
 
       {/* End contract */}
