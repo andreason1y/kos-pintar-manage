@@ -549,16 +549,18 @@ export default function KeuanganPage() {
                     </div>
                     <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200" />
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="px-4 pb-4">
-                    <p className="text-lg font-bold text-destructive mb-3">{formatRupiah(totalUnpaid)}</p>
-                    <div className="space-y-2">
-                      {unpaidList.map((u: any, i: number) => (
-                        <div key={i} className="flex justify-between items-center text-sm">
-                          <div><p className="font-medium text-foreground">{u.nama}</p><p className="text-xs text-muted-foreground">Kamar {u.kamar}</p></div>
-                          <span className="font-semibold text-destructive">{formatRupiah(u.sisa)}</span>
-                        </div>
-                      ))}
-                    </div>
+                  <CollapsibleContent className="overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:collapse data-[state=open]:expand px-4 pb-4">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                      <p className="text-lg font-bold text-destructive mb-3">{formatRupiah(totalUnpaid)}</p>
+                      <div className="space-y-2">
+                        {unpaidList.map((u: any, i: number) => (
+                          <div key={i} className="flex justify-between items-center text-sm">
+                            <div><p className="font-medium text-foreground">{u.nama}</p><p className="text-xs text-muted-foreground">Kamar {u.kamar}</p></div>
+                            <span className="font-semibold text-destructive">{formatRupiah(u.sisa)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
                   </CollapsibleContent>
                 </Collapsible>
               </motion.div>
@@ -618,43 +620,45 @@ export default function KeuanganPage() {
                   <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200" />
                 </div>
               </CollapsibleTrigger>
-              <CollapsibleContent className="px-4 pb-4">
-                {items.length === 0 ? (
-                  <EmptyState title="Belum ada transaksi" description="Transaksi akan muncul di sini" />
-                ) : (
-                  <div className="space-y-2">
-                    {items.map((item: any, i: number) => {
-                      const rowContent = (
-                        <div className="flex items-center px-4 py-3 border border-border rounded-lg shadow-sm">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${item.type === "income" ? "bg-[hsl(142,71%,45%)]/10" : "bg-destructive/10"}`}>
-                              {item.type === "income" ? <TrendingUp size={14} className="text-[hsl(142,71%,45%)]" /> : <TrendingDown size={14} className="text-destructive" />}
+              <CollapsibleContent className="overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:collapse data-[state=open]:expand px-4 pb-4">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  {items.length === 0 ? (
+                    <EmptyState title="Belum ada transaksi" description="Transaksi akan muncul di sini" />
+                  ) : (
+                    <div className="space-y-2">
+                      {items.map((item: any, i: number) => {
+                        const rowContent = (
+                          <div className="flex items-center px-4 py-3 border border-border rounded-lg shadow-sm">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${item.type === "income" ? "bg-[hsl(142,71%,45%)]/10" : "bg-destructive/10"}`}>
+                                {item.type === "income" ? <TrendingUp size={14} className="text-[hsl(142,71%,45%)]" /> : <TrendingDown size={14} className="text-destructive" />}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">{item.label}</p>
+                                <p className="text-xs text-muted-foreground">{item.date}</p>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{item.label}</p>
-                              <p className="text-xs text-muted-foreground">{item.date}</p>
-                            </div>
+                            <span className={`text-sm font-semibold flex-shrink-0 text-right ${item.type === "income" ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>
+                              {item.type === "income" ? "+" : "-"}{formatRupiah(item.amount)}
+                            </span>
                           </div>
-                          <span className={`text-sm font-semibold flex-shrink-0 text-right ${item.type === "income" ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>
-                            {item.type === "income" ? "+" : "-"}{formatRupiah(item.amount)}
-                          </span>
-                        </div>
-                      );
-
-                      if (item.type === "expense") {
-                        return (
-                          <motion.div key={item.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02, duration: 0.15 }}>
-                            <SwipeableRow
-                              onEdit={() => { setShowEdit(item); setJudul(item.label); setKategori(item.kategori || "Lainnya"); setJumlah(String(item.amount)); setTanggal(item.date); setIsRecurring(item.is_recurring || false); }}
-                              onDelete={() => setDeleteTarget({ id: item.id, name: item.label })}
-                            >{rowContent}</SwipeableRow>
-                          </motion.div>
                         );
-                      }
-                      return <motion.div key={item.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02, duration: 0.15 }}>{rowContent}</motion.div>;
-                    })}
-                  </div>
-                )}
+
+                        if (item.type === "expense") {
+                          return (
+                            <motion.div key={item.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02, duration: 0.15 }}>
+                              <SwipeableRow
+                                onEdit={() => { setShowEdit(item); setJudul(item.label); setKategori(item.kategori || "Lainnya"); setJumlah(String(item.amount)); setTanggal(item.date); setIsRecurring(item.is_recurring || false); }}
+                                onDelete={() => setDeleteTarget({ id: item.id, name: item.label })}
+                              >{rowContent}</SwipeableRow>
+                            </motion.div>
+                          );
+                        }
+                        return <motion.div key={item.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02, duration: 0.15 }}>{rowContent}</motion.div>;
+                      })}
+                    </div>
+                  )}
+                </motion.div>
               </CollapsibleContent>
             </Collapsible>
           </>
