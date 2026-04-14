@@ -78,6 +78,7 @@ export default function PembayaranPage() {
   const [editMetode, setEditMetode] = useState("tunai");
   const [editStatus, setEditStatus] = useState("belum_bayar");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [sortBy, setSortBy] = useState<"nama_asc" | "tanggal_terbaru" | "tanggal_terlama">("nama_asc");
 
   const propertyName = demo.isDemo ? demo.property.nama_kos : activeProperty?.nama_kos || "";
 
@@ -168,8 +169,25 @@ export default function PembayaranPage() {
         list.push(...categorized[cat.key]);
       }
     }
-    return list;
-  }, [activeCategories, categorized]);
+
+    // Apply sorting
+    const sorted = [...list];
+    if (sortBy === "nama_asc") {
+      sorted.sort((a, b) => a.tenant_nama.localeCompare(b.tenant_nama));
+    } else if (sortBy === "tanggal_terbaru") {
+      sorted.sort((a, b) => {
+        if (a.periode_tahun !== b.periode_tahun) return b.periode_tahun - a.periode_tahun;
+        return b.periode_bulan - a.periode_bulan;
+      });
+    } else if (sortBy === "tanggal_terlama") {
+      sorted.sort((a, b) => {
+        if (a.periode_tahun !== b.periode_tahun) return a.periode_tahun - b.periode_tahun;
+        return a.periode_bulan - b.periode_bulan;
+      });
+    }
+
+    return sorted;
+  }, [activeCategories, categorized, sortBy]);
 
   const refetch = () => { invalidate.all(); };
 
@@ -279,6 +297,21 @@ export default function PembayaranPage() {
               </button>
             );
           })}
+        </div>
+
+        {/* Sort dropdown */}
+        <div className="flex justify-between items-center gap-2">
+          <span className="text-xs text-muted-foreground font-medium">Urutkan:</span>
+          <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+            <SelectTrigger className="w-auto bg-card border-border">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="nama_asc">By Nama (A-Z)</SelectItem>
+              <SelectItem value="tanggal_terbaru">By Tanggal (Terbaru)</SelectItem>
+              <SelectItem value="tanggal_terlama">By Tanggal (Terlama)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {loading ? (
