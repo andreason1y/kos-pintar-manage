@@ -3,20 +3,27 @@ import { motion } from "framer-motion";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { formatRupiah, getMonthName, waTagihanLink } from "@/lib/helpers";
-import { useRoomTypesAndRooms, useTenants, useTransactions, useExpenses, useOverduePaymentStats, usePrefetchRoutes } from "@/hooks/use-queries";
+import { useRoomTypesAndRooms, useTenants, useTransactions, useExpenses, useOverduePaymentStats, usePrefetchRoutes, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import NotificationBell from "@/components/NotificationBell";
 import SkeletonCard from "@/components/SkeletonCard";
 import BottomSheet from "@/components/BottomSheet";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DoorOpen, DoorClosed, AlertTriangle, AlertCircle,
-  UserPlus, CreditCard, Send, Receipt, LayoutGrid, FileText,
+  UserPlus, CreditCard, Send, Receipt,
   TrendingUp, TrendingDown, MessageCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface DashboardStats {
   totalPenyewa: number;
@@ -46,11 +53,34 @@ const tahunIni = now.getFullYear();
 const bulanLalu = bulanIni === 1 ? 12 : bulanIni - 1;
 const tahunLalu = bulanIni === 1 ? tahunIni - 1 : tahunIni;
 
+const EXPENSE_CATEGORIES = ["Listrik", "Air/PDAM", "Kebersihan", "Perbaikan/Renovasi", "Keamanan", "Internet/WiFi", "Pajak", "Gaji Penjaga", "Pengembalian Deposit", "Lainnya"];
+
 export default function DashboardPage() {
   const { activeProperty } = useProperty();
   const demo = useDemo();
   const navigate = useNavigate();
+  const invalidate = useInvalidate();
   const [showTagihan, setShowTagihan] = useState(false);
+  const [showAddTenant, setShowAddTenant] = useState(false);
+  const [showAddExpense, setShowAddExpense] = useState(false);
+
+  // Form states for Add Tenant
+  const [nama, setNama] = useState("");
+  const [noHp, setNoHp] = useState("");
+  const [email, setEmail] = useState("");
+  const [sendEmailNotifications, setSendEmailNotifications] = useState(false);
+  const [gender, setGender] = useState("L");
+  const [roomId, setRoomId] = useState("");
+  const [tanggalMasuk, setTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
+  const [durasi, setDurasi] = useState("1");
+  const [deposit, setDeposit] = useState("");
+
+  // Form states for Add Expense
+  const [judul, setJudul] = useState("");
+  const [kategori, setKategori] = useState("Lainnya");
+  const [jumlah, setJumlah] = useState("");
+  const [tanggal, setTanggal] = useState(new Date().toISOString().split("T")[0]);
+  const [isRecurring, setIsRecurring] = useState(false);
 
   // Prefetch other routes
   const prefetch = usePrefetchRoutes();
@@ -65,6 +95,9 @@ export default function DashboardPage() {
   const { data: expLastData, isLoading: expLastLoading } = useExpenses(bulanLalu, tahunLalu);
 
   const loading = !demo.isDemo && (roomsLoading || tenantsLoading || txLoading || overdueLoading || expLoading || expLastLoading);
+
+  // Refetch utilities
+  const refetchAll = () => invalidate.all();
 
   const { stats, unpaidTenants } = useMemo(() => {
     if (demo.isDemo) {
@@ -154,13 +187,128 @@ export default function DashboardPage() {
     };
   }, [demo.isDemo, roomData, tenantData, txData, overdueData, expData, expLastData]);
 
+  // Handler for adding tenant
+  const handleAddTenant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!roomId) {
+      toast.error("Silakan pilih kamar");
+      return;
+    }
+    const d = parseInt(durasi);
+    const masuk = new Date(tanggalMasuk);
+    const keluar = new Date(masuk);
+    keluar.setMonth(keluar.getMonth() + d);
+    const keluarStr = keluar.toISOString().split("T")[0];
+
+    if (demo.isDemo) {
+      demo.demoAddTenantAtomic({
+        roomId, nama, noHp: noHp || null, email: email || null, sendEmailNotifications, gender: gender as "L" | "P",
+        tanggalMasuk, tanggalKeluar: keluarStr, depositAmount: parseInt(deposit) || 0,
+      });
+      toast.success("Penyewa berhasil ditambahkan!");
+      setShowAddTenant(false);
+      resetTenantForm();
+      return;
+    }
+
+    if (!activeProperty) return;
+    const { error } = await supabase.rpc("add_tenant", {
+      p_property_id: activeProperty.id,
+      p_room_id: roomId,
+      p_nama: nama,
+      p_no_hp: noHp || null,
+      p_email: email || null,
+      p_send_email_notifications: sendEmailNotifications,
+      p_gender: gender,
+      p_tanggal_masuk: tanggalMasuk,
+      p_tanggal_keluar: keluarStr,
+      p_deposit_amount: parseInt(deposit) || 0,
+    } as any);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Penyewa berhasil ditambahkan!");
+    setShowAddTenant(false);
+    resetTenantForm();
+    refetchAll();
+  };
+
+  // Handler for adding expense
+  const handleAddExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!judul || !jumlah) {
+      toast.error("Silakan isi semua field");
+      return;
+    }
+
+    if (demo.isDemo) {
+      demo.addExpense({ property_id: "prop-1", judul, kategori, jumlah: parseInt(jumlah) || 0, tanggal, is_recurring: isRecurring });
+      toast.success("Pengeluaran ditambahkan!");
+      setShowAddExpense(false);
+      resetExpenseForm();
+      return;
+    }
+
+    if (!activeProperty) return;
+    const { error } = await supabase.from("expenses").insert({
+      property_id: activeProperty.id,
+      judul,
+      kategori,
+      jumlah: parseInt(jumlah) || 0,
+      tanggal,
+      is_recurring: isRecurring
+    } as any);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Pengeluaran ditambahkan!");
+    setShowAddExpense(false);
+    resetExpenseForm();
+    refetchAll();
+  };
+
+  const resetTenantForm = () => {
+    setNama("");
+    setNoHp("");
+    setEmail("");
+    setSendEmailNotifications(false);
+    setRoomId("");
+    setGender("L");
+    setDurasi("1");
+    setDeposit("");
+    setTanggalMasuk(new Date().toISOString().split("T")[0]);
+  };
+
+  const resetExpenseForm = () => {
+    setJudul("");
+    setKategori("Lainnya");
+    setJumlah("");
+    setTanggal(new Date().toISOString().split("T")[0]);
+    setIsRecurring(false);
+  };
+
+  // Compute empty rooms for the tenant form
+  const emptyRooms = useMemo(() => {
+    if (demo.isDemo) {
+      return demo.rooms.filter(r => r.status === "kosong").map(r => {
+        const rt = demo.roomTypes.find(rr => rr.id === r.room_type_id);
+        return { ...r, room_type: rt };
+      });
+    }
+    if (!roomData) return [];
+    const { roomTypes, rooms } = roomData;
+    return rooms.filter((r: any) => r.status === "kosong").map((r: any) => ({
+      ...r, room_type: roomTypes.find((rt: any) => rt.id === r.room_type_id)
+    }));
+  }, [demo.isDemo, roomData, demo.rooms, demo.roomTypes]);
+
   const quickActions = [
-    { icon: UserPlus, label: "Tambah Penyewa", action: () => navigate("/penyewa?action=add"), color: "bg-primary/10 text-primary" },
+    { icon: UserPlus, label: "Tambah Penyewa", action: () => setShowAddTenant(true), color: "bg-primary/10 text-primary" },
     { icon: CreditCard, label: "Pembayaran", action: () => navigate("/pembayaran"), color: "bg-[hsl(142,71%,45%)]/10 text-[hsl(142,71%,45%)]" },
     { icon: Send, label: "Kirim Tagihan", action: () => setShowTagihan(true), color: "bg-accent/10 text-accent" },
-    { icon: Receipt, label: "Pengeluaran", action: () => navigate("/keuangan?action=add-expense"), color: "bg-destructive/10 text-destructive" },
-    { icon: LayoutGrid, label: "Daftar Kamar", action: () => navigate("/kamar?action=add"), color: "bg-[hsl(262,52%,47%)]/10 text-[hsl(262,52%,47%)]" },
-    { icon: FileText, label: "Laporan", action: () => navigate("/keuangan?action=export-pdf"), color: "bg-[hsl(199,89%,48%)]/10 text-[hsl(199,89%,48%)]" },
+    { icon: Receipt, label: "Pengeluaran", action: () => setShowAddExpense(true), color: "bg-destructive/10 text-destructive" },
   ];
 
   const laba = stats ? stats.pemasukanBulanIni - stats.pengeluaranBulanIni : 0;
@@ -304,17 +452,17 @@ export default function DashboardPage() {
             {/* Quick Actions */}
             <div>
               <h2 className="text-sm font-semibold text-foreground mb-3">Aksi Cepat</h2>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-3">
                 {quickActions.map((action) => (
                   <button
                     key={action.label}
                     onClick={action.action}
-                    className="bg-card border border-border rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-muted transition-colors shadow-sm"
+                    className="bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-muted transition-colors shadow-sm"
                   >
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${action.color}`}>
                       <action.icon size={18} />
                     </div>
-                    <span className="text-[11px] font-medium text-foreground text-center leading-tight">{action.label}</span>
+                    <span className="text-xs font-medium text-foreground text-center leading-tight">{action.label}</span>
                   </button>
                 ))}
               </div>
@@ -356,6 +504,145 @@ export default function DashboardPage() {
           )}
         </div>
       </BottomSheet>
+
+      {/* Add Tenant Dialog */}
+      <Dialog open={showAddTenant} onOpenChange={setShowAddTenant}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Tambah Penyewa</DialogTitle>
+            <DialogDescription>Tambahkan penyewa baru ke properti Anda</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddTenant} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nama</Label>
+              <Input value={nama} onChange={e => setNama(e.target.value)} placeholder="Nama penyewa" required />
+            </div>
+            <div className="space-y-2">
+              <Label>No. HP</Label>
+              <Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" />
+            </div>
+            <div className="space-y-2">
+              <Label>Gender</Label>
+              <Select value={gender} onValueChange={setGender}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="L">Laki-laki</SelectItem>
+                  <SelectItem value="P">Perempuan</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Kamar</Label>
+              <Select value={roomId} onValueChange={setRoomId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih kamar kosong" />
+                </SelectTrigger>
+                <SelectContent>
+                  {emptyRooms.map((r: any) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.room_type?.nama} - No. {r.nomor} (Lt. {r.lantai})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Tanggal Masuk</Label>
+                <Input type="date" value={tanggalMasuk} onChange={e => setTanggalMasuk(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Durasi (bulan)</Label>
+                <Select value={durasi} onValueChange={setDurasi}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 3, 6, 12].map(d => (
+                      <SelectItem key={d} value={String(d)}>
+                        {d} bulan
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Deposit (Rp)</Label>
+              <Input type="number" value={deposit} onChange={e => setDeposit(e.target.value)} placeholder="0 (opsional)" />
+            </div>
+            <div className="space-y-2">
+              <Label>Email (opsional)</Label>
+              <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="penyewa@email.com" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="sendNotif"
+                  checked={sendEmailNotifications}
+                  onChange={e => setSendEmailNotifications(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <Label htmlFor="sendNotif" className="cursor-pointer">
+                  Kirim notif email jatuh tempo
+                </Label>
+              </div>
+            </div>
+            <Button type="submit" className="w-full">
+              Tambah Penyewa
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Expense Dialog */}
+      <Dialog open={showAddExpense} onOpenChange={setShowAddExpense}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tambah Pengeluaran</DialogTitle>
+            <DialogDescription>Catat pengeluaran properti Anda</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddExpense} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Judul</Label>
+              <Input value={judul} onChange={e => setJudul(e.target.value)} placeholder="Bayar listrik" required />
+            </div>
+            <div className="space-y-2">
+              <Label>Kategori</Label>
+              <Select value={kategori} onValueChange={setKategori}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPENSE_CATEGORIES.map(c => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Jumlah (Rp)</Label>
+              <Input type="number" value={jumlah} onChange={e => setJumlah(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label>Tanggal</Label>
+              <Input type="date" value={tanggal} onChange={e => setTanggal(e.target.value)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Pengeluaran Rutin</Label>
+              <Switch checked={isRecurring} onCheckedChange={setIsRecurring} />
+            </div>
+            <Button type="submit" className="w-full">
+              Simpan Pengeluaran
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
