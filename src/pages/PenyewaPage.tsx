@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
+import PenyewaForm, { PenyewaFormData } from "@/components/penyewa/PenyewaForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
@@ -15,7 +16,6 @@ import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Plus, Search, MessageCircle, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -45,6 +45,7 @@ export default function PenyewaPage() {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<Tenant | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Open add modal via URL param from dashboard quick action
   useEffect(() => {
@@ -54,14 +55,6 @@ export default function PenyewaPage() {
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
-
-  const [nama, setNama] = useState("");
-  const [noHp, setNoHp] = useState("");
-  const [gender, setGender] = useState("L");
-  const [roomId, setRoomId] = useState("");
-  const [tanggalMasuk, setTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
-  const [durasi, setDurasi] = useState("1");
-  const [deposit, setDeposit] = useState("");
   const [showEndContract, setShowEndContract] = useState<Tenant | null>(null);
   const [depositInfo, setDepositInfo] = useState<any>(null);
   const [returnAmount, setReturnAmount] = useState("");
@@ -131,56 +124,96 @@ export default function PenyewaPage() {
 
   const refetchAll = () => { invalidate.all(); };
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!roomId) return;
-    const d = parseInt(durasi);
-    const masuk = new Date(tanggalMasuk);
-    const keluar = new Date(masuk);
-    keluar.setMonth(keluar.getMonth() + d);
-    const keluarStr = keluar.toISOString().split("T")[0];
+  const handleAddTenant = async (formData: PenyewaFormData) => {
+    setIsSubmitting(true);
+    try {
+      if (!formData.room_id || !formData.jatuh_tempo) {
+        toast.error("Silakan isi semua field yang diperlukan");
+        return;
+      }
 
-    if (demo.isDemo) {
-      demo.demoAddTenantAtomic({
-        roomId, nama, noHp: noHp || null, gender: gender as "L" | "P",
-        tanggalMasuk, tanggalKeluar: keluarStr, depositAmount: parseInt(deposit) || 0,
-      });
+      // Calculate tanggal_keluar as tanggal_masuk (simple approach for now)
+      const tanggalMasuk = formData.tanggal_masuk || new Date().toISOString().split("T")[0];
+
+      if (demo.isDemo) {
+        demo.demoAddTenantAtomic({
+          roomId: formData.room_id,
+          nama: formData.nama,
+          noHp: formData.no_hp || null,
+          gender: "L" as "L" | "P",
+          tanggalMasuk,
+          tanggalKeluar: tanggalMasuk,
+          depositAmount: formData.deposit || 0,
+        });
+        toast.success("Penyewa berhasil ditambahkan!");
+        setShowAdd(false);
+        return;
+      }
+
+      if (!activeProperty) {
+        toast.error("Properti tidak ditemukan");
+        return;
+      }
+
+      const { error } = await supabase.rpc("add_tenant", {
+        p_property_id: activeProperty.id,
+        p_room_id: formData.room_id,
+        p_nama: formData.nama,
+        p_no_hp: formData.no_hp || null,
+        p_email: formData.email || null,
+        p_send_email_notifications: false,
+        p_gender: "L",
+        p_tanggal_masuk: tanggalMasuk,
+        p_tanggal_keluar: tanggalMasuk,
+        p_deposit_amount: formData.deposit || 0,
+        p_jatuh_tempo: formData.jatuh_tempo,
+      } as any);
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
       toast.success("Penyewa berhasil ditambahkan!");
-      setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1"); setDeposit("");
-      return;
+      setShowAdd(false);
+      refetchAll();
+    } finally {
+      setIsSubmitting(false);
     }
-
-    if (!activeProperty) return;
-    const { data, error } = await supabase.rpc("add_tenant", {
-      p_property_id: activeProperty.id,
-      p_room_id: roomId,
-      p_nama: nama,
-      p_no_hp: noHp || null,
-      p_gender: gender,
-      p_tanggal_masuk: tanggalMasuk,
-      p_tanggal_keluar: keluarStr,
-      p_deposit_amount: parseInt(deposit) || 0,
-    } as any);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Penyewa berhasil ditambahkan!");
-    setShowAdd(false); setNama(""); setNoHp(""); setRoomId(""); setGender("L"); setDurasi("1"); setDeposit("");
-    refetchAll();
   };
 
-  const handleEditTenant = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!showEdit) return;
-    if (demo.isDemo) {
-      demo.updateTenant(showEdit.id, { nama, no_hp: noHp || null, gender: gender as "L" | "P" });
+  const handleEditTenant = async (formData: PenyewaFormData) => {
+    setIsSubmitting(true);
+    try {
+      if (!showEdit) return;
+
+      if (demo.isDemo) {
+        demo.updateTenant(showEdit.id, {
+          nama: formData.nama,
+          no_hp: formData.no_hp || null,
+          gender: "L" as "L" | "P",
+        });
+        toast.success("Data penyewa diperbarui!");
+        setShowEdit(null);
+        return;
+      }
+
+      // Only update editable fields: no_hp, email, jatuh_tempo
+      const { error } = await supabase.from("tenants").update({
+        no_hp: formData.no_hp || null,
+      } as any).eq("id", showEdit.id);
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
       toast.success("Data penyewa diperbarui!");
       setShowEdit(null);
-      return;
+      refetchAll();
+    } finally {
+      setIsSubmitting(false);
     }
-    const { error } = await supabase.from("tenants").update({ nama, no_hp: noHp || null, gender } as any).eq("id", showEdit.id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Data penyewa diperbarui!");
-    setShowEdit(null);
-    refetchAll();
   };
 
   const handleDeleteTenant = async (id: string) => {
@@ -306,9 +339,6 @@ export default function PenyewaPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => {
                               setShowEdit(t);
-                              setNama(t.nama);
-                              setNoHp(t.no_hp || "");
-                              setGender(t.gender);
                             }}>
                               <Pencil size={14} className="mr-2" /> Edit
                             </DropdownMenuItem>
@@ -334,49 +364,32 @@ export default function PenyewaPage() {
 
       {/* Add tenant */}
       <BottomSheet open={showAdd} onClose={() => setShowAdd(false)} title="Tambah Penyewa">
-        <form onSubmit={handleAdd} className="bottom-sheet-form">
+        <div className="bottom-sheet-form">
           <div className="bottom-sheet-body">
-            <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
-            <div className="space-y-2"><Label>No. HP</Label><Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" /></div>
-            <div className="space-y-2"><Label>Gender</Label>
-            <Select value={gender} onValueChange={setGender}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="L">Laki-laki</SelectItem><SelectItem value="P">Perempuan</SelectItem></SelectContent></Select>
+            <PenyewaForm
+              mode="create"
+              emptyRooms={emptyRooms}
+              onSubmit={handleAddTenant}
+              isLoading={isSubmitting}
+            />
           </div>
-          <div className="space-y-2"><Label>Kamar</Label>
-            <Select value={roomId} onValueChange={setRoomId}><SelectTrigger><SelectValue placeholder="Pilih kamar kosong" /></SelectTrigger><SelectContent>
-              {emptyRooms.map((r: any) => <SelectItem key={r.id} value={r.id}>{r.room_type?.nama} - No. {r.nomor} (Lt. {r.lantai})</SelectItem>)}
-            </SelectContent></Select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2"><Label>Tanggal Masuk</Label><Input type="date" value={tanggalMasuk} onChange={e => setTanggalMasuk(e.target.value)} /></div>
-            <div className="space-y-2"><Label>Durasi (bulan)</Label>
-              <Select value={durasi} onValueChange={setDurasi}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
-                {[1, 3, 6, 12].map(d => <SelectItem key={d} value={String(d)}>{d} bulan</SelectItem>)}
-              </SelectContent></Select>
-            </div>
-          </div>
-          <div className="space-y-2"><Label>Deposit (Rp)</Label><Input type="number" value={deposit} onChange={e => setDeposit(e.target.value)} placeholder="0 (opsional)" /></div>
-          </div>
-          <div className="bottom-sheet-footer">
-            <Button type="submit" className="w-full">Tambah Penyewa</Button>
-          </div>
-        </form>
+        </div>
       </BottomSheet>
 
       {/* Edit tenant */}
       <BottomSheet open={!!showEdit} onClose={() => setShowEdit(null)} title="Edit Penyewa">
         {showEdit && (
-          <form onSubmit={handleEditTenant} className="bottom-sheet-form">
+          <div className="bottom-sheet-form">
             <div className="bottom-sheet-body">
-              <div className="space-y-2"><Label>Nama</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
-              <div className="space-y-2"><Label>No. HP</Label><Input value={noHp} onChange={e => setNoHp(e.target.value)} placeholder="08123456789" /></div>
-              <div className="space-y-2"><Label>Gender</Label>
-              <Select value={gender} onValueChange={setGender}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="L">Laki-laki</SelectItem><SelectItem value="P">Perempuan</SelectItem></SelectContent></Select>
+              <PenyewaForm
+                mode="edit"
+                initialData={showEdit}
+                emptyRooms={emptyRooms}
+                onSubmit={handleEditTenant}
+                isLoading={isSubmitting}
+              />
             </div>
-            </div>
-            <div className="bottom-sheet-footer">
-              <Button type="submit" className="w-full">Simpan Perubahan</Button>
-            </div>
-          </form>
+          </div>
         )}
       </BottomSheet>
 
