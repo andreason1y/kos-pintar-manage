@@ -31,6 +31,7 @@ interface PenyewaFormProps {
     email: string | null;
     room_id: string;
     tanggal_masuk?: string;
+    durasi_bulan?: number;
     jatuh_tempo?: number;
     deposit: number;
   }) => void;
@@ -50,6 +51,7 @@ export default function PenyewaForm({
   const [tanggalMasuk, setTanggalMasuk] = useState(
     initialData?.tanggal_masuk || new Date().toISOString().split("T")[0]
   );
+  const [durasi, setDurasi] = useState("");
   const [jatuhTempo, setJatuhTempo] = useState(String(initialData?.jatuh_tempo || ""));
   const [deposit, setDeposit] = useState(String(initialData?.deposit || ""));
 
@@ -59,6 +61,10 @@ export default function PenyewaForm({
     if (mode === "create") {
       if (!roomId) {
         alert("Kamar harus dipilih");
+        return;
+      }
+      if (!durasi) {
+        alert("Durasi kontrak harus dipilih");
         return;
       }
     }
@@ -75,7 +81,10 @@ export default function PenyewaForm({
       room_id: roomId || "",
       jatuh_tempo: parseInt(jatuhTempo),
       deposit: parseInt(deposit) || 0,
-      ...(mode === "create" && { tanggal_masuk: tanggalMasuk }),
+      ...(mode === "create" && {
+        tanggal_masuk: tanggalMasuk,
+        durasi_bulan: parseInt(durasi),
+      }),
     };
 
     onSubmit(data as any);
@@ -136,6 +145,30 @@ export default function PenyewaForm({
               value={tanggalMasuk}
               onChange={(e) => setTanggalMasuk(e.target.value)}
             />
+          </div>
+        )}
+
+        {/* Durasi Kontrak - only in create mode */}
+        {mode === "create" && (
+          <div className="space-y-2">
+            <Label>
+              Durasi Kontrak <span className="text-destructive">*</span>
+            </Label>
+            <Select value={durasi} onValueChange={setDurasi}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih durasi..." />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 36 }, (_, i) => i + 1).map((m) => (
+                  <SelectItem key={m} value={String(m)}>
+                    {m} bulan
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Lama kontrak sewa penyewa
+            </p>
           </div>
         )}
 

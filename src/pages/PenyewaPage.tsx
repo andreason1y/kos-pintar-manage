@@ -140,10 +140,16 @@ export default function PenyewaPage() {
     email: string | null;
     room_id: string;
     tanggal_masuk?: string;
+    durasi_bulan?: number;
     jatuh_tempo?: number;
     deposit: number;
   }) => {
     if (!formData.room_id || !formData.jatuh_tempo) return;
+
+    const tanggalMasukStr = formData.tanggal_masuk || new Date().toISOString().split("T")[0];
+    const masuk = new Date(tanggalMasukStr);
+    masuk.setMonth(masuk.getMonth() + (formData.durasi_bulan || 1));
+    const tanggalKeluar = masuk.toISOString().split("T")[0];
 
     if (demo.isDemo) {
       demo.demoAddTenantAtomic({
@@ -153,8 +159,8 @@ export default function PenyewaPage() {
         email: formData.email,
         jatuhTempoHari: formData.jatuh_tempo,
         gender: "L" as "L" | "P",
-        tanggalMasuk: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
-        tanggalKeluar: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
+        tanggalMasuk: tanggalMasukStr,
+        tanggalKeluar,
         depositAmount: formData.deposit,
       });
       toast.success("Penyewa berhasil ditambahkan!");
@@ -170,8 +176,8 @@ export default function PenyewaPage() {
       p_no_hp: formData.no_hp,
       p_email: formData.email,
       p_gender: "L",
-      p_tanggal_masuk: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
-      p_tanggal_keluar: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
+      p_tanggal_masuk: tanggalMasukStr,
+      p_tanggal_keluar: tanggalKeluar,
       p_deposit_amount: formData.deposit,
       p_jatuh_tempo: formData.jatuh_tempo,
     });
