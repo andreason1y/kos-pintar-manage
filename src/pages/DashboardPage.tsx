@@ -358,7 +358,7 @@ export default function DashboardPage() {
                 },
                 {
                   icon: AlertCircle,
-                  label: "Telat Bayar",
+                  label: "Jatuh Tempo",
                   value: stats.overduePayments,
                   color: "text-destructive",
                   action: () => navigate("/pembayaran?filter=overdue")
