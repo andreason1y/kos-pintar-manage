@@ -541,8 +541,8 @@ export default function KeuanganPage() {
 
             {unpaidList.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08, duration: 0.15 }}>
-                <Collapsible defaultOpen={true} className="bg-card rounded-xl border border-border shadow-sm">
-                  <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-accent/50 rounded-t-xl">
+                <Collapsible defaultOpen={false} className="bg-card rounded-xl border border-border shadow-sm">
+                  <CollapsibleTrigger className="w-full p-4 flex items-center justify-between rounded-t-xl">
                     <div className="flex items-center gap-2">
                       <AlertTriangle size={16} className="text-[hsl(38,92%,50%)]" />
                       <p className="text-sm font-semibold text-foreground">Tagihan Belum Lunas</p>
@@ -610,8 +610,8 @@ export default function KeuanganPage() {
               </motion.div>
             )}
 
-            <Collapsible defaultOpen={true} className="bg-card rounded-xl border border-border shadow-sm">
-              <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-accent/50 rounded-t-xl">
+            <Collapsible defaultOpen={false} className="bg-card rounded-xl border border-border shadow-sm">
+              <CollapsibleTrigger className="w-full p-4 flex items-center justify-between rounded-t-xl">
                 <h2 className="text-sm font-semibold text-foreground">Transaksi ({items.length} item{items.length !== 1 ? 's' : ''})</h2>
                 <div className="flex items-center gap-2">
                   <Button size="sm" onClick={(e) => { e.stopPropagation(); setShowAdd(true); }}><Plus size={14} className="mr-1" /> Pengeluaran</Button>
