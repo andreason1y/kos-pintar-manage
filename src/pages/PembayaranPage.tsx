@@ -38,7 +38,7 @@ interface Payment {
   tanggal_bayar: string | null;
   nota_number: string | null;
   daysUntilDue: number;
-  tanggal_masuk_day: number;
+  jatuh_tempo_hari: number;
 }
 
 type Category = "akan_jatuh_tempo" | "jatuh_tempo_hari_ini" | "belum_lunas" | "lunas";
@@ -90,9 +90,9 @@ export default function PembayaranPage() {
   const today = new Date();
   const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-  const mapPayment = (tx: any, tenantNama: string, tenantHp: string | null, kamar: string, tanggalMasukDay: number): Payment => {
-    // Due date = tanggal_masuk day-of-month in the transaction's period
-    const dueDate = new Date(tx.periode_tahun, tx.periode_bulan - 1, tanggalMasukDay);
+  const mapPayment = (tx: any, tenantNama: string, tenantHp: string | null, kamar: string, jatuhTempoHari: number): Payment => {
+    // Due date = jatuh_tempo_hari in the transaction's period
+    const dueDate = new Date(tx.periode_tahun, tx.periode_bulan - 1, jatuhTempoHari);
     const diffMs = dueDate.getTime() - todayDate.getTime();
     const daysUntilDue = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
@@ -103,7 +103,7 @@ export default function PembayaranPage() {
       status: tx.status, sisa: tx.total_tagihan - tx.jumlah_dibayar,
       metode_bayar: tx.metode_bayar, tanggal_bayar: tx.tanggal_bayar, nota_number: tx.nota_number,
       daysUntilDue,
-      tanggal_masuk_day: tanggalMasukDay,
+      jatuh_tempo_hari: jatuhTempoHari,
     };
   };
 
@@ -114,16 +114,18 @@ export default function PembayaranPage() {
       allPayments = demo.transactions.map(tx => {
         const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
         const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
-        const masukDay = tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1;
-        return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp || null, room?.nomor || "-", masukDay);
+        // Use jatuh_tempo_hari; fall back to tanggal_masuk day for legacy demo data
+        const jatuhTempoHari = (tenant as any)?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
+        return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp || null, room?.nomor || "-", jatuhTempoHari);
       });
     } else if (txData && tenantData && roomData) {
       const rooms = roomData.rooms;
       allPayments = txData.map((tx: any) => {
         const tenant = tenantData.find((t: any) => t.id === tx.tenant_id);
         const room = tenant?.room_id ? rooms.find((r: any) => r.id === tenant.room_id) : null;
-        const masukDay = tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1;
-        return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp, room?.nomor || "-", masukDay);
+        // Use jatuh_tempo_hari; fall back to tanggal_masuk day for tenants without it
+        const jatuhTempoHari = tenant?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
+        return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp, room?.nomor || "-", jatuhTempoHari);
       });
     }
 

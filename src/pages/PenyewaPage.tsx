@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MessageCircle, MoreVertical, Pencil, Trash2, Mail, CheckCircle2, Circle } from "lucide-react";
+import { Plus, Search, MessageCircle, MoreVertical, Pencil, Trash2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -27,7 +27,7 @@ interface Tenant {
   nama: string;
   no_hp: string | null;
   email?: string | null;
-  send_email_notifications?: boolean;
+  jatuh_tempo_hari?: number | null;
   gender: string;
   tanggal_masuk: string;
   tanggal_keluar: string | null;
@@ -151,7 +151,7 @@ export default function PenyewaPage() {
         nama: formData.nama,
         noHp: formData.no_hp,
         email: formData.email,
-        sendEmailNotifications: false,
+        jatuhTempoHari: formData.jatuh_tempo,
         gender: "L" as "L" | "P",
         tanggalMasuk: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
         tanggalKeluar: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
@@ -169,13 +169,12 @@ export default function PenyewaPage() {
       p_nama: formData.nama,
       p_no_hp: formData.no_hp,
       p_email: formData.email,
-      p_send_email_notifications: false,
       p_gender: "L",
       p_tanggal_masuk: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
       p_tanggal_keluar: formData.tanggal_masuk || new Date().toISOString().split("T")[0],
       p_deposit_amount: formData.deposit,
       p_jatuh_tempo: formData.jatuh_tempo,
-    } as any);
+    });
     if (error) { toast.error(error.message); return; }
     toast.success("Penyewa berhasil ditambahkan!");
     setShowAdd(false);
@@ -193,11 +192,9 @@ export default function PenyewaPage() {
     if (!showEdit) return;
     if (demo.isDemo) {
       demo.updateTenant(showEdit.id, {
-        nama: formData.nama,
         no_hp: formData.no_hp,
         email: formData.email,
-        send_email_notifications: false,
-        gender: "L" as "L" | "P",
+        jatuh_tempo_hari: formData.jatuh_tempo ?? null,
       });
       toast.success("Data penyewa diperbarui!");
       setShowEdit(null);
@@ -206,11 +203,10 @@ export default function PenyewaPage() {
     const { error } = await supabase
       .from("tenants")
       .update({
-        nama: formData.nama,
         no_hp: formData.no_hp,
         email: formData.email,
-        send_email_notifications: false,
-      } as any)
+        jatuh_tempo_hari: formData.jatuh_tempo ?? null,
+      })
       .eq("id", showEdit.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Data penyewa diperbarui!");
@@ -334,19 +330,10 @@ export default function PenyewaPage() {
                         <StatusBadge status={t.latestTxStatus} />
                         {t.email && (
                           <a href={`mailto:${t.email}`} target="_blank" rel="noreferrer"
-                            title={t.send_email_notifications ? "Email notifications enabled" : "Email on file"}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              t.send_email_notifications
-                                ? "bg-blue-500/10"
-                                : "bg-slate-400/10"
-                            }`}>
-                            <Mail size={16} className={t.send_email_notifications ? "text-blue-500" : "text-slate-400"} />
+                            title={t.email}
+                            className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-500/10">
+                            <Mail size={16} className="text-blue-500" />
                           </a>
-                        )}
-                        {t.send_email_notifications && !t.email && (
-                          <div title="Notif enabled but no email" className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
-                            <Circle size={12} className="text-amber-500" />
-                          </div>
                         )}
                         {t.no_hp && (
                           <a href={`https://wa.me/${t.no_hp.replace(/^0/, "62")}`} target="_blank" rel="noreferrer"
@@ -400,6 +387,7 @@ export default function PenyewaPage() {
               no_hp: showEdit.no_hp,
               email: showEdit.email,
               room_id: showEdit.room_id,
+              jatuh_tempo: showEdit.jatuh_tempo_hari ?? undefined,
             }}
             allRooms={allRooms}
             onSubmit={handleEditTenant}

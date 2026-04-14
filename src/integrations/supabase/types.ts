@@ -517,8 +517,10 @@ export type Database = {
       tenants: {
         Row: {
           created_at: string
+          email: string | null
           gender: Database["public"]["Enums"]["gender_type"]
           id: string
+          jatuh_tempo_hari: number | null
           nama: string
           no_hp: string | null
           property_id: string
@@ -529,8 +531,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email?: string | null
           gender?: Database["public"]["Enums"]["gender_type"]
           id?: string
+          jatuh_tempo_hari?: number | null
           nama: string
           no_hp?: string | null
           property_id: string
@@ -541,8 +545,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email?: string | null
           gender?: Database["public"]["Enums"]["gender_type"]
           id?: string
+          jatuh_tempo_hari?: number | null
           nama?: string
           no_hp?: string | null
           property_id?: string
@@ -573,9 +579,11 @@ export type Database = {
           catatan: string | null
           created_at: string
           id: string
+          is_overdue: boolean | null
           jumlah_dibayar: number
           metode_bayar: Database["public"]["Enums"]["payment_method"] | null
           nota_number: string | null
+          overdue_days: number | null
           periode_bulan: number
           periode_tahun: number
           property_id: string
@@ -588,9 +596,11 @@ export type Database = {
           catatan?: string | null
           created_at?: string
           id?: string
+          is_overdue?: boolean | null
           jumlah_dibayar?: number
           metode_bayar?: Database["public"]["Enums"]["payment_method"] | null
           nota_number?: string | null
+          overdue_days?: number | null
           periode_bulan: number
           periode_tahun: number
           property_id: string
@@ -603,9 +613,11 @@ export type Database = {
           catatan?: string | null
           created_at?: string
           id?: string
+          is_overdue?: boolean | null
           jumlah_dibayar?: number
           metode_bayar?: Database["public"]["Enums"]["payment_method"] | null
           nota_number?: string | null
+          overdue_days?: number | null
           periode_bulan?: number
           periode_tahun?: number
           property_id?: string
@@ -639,11 +651,14 @@ export type Database = {
       add_tenant: {
         Args: {
           p_deposit_amount?: number
+          p_email?: string | null
           p_gender?: string
+          p_jatuh_tempo?: number
           p_nama: string
           p_no_hp?: string
           p_property_id: string
           p_room_id: string
+          p_send_email_notifications?: boolean
           p_tanggal_keluar?: string
           p_tanggal_masuk?: string
         }
@@ -697,7 +712,7 @@ export type Database = {
       payment_method: "tunai" | "transfer" | "qris"
       payment_status: "belum_bayar" | "belum_lunas" | "lunas"
       payment_transaction_status_enum: "pending" | "success" | "failed"
-      plan_enum: "mandiri" | "juragan" | "starter" | "pro" | "bisnis" | "demo"
+      plan_enum: "starter" | "pro" | "bisnis" | "demo"
       room_status: "kosong" | "terisi"
       tenant_status: "aktif" | "keluar"
     }
@@ -832,7 +847,7 @@ export const Constants = {
       payment_method: ["tunai", "transfer", "qris"],
       payment_status: ["belum_bayar", "belum_lunas", "lunas"],
       payment_transaction_status_enum: ["pending", "success", "failed"],
-      plan_enum: ["mandiri", "juragan", "starter", "pro", "bisnis", "demo"],
+      plan_enum: ["starter", "pro", "bisnis", "demo"],
       room_status: ["kosong", "terisi"],
       tenant_status: ["aktif", "keluar"],
     },

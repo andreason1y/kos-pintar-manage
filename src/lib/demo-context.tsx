@@ -30,7 +30,7 @@ export interface DemoTenant {
   nama: string;
   no_hp: string | null;
   email?: string | null;
-  send_email_notifications?: boolean;
+  jatuh_tempo_hari?: number | null;
   gender: "L" | "P";
   tanggal_masuk: string;
   tanggal_keluar: string | null;
@@ -107,15 +107,15 @@ const ROOMS: DemoRoom[] = [
 ];
 
 const TENANTS: DemoTenant[] = [
-  { id: "tn-1", property_id: PID, room_id: "rm-1", nama: "Budi Santoso", no_hp: "081234567890", gender: "L", tanggal_masuk: "2025-10-01", tanggal_keluar: "2026-10-01", status: "aktif" },
-  { id: "tn-2", property_id: PID, room_id: "rm-2", nama: "Siti Rahayu", no_hp: "082198765432", gender: "P", tanggal_masuk: "2025-11-15", tanggal_keluar: "2026-05-15", status: "aktif" },
-  { id: "tn-3", property_id: PID, room_id: "rm-4", nama: "Ahmad Fauzi", no_hp: "085312345678", gender: "L", tanggal_masuk: "2026-01-01", tanggal_keluar: "2026-07-01", status: "aktif" },
-  { id: "tn-4", property_id: PID, room_id: "rm-6", nama: "Dewi Lestari", no_hp: "087812345678", gender: "P", tanggal_masuk: "2025-09-01", tanggal_keluar: "2026-09-01", status: "aktif" },
-  { id: "tn-5", property_id: PID, room_id: "rm-7", nama: "Rizky Pratama", no_hp: "081387654321", gender: "L", tanggal_masuk: "2026-02-01", tanggal_keluar: "2026-08-01", status: "aktif" },
-  { id: "tn-6", property_id: PID, room_id: "rm-9", nama: "Nurul Hidayah", no_hp: "089912345678", gender: "P", tanggal_masuk: "2025-12-01", tanggal_keluar: "2026-06-01", status: "aktif" },
-  { id: "tn-7", property_id: PID, room_id: "rm-10", nama: "Fajar Ramadhan", no_hp: "081567890123", gender: "L", tanggal_masuk: "2026-01-15", tanggal_keluar: "2027-01-15", status: "aktif" },
-  { id: "tn-8", property_id: PID, room_id: "rm-11", nama: "Anisa Putri", no_hp: "082345678901", gender: "P", tanggal_masuk: "2025-08-01", tanggal_keluar: "2026-08-01", status: "aktif" },
-  { id: "tn-9", property_id: PID, room_id: null, nama: "Doni Saputra", no_hp: "081298765432", gender: "L", tanggal_masuk: "2025-03-01", tanggal_keluar: "2025-09-01", status: "keluar" },
+  { id: "tn-1", property_id: PID, room_id: "rm-1", nama: "Budi Santoso", no_hp: "081234567890", gender: "L", tanggal_masuk: "2025-10-01", tanggal_keluar: "2026-10-01", status: "aktif", jatuh_tempo_hari: 1 },
+  { id: "tn-2", property_id: PID, room_id: "rm-2", nama: "Siti Rahayu", no_hp: "082198765432", gender: "P", tanggal_masuk: "2025-11-15", tanggal_keluar: "2026-05-15", status: "aktif", jatuh_tempo_hari: 15 },
+  { id: "tn-3", property_id: PID, room_id: "rm-4", nama: "Ahmad Fauzi", no_hp: "085312345678", gender: "L", tanggal_masuk: "2026-01-01", tanggal_keluar: "2026-07-01", status: "aktif", jatuh_tempo_hari: 1 },
+  { id: "tn-4", property_id: PID, room_id: "rm-6", nama: "Dewi Lestari", no_hp: "087812345678", gender: "P", tanggal_masuk: "2025-09-01", tanggal_keluar: "2026-09-01", status: "aktif", jatuh_tempo_hari: 1 },
+  { id: "tn-5", property_id: PID, room_id: "rm-7", nama: "Rizky Pratama", no_hp: "081387654321", gender: "L", tanggal_masuk: "2026-02-01", tanggal_keluar: "2026-08-01", status: "aktif", jatuh_tempo_hari: 1 },
+  { id: "tn-6", property_id: PID, room_id: "rm-9", nama: "Nurul Hidayah", no_hp: "089912345678", gender: "P", tanggal_masuk: "2025-12-01", tanggal_keluar: "2026-06-01", status: "aktif", jatuh_tempo_hari: 1 },
+  { id: "tn-7", property_id: PID, room_id: "rm-10", nama: "Fajar Ramadhan", no_hp: "081567890123", gender: "L", tanggal_masuk: "2026-01-15", tanggal_keluar: "2027-01-15", status: "aktif", jatuh_tempo_hari: 15 },
+  { id: "tn-8", property_id: PID, room_id: "rm-11", nama: "Anisa Putri", no_hp: "082345678901", gender: "P", tanggal_masuk: "2025-08-01", tanggal_keluar: "2026-08-01", status: "aktif", jatuh_tempo_hari: 1 },
+  { id: "tn-9", property_id: PID, room_id: null, nama: "Doni Saputra", no_hp: "081298765432", gender: "L", tanggal_masuk: "2025-03-01", tanggal_keluar: "2025-09-01", status: "keluar", jatuh_tempo_hari: 1 },
 ];
 
 const now = new Date();
@@ -199,7 +199,7 @@ interface DemoContextType {
     nama: string;
     noHp: string | null;
     email?: string | null;
-    sendEmailNotifications?: boolean;
+    jatuhTempoHari?: number;
     gender: "L" | "P";
     tanggalMasuk: string;
     tanggalKeluar: string;
@@ -339,7 +339,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     nama: string;
     noHp: string | null;
     email?: string | null;
-    sendEmailNotifications?: boolean;
+    jatuhTempoHari?: number;
     gender: "L" | "P";
     tanggalMasuk: string;
     tanggalKeluar: string;
@@ -354,7 +354,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     const harga = rt?.harga_per_bulan || 0;
 
     // Insert tenant
-    setTenants(prev => [{ id: tenantId, property_id: PID, room_id: params.roomId, nama: params.nama, no_hp: params.noHp, gender: params.gender, tanggal_masuk: params.tanggalMasuk, tanggal_keluar: params.tanggalKeluar, status: "aktif" }, ...prev]);
+    setTenants(prev => [{ id: tenantId, property_id: PID, room_id: params.roomId, nama: params.nama, no_hp: params.noHp, email: params.email ?? null, jatuh_tempo_hari: params.jatuhTempoHari ?? 1, gender: params.gender, tanggal_masuk: params.tanggalMasuk, tanggal_keluar: params.tanggalKeluar, status: "aktif" }, ...prev]);
 
     // Update room
     setRooms(prev => prev.map(r => r.id === params.roomId ? { ...r, status: "terisi" as const } : r));

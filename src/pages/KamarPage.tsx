@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Plus, ChevronDown, UserPlus, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -76,10 +77,12 @@ export default function KamarPage() {
   const [editRoomLantai, setEditRoomLantai] = useState("1");
   const [tenantNama, setTenantNama] = useState("");
   const [tenantHp, setTenantHp] = useState("");
+  const [tenantEmail, setTenantEmail] = useState("");
   const [tenantGender, setTenantGender] = useState("L");
   const [tenantTanggalMasuk, setTenantTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
   const [tenantDurasi, setTenantDurasi] = useState("1");
   const [tenantDeposit, setTenantDeposit] = useState("");
+  const [tenantJatuhTempo, setTenantJatuhTempo] = useState("1");
 
   const { data: roomData, isLoading: roomsLoading } = useRoomTypesAndRooms();
   const { data: tenantData, isLoading: tenantsLoading } = useTenants();
@@ -207,8 +210,15 @@ export default function KamarPage() {
     }
     const roomsToInsert = Array.from({ length: n }, (_, i) => ({ room_type_id: showAddRooms, nomor: `${prefix}${start + i}`, lantai: lt, status: "kosong" as const }));
     const { error } = await supabase.from("rooms").insert(roomsToInsert as any);
-    if (error) toast.error(error.message);
-    else { toast.success(`${n} kamar ditambahkan!`); setShowAddRooms(null); refetchAll(); }
+    if (error) {
+      // Gracefully handle plan limit trigger error from DB
+      if (error.message?.toLowerCase().includes("batas kamar")) {
+        const planLabel = plan === "starter" ? "Starter (10 kamar)" : plan === "pro" ? "Pro (25 kamar)" : "Bisnis (60 kamar)";
+        triggerUpgrade(`Batas kamar plan ${planLabel} telah tercapai. Upgrade untuk menambah lebih banyak kamar.`);
+      } else {
+        toast.error(error.message);
+      }
+    } else { toast.success(`${n} kamar ditambahkan!`); setShowAddRooms(null); refetchAll(); }
   };
 
   const handleAddTenant = async (e: React.FormEvent) => {
@@ -220,14 +230,21 @@ export default function KamarPage() {
     keluar.setMonth(keluar.getMonth() + d);
     const keluarStr = keluar.toISOString().split("T")[0];
 
+    const resetTenantForm = () => {
+      setTenantNama(""); setTenantHp(""); setTenantEmail(""); setTenantGender("L");
+      setTenantDurasi("1"); setTenantDeposit(""); setTenantJatuhTempo("1");
+    };
+
     if (demo.isDemo) {
       demo.demoAddTenantAtomic({
         roomId: showAddTenant, nama: tenantNama, noHp: tenantHp || null,
+        email: tenantEmail || null,
         gender: tenantGender as "L" | "P", tanggalMasuk: tenantTanggalMasuk,
         tanggalKeluar: keluarStr, depositAmount: parseInt(tenantDeposit) || 0,
+        jatuhTempoHari: parseInt(tenantJatuhTempo) || 1,
       });
       toast.success("Penyewa berhasil ditambahkan!");
-      setShowAddTenant(null); setTenantNama(""); setTenantHp(""); setTenantGender("L"); setTenantDurasi("1"); setTenantDeposit("");
+      setShowAddTenant(null); resetTenantForm();
       return;
     }
 
@@ -237,14 +254,24 @@ export default function KamarPage() {
       p_room_id: showAddTenant,
       p_nama: tenantNama,
       p_no_hp: tenantHp || null,
+      p_email: tenantEmail || null,
       p_gender: tenantGender,
       p_tanggal_masuk: tenantTanggalMasuk,
       p_tanggal_keluar: keluarStr,
       p_deposit_amount: parseInt(tenantDeposit) || 0,
-    } as any);
-    if (error) { toast.error(error.message); return; }
+      p_jatuh_tempo: parseInt(tenantJatuhTempo) || 1,
+    });
+    if (error) {
+      // Handle plan limit trigger error gracefully
+      if (error.message?.includes("Batas kamar") || error.message?.includes("batas kamar")) {
+        toast.error(error.message);
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
     toast.success("Penyewa berhasil ditambahkan!");
-    setShowAddTenant(null); setTenantNama(""); setTenantHp(""); setTenantGender("L"); setTenantDurasi("1"); setTenantDeposit("");
+    setShowAddTenant(null); resetTenantForm();
     refetchAll();
   };
 
@@ -515,8 +542,26 @@ export default function KamarPage() {
             </div>
           </div>
           <div className="space-y-2">
+            <Label>Jatuh Tempo Bayar <span className="text-destructive">*</span></Label>
+            <Select value={tenantJatuhTempo} onValueChange={setTenantJatuhTempo}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih tanggal..." />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                  <SelectItem key={day} value={String(day)}>{day}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Tanggal tagihan otomatis setiap bulannya</p>
+          </div>
+          <div className="space-y-2">
             <Label>Deposit (Rp)</Label>
             <Input type="number" value={tenantDeposit} onChange={e => setTenantDeposit(e.target.value)} placeholder="0 (opsional)" />
+          </div>
+          <div className="space-y-2">
+            <Label>Email (opsional)</Label>
+            <Input type="email" value={tenantEmail} onChange={e => setTenantEmail(e.target.value)} placeholder="penyewa@email.com" />
           </div>
           </div>
           <div className="bottom-sheet-footer">
