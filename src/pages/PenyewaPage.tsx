@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MessageCircle, MoreVertical, Pencil, Trash2, Mail } from "lucide-react";
+import { Plus, Search, MessageCircle, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -346,13 +346,6 @@ export default function PenyewaPage() {
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <StatusBadge status={t.latestTxStatus} />
-                        {t.email && (
-                          <a href={`mailto:${t.email}`} target="_blank" rel="noreferrer"
-                            title={t.email}
-                            className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-500/10">
-                            <Mail size={16} className="text-blue-500" />
-                          </a>
-                        )}
                         {t.no_hp && (
                           <a href={`https://wa.me/${t.no_hp.replace(/^0/, "62")}`} target="_blank" rel="noreferrer"
                             className="w-8 h-8 rounded-full bg-[hsl(142,71%,45%)]/10 flex items-center justify-center">
