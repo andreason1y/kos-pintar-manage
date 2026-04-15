@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
-import { formatRupiah, getMonthName } from "@/lib/helpers";
+import { formatRupiah, formatRupiahCompact, getMonthName } from "@/lib/helpers";
 import { useTransactions, useExpenses, useDeposits, useTenants, useRoomTypesAndRooms, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
@@ -470,7 +470,7 @@ export default function KeuanganPage() {
               <div className="bg-card rounded-xl border border-border p-3 text-center shadow-sm">
                 <TrendingUp size={18} className="text-[hsl(142,71%,45%)] mx-auto" />
                 <p className="text-xs text-muted-foreground mt-1">Pemasukan</p>
-                <p className="text-sm font-bold text-foreground">{formatRupiah(pemasukan)}</p>
+                <p className="text-sm font-bold text-foreground">{formatRupiahCompact(pemasukan)}</p>
                 <div className="flex items-center justify-center gap-0.5 mt-1">
                   {pemasukanDiff >= 0 ? <TrendingUp size={10} className="text-[hsl(142,71%,45%)]" /> : <TrendingDown size={10} className="text-destructive" />}
                   <span className={`text-[10px] ${pemasukanDiff >= 0 ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>
@@ -481,7 +481,7 @@ export default function KeuanganPage() {
               <div className="bg-card rounded-xl border border-border p-3 text-center shadow-sm">
                 <TrendingDown size={18} className="text-destructive mx-auto" />
                 <p className="text-xs text-muted-foreground mt-1">Pengeluaran</p>
-                <p className="text-sm font-bold text-foreground">{formatRupiah(pengeluaran)}</p>
+                <p className="text-sm font-bold text-foreground">{formatRupiahCompact(pengeluaran)}</p>
                 <div className="flex items-center justify-center gap-0.5 mt-1">
                   {pengeluaranDiff <= 0 ? <TrendingDown size={10} className="text-[hsl(142,71%,45%)]" /> : <TrendingUp size={10} className="text-destructive" />}
                   <span className={`text-[10px] ${pengeluaranDiff <= 0 ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>
@@ -492,7 +492,7 @@ export default function KeuanganPage() {
               <div className="bg-card rounded-xl border border-border p-3 text-center shadow-sm">
                 <Minus size={18} className={`mx-auto ${selisih >= 0 ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`} />
                 <p className="text-xs text-muted-foreground mt-1">Selisih</p>
-                <p className={`text-sm font-bold ${selisih >= 0 ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>{formatRupiah(selisih)}</p>
+                <p className={`text-sm font-bold ${selisih >= 0 ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>{formatRupiahCompact(selisih)}</p>
               </div>
             </div>
 
@@ -531,7 +531,10 @@ export default function KeuanganPage() {
                     {pieData.map((d: any, idx: number) => (
                       <div key={d.name} className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full" style={{ background: PIE_COLORS[idx % PIE_COLORS.length] }} />
-                        <span className="text-xs text-muted-foreground">{d.name}: {formatRupiah(d.value)}</span>
+                        <div className="grid grid-cols-2 gap-2 w-full text-xs text-muted-foreground">
+                          <span>{d.name}</span>
+                          <span className="text-right">{formatRupiahCompact(d.value)}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
