@@ -63,6 +63,12 @@ export default function KeuanganPage() {
     "hsl(199, 89%, 48%)", "hsl(142, 71%, 45%)", "hsl(0, 72%, 51%)",
   ];
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  };
+
   const { data: txData, isLoading: txLoading } = useTransactions();
   const { data: expData, isLoading: expLoading } = useExpenses(bulan, tahun);
   const bulanLalu = bulan === 1 ? 12 : bulan - 1;
@@ -80,21 +86,37 @@ export default function KeuanganPage() {
   // Deposit drawdown list
   const depositList = useMemo(() => {
     if (demo.isDemo) {
+      const seen = new Set<string>();
       return demo.deposits
-        .filter(d => d.status === "ditahan")
+        .filter(d => {
+          if (d.status !== "ditahan") return false;
+          const tenant = demo.tenants.find(t => t.id === d.tenant_id);
+          if (!tenant || tenant.tanggal_keluar != null) return false;
+          if (seen.has(d.id)) return false;
+          seen.add(d.id);
+          return true;
+        })
         .map(d => {
           const tenant = demo.tenants.find(t => t.id === d.tenant_id);
           const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
-          return { tenantId: d.tenant_id, nama: tenant?.nama || "-", kamar: room?.nomor || "-", jumlah: d.jumlah };
+          return { id: d.id, tenantId: d.tenant_id, nama: tenant?.nama || "-", kamar: room?.nomor || "-", jumlah: d.jumlah };
         });
     }
     if (!depositData || !tenantData || !roomData) return [];
+    const seen = new Set<string>();
     return (depositData as any[])
-      .filter((d: any) => d.status === "ditahan")
+      .filter((d: any) => {
+        if (d.status !== "ditahan") return false;
+        const tenant = (tenantData as any[]).find((t: any) => t.id === d.tenant_id);
+        if (!tenant || tenant.tanggal_keluar != null) return false;
+        if (seen.has(d.id)) return false;
+        seen.add(d.id);
+        return true;
+      })
       .map((d: any) => {
         const tenant = (tenantData as any[]).find((t: any) => t.id === d.tenant_id);
         const room = tenant?.room_id ? (roomData.rooms as any[]).find((r: any) => r.id === tenant.room_id) : null;
-        return { tenantId: d.tenant_id, nama: tenant?.nama || "-", kamar: room?.nomor || "-", jumlah: d.jumlah };
+        return { id: d.id, tenantId: d.tenant_id, nama: tenant?.nama || "-", kamar: room?.nomor || "-", jumlah: d.jumlah };
       });
   }, [demo.isDemo, depositData, tenantData, roomData, demo.deposits, demo.tenants, demo.rooms]);
 
@@ -124,7 +146,7 @@ export default function KeuanganPage() {
         pieMap[rt?.nama || "Lainnya"] = (pieMap[rt?.nama || "Lainnya"] || 0) + tx.jumlah_dibayar;
       });
 
-      const unpaid = txMonth.filter(t => t.status !== "lunas").map(tx => {
+      const unpaid = txMonth.filter(t => t.total_tagihan - t.jumlah_dibayar > 0).map(tx => {
         const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
         const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
         return { nama: tenant?.nama || "-", kamar: room?.nomor || "-", sisa: tx.total_tagihan - tx.jumlah_dibayar };
@@ -135,7 +157,7 @@ export default function KeuanganPage() {
         ...exp.map(e => ({ id: e.id, type: "expense", amount: e.jumlah, label: e.judul, date: e.tanggal, kategori: e.kategori, is_recurring: e.is_recurring })),
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-      const totalDep = demo.deposits.filter(d => d.status === "ditahan").reduce((s, d) => s + d.jumlah, 0);
+      const totalDep = demo.deposits.filter(d => d.status === "ditahan" && demo.tenants.some(t => t.id === d.tenant_id && t.tanggal_keluar == null)).reduce((s, d) => s + d.jumlah, 0);
 
       return {
         pemasukan, pengeluaran, pemasukanLalu, pengeluaranLalu: pengeluaran * 0.9,
@@ -156,7 +178,7 @@ export default function KeuanganPage() {
     const pemasukanLalu = txLast.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
     const pengeluaranLalu = (expLastData || []).reduce((s: number, e: any) => s + (e.jumlah || 0), 0);
 
-    const unpaidTx = txMonth.filter((t: any) => t.status !== "lunas");
+    const unpaidTx = txMonth.filter((t: any) => t.total_tagihan - t.jumlah_dibayar > 0);
     const tenants = tenantData || [];
     const rooms = roomData?.rooms || [];
     const rTypes = roomData?.roomTypes || [];
@@ -190,7 +212,15 @@ export default function KeuanganPage() {
       pieMap[rtName] = (pieMap[rtName] || 0) + (tx.jumlah_dibayar || 0);
     });
 
-    const totalDep = (depositData || []).filter((d: any) => d.status === "ditahan").reduce((s: number, d: any) => s + (d.jumlah || 0), 0);
+    const seenDepIds = new Set<string>();
+    const totalDep = (depositData || []).filter((d: any) => {
+      if (d.status !== "ditahan") return false;
+      const tenant = (tenants as any[]).find((t: any) => t.id === d.tenant_id);
+      if (!tenant || tenant.tanggal_keluar != null) return false;
+      if (seenDepIds.has(d.id)) return false;
+      seenDepIds.add(d.id);
+      return true;
+    }).reduce((s: number, d: any) => s + (d.jumlah || 0), 0);
 
     const items = [
       ...txMonth.filter((t: any) => t.jumlah_dibayar > 0).map((t: any) => {
@@ -353,7 +383,7 @@ export default function KeuanganPage() {
             </tr>
             ${incomeRows.map((r: any, i: number) => `
               <tr style="background:${i % 2 === 0 ? "#ffffff" : "#f9fafb"}">
-                <td style="padding:6px;border-bottom:1px solid #f3f4f6">${r.date}</td>
+                <td style="padding:6px;border-bottom:1px solid #f3f4f6">${formatDate(r.date)}</td>
                 <td style="padding:6px;border-bottom:1px solid #f3f4f6">${r.label}</td>
                 <td style="padding:6px;border-bottom:1px solid #f3f4f6">${r.tenantName}</td>
                 <td style="padding:6px;border-bottom:1px solid #f3f4f6">${r.roomNo}</td>
@@ -385,7 +415,7 @@ export default function KeuanganPage() {
               return `
                 ${items.map((e: any, i: number) => `
                   <tr style="background:${i % 2 === 0 ? "#ffffff" : "#f9fafb"}">
-                    <td style="padding:6px;border-bottom:1px solid #f3f4f6">${e.date}</td>
+                    <td style="padding:6px;border-bottom:1px solid #f3f4f6">${formatDate(e.date)}</td>
                     <td style="padding:6px;border-bottom:1px solid #f3f4f6">${e.label}</td>
                     <td style="padding:6px;border-bottom:1px solid #f3f4f6">${kat}</td>
                     <td style="padding:6px;border-bottom:1px solid #f3f4f6;text-align:right;color:#dc2626;font-weight:500">${formatRupiah(e.amount)}</td>
@@ -595,8 +625,8 @@ export default function KeuanganPage() {
                       className="bg-card rounded-b-xl border border-t-0 border-border px-4 pb-4 shadow-sm overflow-hidden"
                     >
                       <div className="space-y-2 pt-2">
-                        {depositList.map((d, i) => (
-                          <div key={i} className="flex justify-between items-center text-sm py-1">
+                        {depositList.map((d) => (
+                          <div key={d.id} className="flex justify-between items-center text-sm py-1">
                             <div>
                               <p className="font-medium text-foreground">{d.nama}</p>
                               <p className="text-xs text-muted-foreground">Kamar {d.kamar}</p>
@@ -638,7 +668,7 @@ export default function KeuanganPage() {
                               </div>
                               <div className="min-w-0">
                                 <p className="text-sm font-medium text-foreground truncate">{item.label}</p>
-                                <p className="text-xs text-muted-foreground">{item.date}</p>
+                                <p className="text-xs text-muted-foreground">{formatDate(item.date)}</p>
                               </div>
                             </div>
                             <span className={`text-sm font-semibold flex-shrink-0 text-right ${item.type === "income" ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>
