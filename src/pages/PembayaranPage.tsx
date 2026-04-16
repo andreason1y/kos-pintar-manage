@@ -69,12 +69,9 @@ export default function PembayaranPage() {
   const [showPay, setShowPay] = useState<Payment | null>(null);
   const [showNota, setShowNota] = useState<Payment | null>(null);
   const [showEdit, setShowEdit] = useState<Payment | null>(null);
-  const [jumlahBayar, setJumlahBayar] = useState("");
-  const [payError, setPayError] = useState("");
   const [metode, setMetode] = useState("tunai");
   const [catatan, setCatatan] = useState("");
   const [activeCategories, setActiveCategories] = useState<Set<Category>>(new Set(["akan_jatuh_tempo", "jatuh_tempo_hari_ini"]));
-  const [editJumlah, setEditJumlah] = useState("");
   const [editMetode, setEditMetode] = useState("tunai");
   const [editStatus, setEditStatus] = useState("belum_bayar");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
@@ -195,9 +192,7 @@ export default function PembayaranPage() {
     e.preventDefault();
     setPayError("");
     if (!showPay) return;
-    const bayar = parseInt(jumlahBayar) || 0;
-    if (bayar <= 0) { setPayError("Jumlah bayar harus lebih dari 0"); return; }
-    const totalBayar = showPay.jumlah_dibayar + bayar;
+    const totalBayar = showPay.total_tagihan;
     const newStatus = totalBayar >= showPay.total_tagihan ? "lunas" : "belum_lunas";
     const nota = newStatus === "lunas" ? generateNotaNumber(showPay.periode_bulan, showPay.periode_tahun) : null;
 
@@ -210,14 +205,14 @@ export default function PembayaranPage() {
         catatan,
         nota_number: nota,
       });
-      toast.success(newStatus === "lunas" ? "Pembayaran lunas!" : "Pembayaran parsial berhasil");
-      setShowPay(null); setJumlahBayar(""); setCatatan(""); setPayError("");
+      toast.success("Pembayaran lunas!");
+      setShowPay(null); setCatatan("");
       return;
     }
     const { error } = await supabase.from("transactions").update({ jumlah_dibayar: totalBayar, status: newStatus, metode_bayar: metode, tanggal_bayar: new Date().toISOString().split("T")[0], catatan, nota_number: nota } as any).eq("id", showPay.id);
     if (error) { toast.error(error.message); return; }
-    toast.success(newStatus === "lunas" ? "Pembayaran lunas!" : "Pembayaran parsial berhasil");
-    setShowPay(null); setJumlahBayar(""); setCatatan(""); setPayError("");
+    toast.success("Pembayaran lunas!");
+    setShowPay(null); setCatatan("");
     refetch();
   };
 
@@ -244,7 +239,6 @@ export default function PembayaranPage() {
     if (!showEdit) return;
     if (demo.isDemo) {
       demo.updateTransaction(showEdit.id, {
-        jumlah_dibayar: parseInt(editJumlah) || 0,
         status: editStatus as DemoTransaction["status"],
         metode_bayar: editMetode,
       });
@@ -252,7 +246,7 @@ export default function PembayaranPage() {
       setShowEdit(null);
       return;
     }
-    const { error } = await supabase.from("transactions").update({ jumlah_dibayar: parseInt(editJumlah) || 0, status: editStatus, metode_bayar: editMetode } as any).eq("id", showEdit.id);
+    const { error } = await supabase.from("transactions").update({ status: editStatus, metode_bayar: editMetode } as any).eq("id", showEdit.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Transaksi diperbarui");
     setShowEdit(null);
@@ -338,7 +332,7 @@ export default function PembayaranPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <StatusBadge status={p.status} />
+                  <StatusBadge status={p.jumlah_dibayar >= p.total_tagihan ? "lunas" : "belum_bayar"} />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted">
@@ -347,7 +341,7 @@ export default function PembayaranPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => {
-                        setShowEdit(p); setEditJumlah(String(p.jumlah_dibayar)); setEditMetode(p.metode_bayar || "tunai"); setEditStatus(p.status);
+                        setShowEdit(p); setEditMetode(p.metode_bayar || "tunai"); setEditStatus(p.status);
                       }}>
                         <Pencil size={14} className="mr-2" /> Edit
                       </DropdownMenuItem>
@@ -370,7 +364,7 @@ export default function PembayaranPage() {
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <Button size="sm" className="flex-1" onClick={() => { setShowPay(p); setJumlahBayar(String(p.sisa)); setPayError(""); }}>
+                  <Button size="sm" className="flex-1" onClick={() => setShowPay(p)}>
                     <CreditCard size={14} className="mr-1" /> Bayar
                   </Button>
                   {p.tenant_hp && (
@@ -386,7 +380,7 @@ export default function PembayaranPage() {
       </div>
 
       {/* Pay bottom sheet */}
-      <BottomSheet open={!!showPay} onClose={() => { setShowPay(null); setPayError(""); }} title="Selesaikan Pembayaran">
+      <BottomSheet open={!!showPay} onClose={() => setShowPay(null)} title="Selesaikan Pembayaran">
         {showPay && (
           <form onSubmit={handlePay} className="bottom-sheet-form">
             <div className="bottom-sheet-body">
@@ -394,11 +388,6 @@ export default function PembayaranPage() {
                 <p className="text-sm font-medium text-foreground">{showPay.tenant_nama}</p>
                 <p className="text-xs text-muted-foreground">Kamar {showPay.kamar} · {getMonthName(showPay.periode_bulan)} {showPay.periode_tahun}</p>
                 <p className="text-sm">Tagihan: {formatRupiah(showPay.total_tagihan)} | Sudah bayar: {formatRupiah(showPay.jumlah_dibayar)}</p>
-              </div>
-              <div className="space-y-2">
-                <Label>Jumlah Bayar (Rp)</Label>
-                <Input type="number" value={jumlahBayar} onChange={e => { setJumlahBayar(e.target.value); setPayError(""); }} />
-                {payError && <p className="text-xs text-destructive">{payError}</p>}
               </div>
               <div className="space-y-2"><Label>Metode Pembayaran</Label>
               <Select value={metode} onValueChange={setMetode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
@@ -421,7 +410,6 @@ export default function PembayaranPage() {
         {showEdit && (
           <form onSubmit={handleEditTx} className="bottom-sheet-form">
             <div className="bottom-sheet-body">
-              <div className="space-y-2"><Label>Jumlah Dibayar (Rp)</Label><Input type="number" value={editJumlah} onChange={e => setEditJumlah(e.target.value)} /></div>
               <div className="space-y-2"><Label>Metode</Label>
               <Select value={editMetode} onValueChange={setEditMetode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
                 <SelectItem value="tunai">Tunai</SelectItem><SelectItem value="transfer">Transfer</SelectItem><SelectItem value="qris">QRIS</SelectItem>
