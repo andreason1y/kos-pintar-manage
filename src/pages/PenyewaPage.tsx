@@ -46,6 +46,7 @@ export default function PenyewaPage() {
   const invalidate = useInvalidate();
   const [activeTab, setActiveTab] = useState("Semua");
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("name");
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<Tenant | null>(null);
 
@@ -129,8 +130,16 @@ export default function PenyewaPage() {
       list = list.filter(t => t.status === "aktif");
     }
     if (search) list = list.filter(t => t.nama.toLowerCase().includes(search.toLowerCase()));
+
+    // Apply sorting
+    if (sortBy === "name") {
+      list.sort((a, b) => a.nama.localeCompare(b.nama));
+    } else if (sortBy === "due_date") {
+      list.sort((a, b) => (a.jatuh_tempo_hari || Infinity) - (b.jatuh_tempo_hari || Infinity));
+    }
+
     return list;
-  }, [tenants, activeTab, search]);
+  }, [tenants, activeTab, search, sortBy]);
 
   const refetchAll = () => invalidate.all();
 
@@ -307,6 +316,15 @@ export default function PenyewaPage() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari penyewa..." className="pl-9" />
         </div>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Urutkan" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name">Nama (A–Z)</SelectItem>
+            <SelectItem value="due_date">Jatuh Tempo (terdekat)</SelectItem>
+          </SelectContent>
+        </Select>
         <div className="flex gap-2 overflow-x-auto">
           {tabsList.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
