@@ -338,11 +338,16 @@ export default function PenyewaPage() {
                       <div>
                         <p className="font-semibold text-foreground">{t.nama}</p>
                         <p className="text-sm text-muted-foreground">{t.roomLabel}</p>
-                        {t.sisaHari !== undefined && t.status === "aktif" && (
-                          <p className={`text-xs mt-1 ${t.sisaHari <= 30 ? "text-[hsl(38,92%,50%)]" : "text-muted-foreground"}`}>
-                            {t.sisaHari > 0 ? `${t.sisaHari} hari lagi` : "Kontrak habis"}
-                          </p>
-                        )}
+                        {t.jatuh_tempo_hari && t.status === "aktif" && (() => {
+                          const dueThisMonth = new Date(now.getFullYear(), now.getMonth(), t.jatuh_tempo_hari);
+                          const nextDue = dueThisMonth >= now ? dueThisMonth : new Date(now.getFullYear(), now.getMonth() + 1, t.jatuh_tempo_hari);
+                          const daysUntilDue = Math.ceil((nextDue.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                          return (
+                            <p className={`text-xs mt-1 ${daysUntilDue <= 7 ? "text-[hsl(38,92%,50%)]" : "text-muted-foreground"}`}>
+                              {daysUntilDue === 0 ? "Jatuh tempo: hari ini" : `Jatuh tempo: ${daysUntilDue} hari lagi`}
+                            </p>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <StatusBadge status={t.latestTxIsPaid === true ? "lunas" : t.latestTxIsPaid === false ? "belum_bayar" : undefined} />
