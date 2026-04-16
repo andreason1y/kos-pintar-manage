@@ -46,6 +46,7 @@ export default function PenyewaPage() {
   const invalidate = useInvalidate();
   const [activeTab, setActiveTab] = useState("Semua");
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("name");
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<Tenant | null>(null);
 
@@ -129,8 +130,19 @@ export default function PenyewaPage() {
       list = list.filter(t => t.status === "aktif");
     }
     if (search) list = list.filter(t => t.nama.toLowerCase().includes(search.toLowerCase()));
+    if (sortBy === "name") {
+      list = [...list].sort((a, b) => a.nama.localeCompare(b.nama));
+    } else if (sortBy === "due") {
+      const getDue = (h: number | null | undefined) => {
+        if (!h) return Infinity;
+        const dueThisMonth = new Date(now.getFullYear(), now.getMonth(), h);
+        const nextDue = dueThisMonth >= now ? dueThisMonth : new Date(now.getFullYear(), now.getMonth() + 1, h);
+        return Math.ceil((nextDue.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      };
+      list = [...list].sort((a, b) => getDue(a.jatuh_tempo_hari) - getDue(b.jatuh_tempo_hari));
+    }
     return list;
-  }, [tenants, activeTab, search]);
+  }, [tenants, activeTab, search, sortBy]);
 
   const refetchAll = () => invalidate.all();
 
@@ -307,12 +319,23 @@ export default function PenyewaPage() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari penyewa..." className="pl-9" />
         </div>
-        <div className="flex gap-2 overflow-x-auto">
-          {tabsList.map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${activeTab === tab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-            >{tab}</button>
-          ))}
+        <div className="flex items-center gap-2">
+          <div className="flex gap-2 overflow-x-auto flex-1">
+            {tabsList.map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${activeTab === tab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+              >{tab}</button>
+            ))}
+          </div>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-auto text-xs h-8 shrink-0 gap-1">
+              <SelectValue placeholder="Urutkan" />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="name">Nama (A–Z)</SelectItem>
+              <SelectItem value="due">Jatuh Tempo (terdekat)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         {loading ? (
           <div className="space-y-3"><SkeletonCard /><SkeletonCard /><SkeletonCard /></div>
