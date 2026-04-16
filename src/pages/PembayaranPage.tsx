@@ -41,12 +41,13 @@ interface Payment {
   jatuh_tempo_hari: number;
 }
 
-type Category = "akan_jatuh_tempo" | "jatuh_tempo_hari_ini" | "belum_lunas" | "lunas";
+type Category = "terlambat" | "akan_jatuh_tempo" | "jatuh_tempo_hari_ini" | "belum_lunas" | "lunas";
 
 const CATEGORIES: { key: Category; label: string; badgeClass: string }[] = [
+  { key: "terlambat", label: "Terlambat", badgeClass: "bg-destructive text-destructive-foreground" },
+  { key: "jatuh_tempo_hari_ini", label: "Jatuh Tempo Hari Ini", badgeClass: "bg-[hsl(0,50%,35%)] text-white" },
   { key: "akan_jatuh_tempo", label: "Akan Jatuh Tempo", badgeClass: "bg-[hsl(38,92%,50%)] text-white" },
-  { key: "jatuh_tempo_hari_ini", label: "Jatuh Tempo Hari Ini", badgeClass: "bg-destructive text-destructive-foreground" },
-  { key: "belum_lunas", label: "Belum Lunas", badgeClass: "bg-[hsl(0,50%,35%)] text-white" },
+  { key: "belum_lunas", label: "Belum Lunas", badgeClass: "bg-muted text-muted-foreground" },
   { key: "lunas", label: "Lunas", badgeClass: "bg-[hsl(142,71%,45%)] text-white" },
 ];
 
@@ -71,7 +72,7 @@ export default function PembayaranPage() {
   const [showEdit, setShowEdit] = useState<Payment | null>(null);
   const [metode, setMetode] = useState("tunai");
   const [catatan, setCatatan] = useState("");
-  const [activeCategories, setActiveCategories] = useState<Set<Category>>(new Set(["akan_jatuh_tempo", "jatuh_tempo_hari_ini"]));
+  const [activeCategories, setActiveCategories] = useState<Set<Category>>(new Set(["terlambat", "akan_jatuh_tempo", "jatuh_tempo_hari_ini"]));
   const [editMetode, setEditMetode] = useState("tunai");
   const [editStatus, setEditStatus] = useState("belum_bayar");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
@@ -87,6 +88,8 @@ export default function PembayaranPage() {
 
   const today = new Date();
   const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const bulanIni = today.getMonth() + 1;
+  const tahunIni = today.getFullYear();
 
   const mapPayment = (tx: any, tenantNama: string, tenantHp: string | null, kamar: string, jatuhTempoHari: number): Payment => {
     // Due date = jatuh_tempo_hari in the transaction's period
@@ -109,25 +112,30 @@ export default function PembayaranPage() {
     let allPayments: Payment[] = [];
 
     if (demo.isDemo) {
-      allPayments = demo.transactions.map(tx => {
-        const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
-        const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
-        // Use jatuh_tempo_hari; fall back to tanggal_masuk day for legacy demo data
-        const jatuhTempoHari = (tenant as any)?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
-        return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp || null, room?.nomor || "-", jatuhTempoHari);
-      });
+      allPayments = demo.transactions
+        .filter(tx => tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni)
+        .map(tx => {
+          const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
+          const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
+          // Use jatuh_tempo_hari; fall back to tanggal_masuk day for legacy demo data
+          const jatuhTempoHari = (tenant as any)?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
+          return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp || null, room?.nomor || "-", jatuhTempoHari);
+        });
     } else if (txData && tenantData && roomData) {
       const rooms = roomData.rooms;
-      allPayments = txData.map((tx: any) => {
-        const tenant = tenantData.find((t: any) => t.id === tx.tenant_id);
-        const room = tenant?.room_id ? rooms.find((r: any) => r.id === tenant.room_id) : null;
-        // Use jatuh_tempo_hari; fall back to tanggal_masuk day for tenants without it
-        const jatuhTempoHari = tenant?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
-        return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp, room?.nomor || "-", jatuhTempoHari);
-      });
+      allPayments = txData
+        .filter((tx: any) => tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni)
+        .map((tx: any) => {
+          const tenant = tenantData.find((t: any) => t.id === tx.tenant_id);
+          const room = tenant?.room_id ? rooms.find((r: any) => r.id === tenant.room_id) : null;
+          // Use jatuh_tempo_hari; fall back to tanggal_masuk day for tenants without it
+          const jatuhTempoHari = tenant?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
+          return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp, room?.nomor || "-", jatuhTempoHari);
+        });
     }
 
     const result: Record<Category, Payment[]> = {
+      terlambat: [],
       akan_jatuh_tempo: [],
       jatuh_tempo_hari_ini: [],
       belum_lunas: [],
@@ -135,14 +143,17 @@ export default function PembayaranPage() {
     };
 
     for (const p of allPayments) {
-      if (p.status === "lunas") {
+      const isPaid = p.jumlah_dibayar >= p.total_tagihan;
+      if (isPaid) {
         result.lunas.push(p);
-      } else if (p.daysUntilDue >= 1 && p.daysUntilDue <= 7) {
-        result.akan_jatuh_tempo.push(p);
+      } else if (p.daysUntilDue < 0) {
+        result.terlambat.push(p);
       } else if (p.daysUntilDue === 0) {
         result.jatuh_tempo_hari_ini.push(p);
+      } else if (p.daysUntilDue <= 5) {
+        result.akan_jatuh_tempo.push(p);
       } else {
-        // H+1 and beyond (overdue) OR more than 7 days out
+        // More than 5 days until due — not yet urgent
         result.belum_lunas.push(p);
       }
     }
@@ -325,7 +336,7 @@ export default function PembayaranPage() {
                 <div>
                   <p className="font-semibold text-foreground">{p.tenant_nama}</p>
                   <p className="text-sm text-muted-foreground">Kamar {p.kamar} · {getMonthName(p.periode_bulan)} {p.periode_tahun}</p>
-                  {p.status !== "lunas" && (
+                  {p.jumlah_dibayar < p.total_tagihan && (
                     <p className={`text-xs font-semibold mt-0.5 ${getDueDateColor(p.daysUntilDue)}`}>
                       {getDueDateLabel(p.daysUntilDue)}
                     </p>
@@ -353,10 +364,10 @@ export default function PembayaranPage() {
                 </div>
               </div>
               <div className="flex justify-between items-center text-sm mb-3">
-                <span className="text-muted-foreground">{p.status === "lunas" ? "Total" : "Sisa tagihan"}</span>
-                <span className="font-bold text-foreground">{formatRupiah(p.status === "lunas" ? p.total_tagihan : p.sisa)}</span>
+                <span className="text-muted-foreground">{p.jumlah_dibayar >= p.total_tagihan ? "Total" : "Sisa tagihan"}</span>
+                <span className="font-bold text-foreground">{formatRupiah(p.jumlah_dibayar >= p.total_tagihan ? p.total_tagihan : p.sisa)}</span>
               </div>
-              {p.status === "lunas" ? (
+              {p.jumlah_dibayar >= p.total_tagihan ? (
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="flex-1" onClick={() => setShowNota(p)}>
                     <FileText size={14} className="mr-1" /> Lihat Nota

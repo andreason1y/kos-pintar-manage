@@ -4,7 +4,7 @@ import PenyewaForm from "@/components/penyewa/PenyewaForm";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { formatRupiah, getMonthName, waTagihanLink } from "@/lib/helpers";
-import { useRoomTypesAndRooms, useTenants, useTransactions, useExpenses, useOverduePaymentStats, usePrefetchRoutes, useInvalidate } from "@/hooks/use-queries";
+import { useRoomTypesAndRooms, useTenants, useTransactions, useExpenses, usePrefetchRoutes, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import NotificationBell from "@/components/NotificationBell";
@@ -53,6 +53,7 @@ const bulanIni = now.getMonth() + 1;
 const tahunIni = now.getFullYear();
 const bulanLalu = bulanIni === 1 ? 12 : bulanIni - 1;
 const tahunLalu = bulanIni === 1 ? tahunIni - 1 : tahunIni;
+const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
 const EXPENSE_CATEGORIES = ["Listrik", "Air/PDAM", "Kebersihan", "Perbaikan/Renovasi", "Keamanan", "Internet/WiFi", "Pajak", "Gaji Penjaga", "Pengembalian Deposit", "Lainnya"];
 
@@ -80,11 +81,10 @@ export default function DashboardPage() {
   const { data: roomData, isLoading: roomsLoading } = useRoomTypesAndRooms();
   const { data: tenantData, isLoading: tenantsLoading } = useTenants();
   const { data: txData, isLoading: txLoading } = useTransactions();
-  const { data: overdueData, isLoading: overdueLoading } = useOverduePaymentStats();
   const { data: expData, isLoading: expLoading } = useExpenses(bulanIni, tahunIni);
   const { data: expLastData, isLoading: expLastLoading } = useExpenses(bulanLalu, tahunLalu);
 
-  const loading = !demo.isDemo && (roomsLoading || tenantsLoading || txLoading || overdueLoading || expLoading || expLastLoading);
+  const loading = !demo.isDemo && (roomsLoading || tenantsLoading || txLoading || expLoading || expLastLoading);
 
   // Refetch utilities
   const refetchAll = () => invalidate.all();
@@ -100,10 +100,16 @@ export default function DashboardPage() {
       const pemasukan = txBulanIni.reduce((s, t) => s + t.jumlah_dibayar, 0);
       const pengeluaran = expBulanIni.reduce((s, e) => s + e.jumlah, 0);
       const pemasukanLalu = txBulanLalu.reduce((s, t) => s + t.jumlah_dibayar, 0);
-      const overdue = demo.transactions.filter(t => t.is_overdue === true).length;
+      const overdue = txBulanIni.filter(t => {
+        if (t.jumlah_dibayar >= t.total_tagihan) return false;
+        const tenant = demo.tenants.find(tt => tt.id === t.tenant_id);
+        const jatuhTempoHari = (tenant as any)?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
+        const dueDate = new Date(t.periode_tahun, t.periode_bulan - 1, jatuhTempoHari);
+        return dueDate < todayDate;
+      }).length;
 
       const unpaid: UnpaidTenant[] = txBulanIni
-        .filter(tx => tx.status !== "lunas")
+        .filter(tx => tx.jumlah_dibayar < tx.total_tagihan)
         .map(tx => {
           const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
           const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
@@ -121,14 +127,14 @@ export default function DashboardPage() {
           totalPenyewa: activeTenants.length,
           kamarTerisi: terisi,
           kamarKosong: kosong,
-          tagihanBelumLunas: txBulanIni.filter(t => t.status !== "lunas").length,
+          tagihanBelumLunas: txBulanIni.filter(t => t.jumlah_dibayar < t.total_tagihan).length,
           overduePayments: overdue,
           pemasukanBulanIni: pemasukan,
           pengeluaranBulanIni: pengeluaran,
           pemasukanBulanLalu: pemasukanLalu,
           pengeluaranBulanLalu: pengeluaran * 0.9,
           totalTxBulanIni: txBulanIni.length,
-          lunasBulanIni: txBulanIni.filter(t => t.status === "lunas").length,
+          lunasBulanIni: txBulanIni.filter(t => t.jumlah_dibayar >= t.total_tagihan).length,
         } as DashboardStats,
         unpaidTenants: unpaid,
       };
@@ -146,7 +152,7 @@ export default function DashboardPage() {
     const pengeluaran = expenses.reduce((s: number, e: any) => s + (e.jumlah || 0), 0);
 
     const unpaid: UnpaidTenant[] = txThisMonth
-      .filter((tx: any) => tx.status !== "lunas")
+      .filter((tx: any) => tx.jumlah_dibayar < tx.total_tagihan)
       .map((tx: any) => {
         const tenant = tenants.find((t: any) => t.id === tx.tenant_id);
         const room = tenant?.room_id ? allRooms.find((r: any) => r.id === tenant.room_id) : null;
@@ -159,23 +165,31 @@ export default function DashboardPage() {
         };
       });
 
+    const overdueCount = txThisMonth.filter((tx: any) => {
+      if (tx.jumlah_dibayar >= tx.total_tagihan) return false;
+      const tenant = tenants.find((t: any) => t.id === tx.tenant_id);
+      const jatuhTempoHari = tenant?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
+      const dueDate = new Date(tx.periode_tahun, tx.periode_bulan - 1, jatuhTempoHari);
+      return dueDate < todayDate;
+    }).length;
+
     return {
       stats: {
         totalPenyewa: tenants.filter((t: any) => t.status === "aktif").length,
         kamarTerisi: allRooms.filter((r: any) => r.status === "terisi").length,
         kamarKosong: allRooms.filter((r: any) => r.status === "kosong").length,
-        tagihanBelumLunas: txThisMonth.filter((t: any) => t.status !== "lunas").length,
-        overduePayments: overdueData?.count || 0,
+        tagihanBelumLunas: txThisMonth.filter((t: any) => t.jumlah_dibayar < t.total_tagihan).length,
+        overduePayments: overdueCount,
         pemasukanBulanIni: pemasukan,
         pengeluaranBulanIni: pengeluaran,
         pemasukanBulanLalu: txLastMonth.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0),
         pengeluaranBulanLalu: (expLastData || []).reduce((s: number, e: any) => s + (e.jumlah || 0), 0),
         totalTxBulanIni: txThisMonth.length,
-        lunasBulanIni: txThisMonth.filter((t: any) => t.status === "lunas").length,
+        lunasBulanIni: txThisMonth.filter((t: any) => t.jumlah_dibayar >= t.total_tagihan).length,
       } as DashboardStats,
       unpaidTenants: unpaid,
     };
-  }, [demo.isDemo, roomData, tenantData, txData, overdueData, expData, expLastData]);
+  }, [demo.isDemo, roomData, tenantData, txData, expData, expLastData]);
 
   // Handler to close mobile keyboard when dialog opens
   const handleDialogOpenChange = (open: boolean) => {
