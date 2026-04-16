@@ -319,14 +319,14 @@ export default function PenyewaPage() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari penyewa..." className="pl-9" />
         </div>
+        <div className="flex gap-2 overflow-x-auto">
+          {tabsList.map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${activeTab === tab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+            >{tab}</button>
+          ))}
+        </div>
         <div className="flex items-center gap-2">
-          <div className="flex gap-2 overflow-x-auto flex-1">
-            {tabsList.map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${activeTab === tab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-              >{tab}</button>
-            ))}
-          </div>
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-auto text-xs h-8 shrink-0 gap-1">
               <SelectValue placeholder="Urutkan" />
