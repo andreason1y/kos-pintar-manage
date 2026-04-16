@@ -332,7 +332,7 @@ export default function PembayaranPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <StatusBadge status={p.status} />
+                  <StatusBadge status={p.jumlah_dibayar >= p.total_tagihan ? "lunas" : "belum_bayar"} />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted">

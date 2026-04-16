@@ -14,13 +14,6 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
       </Badge>
     );
   }
-  if (status === "belum_lunas") {
-    return (
-      <Badge className="bg-[hsl(38,92%,50%)] text-white border-0 text-[10px] px-2 py-0.5 shadow-sm">
-        Belum Lunas
-      </Badge>
-    );
-  }
   return (
     <Badge className="bg-destructive text-destructive-foreground border-0 text-[10px] px-2 py-0.5 shadow-sm">
       Belum Bayar
