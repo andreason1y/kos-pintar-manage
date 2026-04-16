@@ -484,8 +484,8 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground">Semua tagihan sudah lunas! 🎉</p>
             </div>
           ) : (
-            unpaidTenants.map((t, i) => (
-              <div key={i} className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-3">
+            unpaidTenants.map((t) => (
+              <div key={t.nama + t.kamar + t.periodLabel} className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-3">
                 <div>
                   <p className="text-sm font-semibold text-foreground">{t.nama}</p>
                   <p className="text-xs text-muted-foreground">Kamar {t.kamar} · {t.periodLabel}</p>
