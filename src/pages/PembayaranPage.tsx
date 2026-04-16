@@ -135,14 +135,15 @@ export default function PembayaranPage() {
     };
 
     for (const p of allPayments) {
-      if (p.status === "lunas") {
+      const isPaid = p.jumlah_dibayar >= p.total_tagihan;
+      if (isPaid) {
         result.lunas.push(p);
-      } else if (p.daysUntilDue >= 1 && p.daysUntilDue <= 7) {
+      } else if (p.daysUntilDue >= 1 && p.daysUntilDue <= 5) {
         result.akan_jatuh_tempo.push(p);
       } else if (p.daysUntilDue === 0) {
         result.jatuh_tempo_hari_ini.push(p);
       } else {
-        // H+1 and beyond (overdue) OR more than 7 days out
+        // Overdue (daysUntilDue < 0) OR more than 5 days out (!isPaid)
         result.belum_lunas.push(p);
       }
     }
