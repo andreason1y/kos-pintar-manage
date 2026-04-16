@@ -63,7 +63,12 @@ async function fetchDeposits(propertyId: string) {
     .select("*")
     .eq("property_id", propertyId) as any;
   if (error) Sentry.captureException(error, { tags: { source: "fetchDeposits", propertyId } });
-  return (data || []) as any[];
+  // Deduplicate by id — guards against duplicate rows that can arise from
+  // RLS policies or other DB-level multiplications.
+  const rows = (data || []) as any[];
+  const seen = new Map<string, any>();
+  for (const row of rows) seen.set(row.id, row);
+  return Array.from(seen.values());
 }
 
 async function fetchReminders(propertyId: string, bulan: number, tahun: number) {
