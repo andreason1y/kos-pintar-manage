@@ -177,10 +177,11 @@ export default function DashboardPage() {
     };
   }, [demo.isDemo, roomData, tenantData, txData, overdueData, expData, expLastData]);
 
-  // Handler to close mobile keyboard
+  // Handler to close mobile keyboard when dialog opens
   const handleDialogOpenChange = (open: boolean) => {
     if (open) {
-      // Blur any active element to close mobile keyboard
+      // Blur any currently focused element to close mobile keyboard
+      // Dialog component prevents auto-focus, but we blur as extra safeguard
       (document.activeElement as HTMLElement)?.blur();
     }
   };
