@@ -177,6 +177,14 @@ export default function DashboardPage() {
     };
   }, [demo.isDemo, roomData, tenantData, txData, overdueData, expData, expLastData]);
 
+  // Handler to close mobile keyboard
+  const handleDialogOpenChange = (open: boolean) => {
+    if (open) {
+      // Blur any active element to close mobile keyboard
+      (document.activeElement as HTMLElement)?.blur();
+    }
+  };
+
   // Handler for adding tenant
   const handleAddTenant = async (formData: {
     nama: string;
@@ -431,9 +439,13 @@ export default function DashboardPage() {
             <div>
               <h2 className="text-sm font-semibold text-foreground mb-3">Aksi Cepat</h2>
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-3">
-                {quickActions.map((action) => (
-                  <button
+                {quickActions.map((action, i) => (
+                  <motion.button
                     key={action.label}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.15, delay: i * 0.05 }}
+                    whileHover={{ scale: 1.02 }}
                     onClick={action.action}
                     className="bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-muted transition-colors shadow-sm"
                   >
@@ -441,7 +453,7 @@ export default function DashboardPage() {
                       <action.icon size={18} />
                     </div>
                     <span className="text-xs font-medium text-foreground text-center leading-tight">{action.label}</span>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -484,7 +496,7 @@ export default function DashboardPage() {
       </BottomSheet>
 
       {/* Add Tenant Dialog */}
-      <Dialog open={showAddTenant} onOpenChange={setShowAddTenant}>
+      <Dialog open={showAddTenant} onOpenChange={(open) => { handleDialogOpenChange(open); setShowAddTenant(open); }}>
         <DialogContent className="max-h-[90vh] overflow-y-auto p-0">
           <div className="sticky top-0 border-b bg-background px-6 py-4">
             <DialogTitle>Tambah Penyewa</DialogTitle>
@@ -497,7 +509,7 @@ export default function DashboardPage() {
       </Dialog>
 
       {/* Add Expense Dialog */}
-      <Dialog open={showAddExpense} onOpenChange={setShowAddExpense}>
+      <Dialog open={showAddExpense} onOpenChange={(open) => { handleDialogOpenChange(open); setShowAddExpense(open); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Tambah Pengeluaran</DialogTitle>
@@ -506,7 +518,7 @@ export default function DashboardPage() {
           <form onSubmit={handleAddExpense} className="space-y-4">
             <div className="space-y-2">
               <Label>Judul</Label>
-              <Input value={judul} onChange={e => setJudul(e.target.value)} placeholder="Bayar listrik" required />
+              <Input autoFocus={false} value={judul} onChange={e => setJudul(e.target.value)} placeholder="Bayar listrik" required />
             </div>
             <div className="space-y-2">
               <Label>Kategori</Label>
