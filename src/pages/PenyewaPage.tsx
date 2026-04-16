@@ -46,6 +46,7 @@ export default function PenyewaPage() {
   const invalidate = useInvalidate();
   const [activeTab, setActiveTab] = useState("Semua");
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("name");
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<Tenant | null>(null);
 
@@ -129,8 +130,19 @@ export default function PenyewaPage() {
       list = list.filter(t => t.status === "aktif");
     }
     if (search) list = list.filter(t => t.nama.toLowerCase().includes(search.toLowerCase()));
+    if (sortBy === "name") {
+      list = [...list].sort((a, b) => a.nama.localeCompare(b.nama));
+    } else if (sortBy === "due") {
+      const getDue = (h: number | null | undefined) => {
+        if (!h) return Infinity;
+        const dueThisMonth = new Date(now.getFullYear(), now.getMonth(), h);
+        const nextDue = dueThisMonth >= now ? dueThisMonth : new Date(now.getFullYear(), now.getMonth() + 1, h);
+        return Math.ceil((nextDue.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      };
+      list = [...list].sort((a, b) => getDue(a.jatuh_tempo_hari) - getDue(b.jatuh_tempo_hari));
+    }
     return list;
-  }, [tenants, activeTab, search]);
+  }, [tenants, activeTab, search, sortBy]);
 
   const refetchAll = () => invalidate.all();
 
@@ -314,6 +326,17 @@ export default function PenyewaPage() {
             >{tab}</button>
           ))}
         </div>
+        <div className="flex items-center gap-2">
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-auto text-xs h-8 shrink-0 gap-1">
+              <SelectValue placeholder="Urutkan" />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="name">Nama (A–Z)</SelectItem>
+              <SelectItem value="due">Jatuh Tempo (terdekat)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         {loading ? (
           <div className="space-y-3"><SkeletonCard /><SkeletonCard /><SkeletonCard /></div>
         ) : filtered.length === 0 ? (
@@ -338,11 +361,16 @@ export default function PenyewaPage() {
                       <div>
                         <p className="font-semibold text-foreground">{t.nama}</p>
                         <p className="text-sm text-muted-foreground">{t.roomLabel}</p>
-                        {t.sisaHari !== undefined && t.status === "aktif" && (
-                          <p className={`text-xs mt-1 ${t.sisaHari <= 30 ? "text-[hsl(38,92%,50%)]" : "text-muted-foreground"}`}>
-                            {t.sisaHari > 0 ? `${t.sisaHari} hari lagi` : "Kontrak habis"}
-                          </p>
-                        )}
+                        {t.jatuh_tempo_hari && t.status === "aktif" && (() => {
+                          const dueThisMonth = new Date(now.getFullYear(), now.getMonth(), t.jatuh_tempo_hari);
+                          const nextDue = dueThisMonth >= now ? dueThisMonth : new Date(now.getFullYear(), now.getMonth() + 1, t.jatuh_tempo_hari);
+                          const daysUntilDue = Math.ceil((nextDue.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                          return (
+                            <p className={`text-xs mt-1 ${daysUntilDue <= 7 ? "text-[hsl(38,92%,50%)]" : "text-muted-foreground"}`}>
+                              {daysUntilDue === 0 ? "Jatuh tempo: hari ini" : `Jatuh tempo: ${daysUntilDue} hari lagi`}
+                            </p>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <StatusBadge status={t.latestTxIsPaid === true ? "lunas" : t.latestTxIsPaid === false ? "belum_bayar" : undefined} />
