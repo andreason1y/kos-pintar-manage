@@ -34,7 +34,7 @@ interface Tenant {
   status: string;
   room_id: string | null;
   roomLabel?: string;
-  latestTxStatus?: string;
+  latestTxIsPaid?: boolean;
   sisaHari?: number;
 }
 
@@ -82,7 +82,7 @@ export default function PenyewaPage() {
         const rt = room ? demo.roomTypes.find(rr => rr.id === room.room_type_id) : null;
         const tx = demo.transactions.find(tx => tx.tenant_id === t.id && tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni);
         const sisaHari = t.tanggal_keluar ? Math.ceil((new Date(t.tanggal_keluar).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : undefined;
-        return { ...t, tanggal_masuk: t.tanggal_masuk, tanggal_keluar: t.tanggal_keluar || null, roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-", latestTxStatus: tx?.status, sisaHari };
+        return { ...t, tanggal_masuk: t.tanggal_masuk, tanggal_keluar: t.tanggal_keluar || null, roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-", latestTxIsPaid: tx ? tx.jumlah_dibayar >= tx.total_tagihan : undefined, sisaHari };
       });
       const empty = demo.rooms.filter(r => r.status === "kosong").map(r => {
         const rt = demo.roomTypes.find(rr => rr.id === r.room_type_id);
@@ -105,7 +105,7 @@ export default function PenyewaPage() {
       const rt = room ? roomTypes.find((rr: any) => rr.id === room.room_type_id) : null;
       const tx = transactions.find((tx: any) => tx.tenant_id === t.id);
       const sisaHari = t.tanggal_keluar ? Math.ceil((new Date(t.tanggal_keluar).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : undefined;
-      return { ...t, roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-", latestTxStatus: tx?.status, sisaHari };
+      return { ...t, roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-", latestTxIsPaid: tx ? tx.jumlah_dibayar >= tx.total_tagihan : undefined, sisaHari };
     });
     const empty = rooms.filter((r: any) => r.status === "kosong").map((r: any) => ({
       ...r, room_type: roomTypes.find((rt: any) => rt.id === r.room_type_id)
@@ -119,11 +119,11 @@ export default function PenyewaPage() {
   const filtered = useMemo(() => {
     let list = tenants;
     if (activeTab === "Lunas") {
-      list = list.filter(t => t.status === "aktif" && t.latestTxStatus === "lunas");
+      list = list.filter(t => t.status === "aktif" && t.latestTxIsPaid === true);
     } else if (activeTab === "Keluar") {
       list = list.filter(t => t.status === "keluar");
     } else if (activeTab === "Jatuh Tempo") {
-      list = list.filter(t => t.status === "aktif" && t.latestTxStatus && t.latestTxStatus !== "lunas");
+      list = list.filter(t => t.status === "aktif" && t.latestTxIsPaid === false);
     } else {
       // "Semua" — show all active tenants
       list = list.filter(t => t.status === "aktif");
@@ -345,7 +345,7 @@ export default function PenyewaPage() {
                         )}
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        <StatusBadge status={t.latestTxStatus} />
+                        <StatusBadge status={t.latestTxIsPaid === true ? "lunas" : t.latestTxIsPaid === false ? "belum_bayar" : undefined} />
                         {t.no_hp && (
                           <a href={`https://wa.me/${t.no_hp.replace(/^0/, "62")}`} target="_blank" rel="noreferrer"
                             className="w-8 h-8 rounded-full bg-[hsl(142,71%,45%)]/10 flex items-center justify-center">
