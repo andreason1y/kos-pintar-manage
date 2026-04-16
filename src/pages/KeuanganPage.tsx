@@ -86,29 +86,37 @@ export default function KeuanganPage() {
   // Deposit drawdown list
   const depositList = useMemo(() => {
     if (demo.isDemo) {
+      const seen = new Set<string>();
       return demo.deposits
         .filter(d => {
           if (d.status !== "ditahan") return false;
           const tenant = demo.tenants.find(t => t.id === d.tenant_id);
-          return tenant && tenant.tanggal_keluar == null;
+          if (!tenant || tenant.tanggal_keluar != null) return false;
+          if (seen.has(d.id)) return false;
+          seen.add(d.id);
+          return true;
         })
         .map(d => {
           const tenant = demo.tenants.find(t => t.id === d.tenant_id);
           const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
-          return { tenantId: d.tenant_id, nama: tenant?.nama || "-", kamar: room?.nomor || "-", jumlah: d.jumlah };
+          return { id: d.id, tenantId: d.tenant_id, nama: tenant?.nama || "-", kamar: room?.nomor || "-", jumlah: d.jumlah };
         });
     }
     if (!depositData || !tenantData || !roomData) return [];
+    const seen = new Set<string>();
     return (depositData as any[])
       .filter((d: any) => {
         if (d.status !== "ditahan") return false;
         const tenant = (tenantData as any[]).find((t: any) => t.id === d.tenant_id);
-        return tenant && tenant.tanggal_keluar == null;
+        if (!tenant || tenant.tanggal_keluar != null) return false;
+        if (seen.has(d.id)) return false;
+        seen.add(d.id);
+        return true;
       })
       .map((d: any) => {
         const tenant = (tenantData as any[]).find((t: any) => t.id === d.tenant_id);
         const room = tenant?.room_id ? (roomData.rooms as any[]).find((r: any) => r.id === tenant.room_id) : null;
-        return { tenantId: d.tenant_id, nama: tenant?.nama || "-", kamar: room?.nomor || "-", jumlah: d.jumlah };
+        return { id: d.id, tenantId: d.tenant_id, nama: tenant?.nama || "-", kamar: room?.nomor || "-", jumlah: d.jumlah };
       });
   }, [demo.isDemo, depositData, tenantData, roomData, demo.deposits, demo.tenants, demo.rooms]);
 
@@ -204,10 +212,14 @@ export default function KeuanganPage() {
       pieMap[rtName] = (pieMap[rtName] || 0) + (tx.jumlah_dibayar || 0);
     });
 
+    const seenDepIds = new Set<string>();
     const totalDep = (depositData || []).filter((d: any) => {
       if (d.status !== "ditahan") return false;
       const tenant = (tenants as any[]).find((t: any) => t.id === d.tenant_id);
-      return tenant && tenant.tanggal_keluar == null;
+      if (!tenant || tenant.tanggal_keluar != null) return false;
+      if (seenDepIds.has(d.id)) return false;
+      seenDepIds.add(d.id);
+      return true;
     }).reduce((s: number, d: any) => s + (d.jumlah || 0), 0);
 
     const items = [
@@ -613,8 +625,8 @@ export default function KeuanganPage() {
                       className="bg-card rounded-b-xl border border-t-0 border-border px-4 pb-4 shadow-sm overflow-hidden"
                     >
                       <div className="space-y-2 pt-2">
-                        {depositList.map((d, i) => (
-                          <div key={i} className="flex justify-between items-center text-sm py-1">
+                        {depositList.map((d) => (
+                          <div key={d.id} className="flex justify-between items-center text-sm py-1">
                             <div>
                               <p className="font-medium text-foreground">{d.nama}</p>
                               <p className="text-xs text-muted-foreground">Kamar {d.kamar}</p>
