@@ -263,6 +263,15 @@ export default function LandingPage() {
   };
   const handleLogin = () => navigate("/login");
 
+  const handlePlanCheckout = (plan: "starter" | "pro" | "bisnis") => {
+    trackEvent("InitiateCheckout", { plan });
+    if (user) {
+      navigate(`/checkout?plan=${plan}`);
+    } else {
+      navigate(`/login?next=/checkout?plan=${plan}`);
+    }
+  };
+
   // Helper to get text with fallback
   const t = (key: string) => cfgText[key] ?? TEXT_DEFAULTS[key] ?? "";
 
@@ -580,8 +589,8 @@ export default function LandingPage() {
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full font-bold mt-auto flex items-center justify-center" size="lg" onClick={handleRegister}>
-                    Daftar Paket Starter →
+                  <Button className="w-full font-bold mt-auto flex items-center justify-center" size="lg" onClick={() => handlePlanCheckout("starter")}>
+                    Beli Paket Starter →
                   </Button>
                 </CardContent>
               </Card>
@@ -623,8 +632,8 @@ export default function LandingPage() {
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full font-bold mt-auto text-white hover:opacity-90 flex items-center justify-center" size="lg" style={{ background: "#FF8C42" }} onClick={handleRegister}>
-                    Daftar Paket Pro →
+                  <Button className="w-full font-bold mt-auto text-white hover:opacity-90 flex items-center justify-center" size="lg" style={{ background: "#FF8C42" }} onClick={() => handlePlanCheckout("pro")}>
+                    Beli Paket Pro →
                   </Button>
                 </CardContent>
               </Card>
@@ -666,8 +675,8 @@ export default function LandingPage() {
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full font-bold mt-auto text-white hover:opacity-90 flex items-center justify-center" size="lg" style={{ background: "#1B2B6B" }} onClick={handleRegister}>
-                    Daftar Paket Bisnis →
+                  <Button className="w-full font-bold mt-auto text-white hover:opacity-90 flex items-center justify-center" size="lg" style={{ background: "#1B2B6B" }} onClick={() => handlePlanCheckout("bisnis")}>
+                    Beli Paket Bisnis →
                   </Button>
                 </CardContent>
               </Card>

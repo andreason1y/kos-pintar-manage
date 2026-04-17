@@ -9,6 +9,8 @@ const PembayaranPage = lazy(() => import("@/pages/PembayaranPage"));
 const KeuanganPage = lazy(() => import("@/pages/KeuanganPage"));
 const ProfilPage = lazy(() => import("@/pages/ProfilPage"));
 const OnboardingPage = lazy(() => import("@/pages/OnboardingPage"));
+const CheckoutPage = lazy(() => import("@/pages/CheckoutPage"));
+const CheckoutSuccessPage = lazy(() => import("@/pages/CheckoutSuccessPage"));
 
 /**
  * Private routes - requires authentication and at least one property
@@ -66,5 +68,13 @@ export const privateRoutes: RouteObject[] = [
         <ProfilPage />
       </OnboardingGuard>
     ),
+  },
+  {
+    path: "/checkout",
+    element: <CheckoutPage />,
+  },
+  {
+    path: "/checkout-success",
+    element: <CheckoutSuccessPage />,
   },
 ];

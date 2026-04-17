@@ -16,7 +16,7 @@ export default function UpgradeModal() {
     if (upgradeLink) {
       window.open(upgradeLink, "_blank");
     } else {
-      navigate("/#harga");
+      navigate("/checkout?plan=pro");
     }
   };
 
