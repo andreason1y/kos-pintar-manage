@@ -586,8 +586,8 @@ export default function KeuanganPage() {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                       <p className="text-lg font-bold text-destructive mb-3">{formatRupiah(totalUnpaid)}</p>
                       <div className="space-y-2">
-                        {unpaidList.map((u: any, i: number) => (
-                          <div key={i} className="flex justify-between items-center text-sm">
+                        {unpaidList.map((u: any) => (
+                          <div key={u.nama + u.kamar} className="flex justify-between items-center text-sm">
                             <div><p className="font-medium text-foreground">{u.nama}</p><p className="text-xs text-muted-foreground">Kamar {u.kamar}</p></div>
                             <span className="font-semibold text-destructive">{formatRupiah(u.sisa)}</span>
                           </div>
@@ -679,7 +679,7 @@ export default function KeuanganPage() {
 
                         if (item.type === "expense") {
                           return (
-                            <motion.div key={item.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02, duration: 0.15 }}>
+                            <motion.div key={item.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02, duration: 0.15 }}>
                               <SwipeableRow
                                 onEdit={() => { setShowEdit(item); setJudul(item.label); setKategori(item.kategori || "Lainnya"); setJumlah(String(item.amount)); setTanggal(item.date); setIsRecurring(item.is_recurring || false); }}
                                 onDelete={() => setDeleteTarget({ id: item.id, name: item.label })}
@@ -687,7 +687,7 @@ export default function KeuanganPage() {
                             </motion.div>
                           );
                         }
-                        return <motion.div key={item.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02, duration: 0.15 }}>{rowContent}</motion.div>;
+                        return <motion.div key={item.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02, duration: 0.15 }}>{rowContent}</motion.div>;
                       })}
                     </div>
                   )}
