@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,6 @@ interface PenyewaFormProps {
     id?: string;
     nama: string;
     no_hp: string | null;
-    email?: string | null;
     gender?: string;
     room_id: string | null;
     jatuh_tempo?: number;
@@ -30,7 +29,6 @@ interface PenyewaFormProps {
   onSubmit: (data: {
     nama: string;
     no_hp: string | null;
-    email: string | null;
     gender: string;
     room_id: string;
     tanggal_masuk?: string;
@@ -48,7 +46,6 @@ export default function PenyewaForm({
 }: PenyewaFormProps) {
   const [nama, setNama] = useState(initialData?.nama || "");
   const [noHp, setNoHp] = useState(initialData?.no_hp || "");
-  const [email, setEmail] = useState(initialData?.email || "");
   const [roomId, setRoomId] = useState(initialData?.room_id || "");
   const [tanggalMasuk, setTanggalMasuk] = useState(
     initialData?.tanggal_masuk || new Date().toISOString().split("T")[0]
@@ -73,7 +70,6 @@ export default function PenyewaForm({
     const data = {
       nama,
       no_hp: noHp || null,
-      email: email || null,
       gender,
       room_id: roomId || "",
       jatuh_tempo: parseInt(jatuhTempo),
@@ -191,16 +187,6 @@ export default function PenyewaForm({
           </div>
         )}
 
-        {/* Email */}
-        <div className="space-y-2">
-          <Label>Email (opsional)</Label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="penyewa@email.com"
-          />
-        </div>
       </div>
 
       <div className="bottom-sheet-footer">
