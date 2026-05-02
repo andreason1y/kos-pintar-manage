@@ -23,13 +23,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Plus, ChevronDown, UserPlus, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-const FASILITAS_OPTIONS = ["AC", "TV", "Lemari", "Kamar Mandi Dalam", "WiFi", "Air Panas", "Parkir Motor", "Kasur", "Meja & Kursi", "Dapur Bersama", "Mesin Cuci", "Kulkas", "CCTV", "Parkir Mobil", "Kamar Mandi Luar"];
-
 interface RoomType {
   id: string;
   nama: string;
   harga_per_bulan: number;
-  fasilitas: string[];
   rooms: Room[];
 }
 
@@ -67,8 +64,6 @@ export default function KamarPage() {
 
   const [nama, setNama] = useState("");
   const [harga, setHarga] = useState("");
-  const [fasilitas, setFasilitas] = useState<string[]>([]);
-  const [customFasilitas, setCustomFasilitas] = useState("");
   const [prefix, setPrefix] = useState("");
   const [startNum, setStartNum] = useState("1");
   const [count, setCount] = useState("5");
@@ -116,25 +111,25 @@ export default function KamarPage() {
   const handleAddType = async (e: React.FormEvent) => {
     e.preventDefault();
     if (demo.isDemo) {
-      demo.addRoomType({ property_id: "prop-1", nama, harga_per_bulan: parseInt(harga) || 0, fasilitas });
-      toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); setFasilitas([]); setCustomFasilitas("");
+      demo.addRoomType({ property_id: "prop-1", nama, harga_per_bulan: parseInt(harga) || 0 });
+      toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga("");
       return;
     }
     if (!activeProperty) return;
-    const { error } = await supabase.from("room_types").insert({ property_id: activeProperty.id, nama, harga_per_bulan: parseInt(harga) || 0, fasilitas } as any);
+    const { error } = await supabase.from("room_types").insert({ property_id: activeProperty.id, nama, harga_per_bulan: parseInt(harga) || 0 } as any);
     if (error) toast.error(error.message);
-    else { toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); setFasilitas([]); setCustomFasilitas(""); refetchAll(); }
+    else { toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); refetchAll(); }
   };
 
   const handleEditType = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!showEditType) return;
     if (demo.isDemo) {
-      demo.updateRoomType(showEditType.id, { nama, harga_per_bulan: parseInt(harga) || 0, fasilitas });
+      demo.updateRoomType(showEditType.id, { nama, harga_per_bulan: parseInt(harga) || 0 });
       toast.success("Tipe kamar diperbarui!"); setShowEditType(null);
       return;
     }
-    const { error } = await supabase.from("room_types").update({ nama, harga_per_bulan: parseInt(harga) || 0, fasilitas } as any).eq("id", showEditType.id);
+    const { error } = await supabase.from("room_types").update({ nama, harga_per_bulan: parseInt(harga) || 0 } as any).eq("id", showEditType.id);
     if (error) toast.error(error.message);
     else { toast.success("Tipe kamar diperbarui!"); setShowEditType(null); refetchAll(); }
   };
@@ -303,9 +298,6 @@ export default function KamarPage() {
                     <div className="text-left">
                       <p className="font-semibold text-foreground">{rt.nama}</p>
                       <p className="text-sm text-muted-foreground">{formatRupiah(rt.harga_per_bulan)}/bln</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {rt.fasilitas?.map(f => <Badge key={f} variant="secondary" className="text-[10px]">{f}</Badge>)}
-                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="text-right">
@@ -324,7 +316,7 @@ export default function KamarPage() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => { setShowEditType(rt); setNama(rt.nama); setHarga(String(rt.harga_per_bulan)); setFasilitas(rt.fasilitas || []); }}>
+                      <DropdownMenuItem onClick={() => { setShowEditType(rt); setNama(rt.nama); setHarga(String(rt.harga_per_bulan)); }}>
                         <Pencil size={14} className="mr-2" /> Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ type: "room_type", id: rt.id, name: rt.nama })}>
@@ -412,28 +404,6 @@ export default function KamarPage() {
           <div className="bottom-sheet-body">
             <div className="space-y-2"><Label>Nama Tipe</Label><Input value={nama} onChange={e => setNama(e.target.value)} placeholder="Standar" required /></div>
             <div className="space-y-2"><Label>Harga per Bulan (Rp)</Label><Input type="number" value={harga} onChange={e => setHarga(e.target.value)} placeholder="500000" required /></div>
-            <div className="space-y-2">
-            <Label>Fasilitas</Label>
-            <div className="flex flex-wrap gap-2">
-              {FASILITAS_OPTIONS.map(f => (
-                <button key={f} type="button" onClick={() => setFasilitas(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f])}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${fasilitas.includes(f) ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}
-                >{f}</button>
-              ))}
-              {fasilitas.filter(f => !FASILITAS_OPTIONS.includes(f)).map(f => (
-                <button key={f} type="button" onClick={() => setFasilitas(prev => prev.filter(x => x !== f))}
-                  className="px-3 py-1.5 rounded-full text-xs font-medium border bg-primary text-primary-foreground border-primary"
-                >{f} ✕</button>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-1">
-              <Input value={customFasilitas} onChange={e => setCustomFasilitas(e.target.value)} placeholder="Fasilitas lainnya..." className="text-sm" />
-              <Button type="button" variant="outline" size="sm" onClick={() => {
-                const val = customFasilitas.trim();
-                if (val && !fasilitas.includes(val)) { setFasilitas(prev => [...prev, val]); setCustomFasilitas(""); }
-              }}>Tambah</Button>
-            </div>
-          </div>
           </div>
           <div className="bottom-sheet-footer">
             <Button type="submit" className="w-full">Simpan Tipe</Button>
@@ -447,28 +417,6 @@ export default function KamarPage() {
           <div className="bottom-sheet-body">
             <div className="space-y-2"><Label>Nama Tipe</Label><Input value={nama} onChange={e => setNama(e.target.value)} required /></div>
             <div className="space-y-2"><Label>Harga per Bulan (Rp)</Label><Input type="number" value={harga} onChange={e => setHarga(e.target.value)} required /></div>
-            <div className="space-y-2">
-            <Label>Fasilitas</Label>
-            <div className="flex flex-wrap gap-2">
-              {FASILITAS_OPTIONS.map(f => (
-                <button key={f} type="button" onClick={() => setFasilitas(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f])}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${fasilitas.includes(f) ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}
-                >{f}</button>
-              ))}
-              {fasilitas.filter(f => !FASILITAS_OPTIONS.includes(f)).map(f => (
-                <button key={f} type="button" onClick={() => setFasilitas(prev => prev.filter(x => x !== f))}
-                  className="px-3 py-1.5 rounded-full text-xs font-medium border bg-primary text-primary-foreground border-primary"
-                >{f} ✕</button>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-1">
-              <Input value={customFasilitas} onChange={e => setCustomFasilitas(e.target.value)} placeholder="Fasilitas lainnya..." className="text-sm" />
-              <Button type="button" variant="outline" size="sm" onClick={() => {
-                const val = customFasilitas.trim();
-                if (val && !fasilitas.includes(val)) { setFasilitas(prev => [...prev, val]); setCustomFasilitas(""); }
-              }}>Tambah</Button>
-            </div>
-          </div>
           </div>
           <div className="bottom-sheet-footer">
             <Button type="submit" className="w-full">Simpan Tipe</Button>
