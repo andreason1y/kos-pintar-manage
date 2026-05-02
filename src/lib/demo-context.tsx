@@ -12,7 +12,6 @@ export interface DemoRoomType {
   property_id: string;
   nama: string;
   harga_per_bulan: number;
-  fasilitas: string[];
 }
 
 export interface DemoRoom {
@@ -86,9 +85,9 @@ const PROPERTY: DemoProperty = {
 };
 
 const ROOM_TYPES: DemoRoomType[] = [
-  { id: "rt-1", property_id: PID, nama: "Standar", harga_per_bulan: 1200000, fasilitas: ["WiFi", "Lemari", "Parkir Motor"] },
-  { id: "rt-2", property_id: PID, nama: "Deluxe", harga_per_bulan: 1800000, fasilitas: ["AC", "WiFi", "Kamar Mandi Dalam", "Lemari", "TV"] },
-  { id: "rt-3", property_id: PID, nama: "Suite", harga_per_bulan: 2500000, fasilitas: ["AC", "WiFi", "Kamar Mandi Dalam", "Lemari", "TV", "Air Panas", "Parkir Motor"] },
+  { id: "rt-1", property_id: PID, nama: "Standar", harga_per_bulan: 1200000 },
+  { id: "rt-2", property_id: PID, nama: "Deluxe", harga_per_bulan: 1800000 },
+  { id: "rt-3", property_id: PID, nama: "Suite", harga_per_bulan: 2500000 },
 ];
 
 const ROOMS: DemoRoom[] = [

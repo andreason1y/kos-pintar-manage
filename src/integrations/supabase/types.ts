@@ -177,6 +177,45 @@ export type Database = {
           },
         ]
       }
+      midtrans_orders: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          midtrans_status: string | null
+          order_id: string
+          plan: string
+          status: string | null
+          updated_at: string | null
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          midtrans_status?: string | null
+          order_id: string
+          plan: string
+          status?: string | null
+          updated_at?: string | null
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          midtrans_status?: string | null
+          order_id?: string
+          plan?: string
+          status?: string | null
+          updated_at?: string | null
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_transactions: {
         Row: {
           amount: number
@@ -219,6 +258,27 @@ export type Database = {
             | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      plan_limits: {
+        Row: {
+          harga_per_tahun: number
+          max_rooms: number
+          nama_display: string
+          plan: Database["public"]["Enums"]["plan_enum"]
+        }
+        Insert: {
+          harga_per_tahun: number
+          max_rooms: number
+          nama_display: string
+          plan: Database["public"]["Enums"]["plan_enum"]
+        }
+        Update: {
+          harga_per_tahun?: number
+          max_rooms?: number
+          nama_display?: string
+          plan?: Database["public"]["Enums"]["plan_enum"]
         }
         Relationships: []
       }
@@ -339,7 +399,6 @@ export type Database = {
       room_types: {
         Row: {
           created_at: string
-          fasilitas: string[] | null
           harga_per_bulan: number
           id: string
           nama: string
@@ -347,7 +406,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          fasilitas?: string[] | null
           harga_per_bulan?: number
           id?: string
           nama: string
@@ -355,7 +413,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          fasilitas?: string[] | null
           harga_per_bulan?: number
           id?: string
           nama?: string
@@ -408,78 +465,42 @@ export type Database = {
       }
       settings: {
         Row: {
-          bisnis_price_earlybird: number | null
-          bisnis_price_normal: number | null
           created_at: string
           id: string
           key: string
-          pro_price_earlybird: number | null
-          pro_price_normal: number | null
-          starter_price_earlybird: number | null
-          starter_price_normal: number | null
           value: number
         }
         Insert: {
-          bisnis_price_earlybird?: number | null
-          bisnis_price_normal?: number | null
           created_at?: string
           id?: string
           key: string
-          pro_price_earlybird?: number | null
-          pro_price_normal?: number | null
-          starter_price_earlybird?: number | null
-          starter_price_normal?: number | null
           value?: number
         }
         Update: {
-          bisnis_price_earlybird?: number | null
-          bisnis_price_normal?: number | null
           created_at?: string
           id?: string
           key?: string
-          pro_price_earlybird?: number | null
-          pro_price_normal?: number | null
-          starter_price_earlybird?: number | null
-          starter_price_normal?: number | null
           value?: number
         }
         Relationships: []
       }
       settings_text: {
         Row: {
-          bisnis_earlybird_badge: string | null
-          bisnis_sublabel: string | null
           created_at: string
           id: string
           key: string
-          pro_earlybird_badge: string | null
-          pro_sublabel: string | null
-          starter_earlybird_badge: string | null
-          starter_sublabel: string | null
           value: string
         }
         Insert: {
-          bisnis_earlybird_badge?: string | null
-          bisnis_sublabel?: string | null
           created_at?: string
           id?: string
           key: string
-          pro_earlybird_badge?: string | null
-          pro_sublabel?: string | null
-          starter_earlybird_badge?: string | null
-          starter_sublabel?: string | null
           value?: string
         }
         Update: {
-          bisnis_earlybird_badge?: string | null
-          bisnis_sublabel?: string | null
           created_at?: string
           id?: string
           key?: string
-          pro_earlybird_badge?: string | null
-          pro_sublabel?: string | null
-          starter_earlybird_badge?: string | null
-          starter_sublabel?: string | null
           value?: string
         }
         Relationships: []
@@ -520,7 +541,7 @@ export type Database = {
           email: string | null
           gender: Database["public"]["Enums"]["gender_type"]
           id: string
-          jatuh_tempo_hari: number | null
+          jatuh_tempo_hari: number
           nama: string
           no_hp: string | null
           property_id: string
@@ -534,7 +555,7 @@ export type Database = {
           email?: string | null
           gender?: Database["public"]["Enums"]["gender_type"]
           id?: string
-          jatuh_tempo_hari?: number | null
+          jatuh_tempo_hari?: number
           nama: string
           no_hp?: string | null
           property_id: string
@@ -548,7 +569,7 @@ export type Database = {
           email?: string | null
           gender?: Database["public"]["Enums"]["gender_type"]
           id?: string
-          jatuh_tempo_hari?: number | null
+          jatuh_tempo_hari?: number
           nama?: string
           no_hp?: string | null
           property_id?: string
@@ -578,12 +599,13 @@ export type Database = {
         Row: {
           catatan: string | null
           created_at: string
+          due_date: string | null
           id: string
-          is_overdue: boolean | null
+          is_overdue: boolean
           jumlah_dibayar: number
           metode_bayar: Database["public"]["Enums"]["payment_method"] | null
           nota_number: string | null
-          overdue_days: number | null
+          overdue_days: number
           periode_bulan: number
           periode_tahun: number
           property_id: string
@@ -595,12 +617,13 @@ export type Database = {
         Insert: {
           catatan?: string | null
           created_at?: string
+          due_date?: string | null
           id?: string
-          is_overdue?: boolean | null
+          is_overdue?: boolean
           jumlah_dibayar?: number
           metode_bayar?: Database["public"]["Enums"]["payment_method"] | null
           nota_number?: string | null
-          overdue_days?: number | null
+          overdue_days?: number
           periode_bulan: number
           periode_tahun: number
           property_id: string
@@ -612,12 +635,13 @@ export type Database = {
         Update: {
           catatan?: string | null
           created_at?: string
+          due_date?: string | null
           id?: string
-          is_overdue?: boolean | null
+          is_overdue?: boolean
           jumlah_dibayar?: number
           metode_bayar?: Database["public"]["Enums"]["payment_method"] | null
           nota_number?: string | null
-          overdue_days?: number | null
+          overdue_days?: number
           periode_bulan?: number
           periode_tahun?: number
           property_id?: string
@@ -651,14 +675,13 @@ export type Database = {
       add_tenant: {
         Args: {
           p_deposit_amount?: number
-          p_email?: string | null
+          p_email?: string
           p_gender?: string
           p_jatuh_tempo?: number
           p_nama: string
           p_no_hp?: string
           p_property_id: string
           p_room_id: string
-          p_send_email_notifications?: boolean
           p_tanggal_keluar?: string
           p_tanggal_masuk?: string
         }
@@ -683,6 +706,18 @@ export type Database = {
           provider: string
         }[]
       }
+      calc_overdue_status: {
+        Args: {
+          p_bulan: number
+          p_status: string
+          p_tahun: number
+          p_tanggal_masuk: string
+        }
+        Returns: {
+          is_overdue: boolean
+          overdue_days: number
+        }[]
+      }
       delete_tenant: { Args: { p_tenant_id: string }; Returns: Json }
       end_tenant_contract: {
         Args: {
@@ -693,18 +728,21 @@ export type Database = {
         }
         Returns: Json
       }
-      get_active_outlets: {
-        Args: never
-        Returns: {
-          id: string
-          nama_outlet: string
-        }[]
-      }
+      get_due_date:
+        | {
+            Args: { p_bulan: number; p_tahun: number; p_tanggal_masuk: string }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_bulan: number
+              p_jatuh_tempo_hari?: number
+              p_tahun: number
+              p_tanggal_masuk: string
+            }
+            Returns: string
+          }
       is_admin: { Args: never; Returns: boolean }
-      verify_cashier_pin: {
-        Args: { p_outlet_id: string; p_pin: string }
-        Returns: Json
-      }
     }
     Enums: {
       deposit_status_enum: "ditahan" | "dikembalikan"
@@ -712,7 +750,7 @@ export type Database = {
       payment_method: "tunai" | "transfer" | "qris"
       payment_status: "belum_bayar" | "belum_lunas" | "lunas"
       payment_transaction_status_enum: "pending" | "success" | "failed"
-      plan_enum: "starter" | "pro" | "bisnis" | "demo"
+      plan_enum: "starter" | "pro" | "bisnis"
       room_status: "kosong" | "terisi"
       tenant_status: "aktif" | "keluar"
     }
@@ -847,7 +885,7 @@ export const Constants = {
       payment_method: ["tunai", "transfer", "qris"],
       payment_status: ["belum_bayar", "belum_lunas", "lunas"],
       payment_transaction_status_enum: ["pending", "success", "failed"],
-      plan_enum: ["starter", "pro", "bisnis", "demo"],
+      plan_enum: ["starter", "pro", "bisnis"],
       room_status: ["kosong", "terisi"],
       tenant_status: ["aktif", "keluar"],
     },
