@@ -18,6 +18,7 @@ interface PenyewaFormProps {
     nama: string;
     no_hp: string | null;
     email?: string | null;
+    gender?: string;
     room_id: string | null;
     jatuh_tempo?: number;
     deposit?: number;
@@ -30,6 +31,7 @@ interface PenyewaFormProps {
     nama: string;
     no_hp: string | null;
     email: string | null;
+    gender: string;
     room_id: string;
     tanggal_masuk?: string;
     jatuh_tempo?: number;
@@ -51,6 +53,7 @@ export default function PenyewaForm({
   const [tanggalMasuk, setTanggalMasuk] = useState(
     initialData?.tanggal_masuk || new Date().toISOString().split("T")[0]
   );
+  const [gender, setGender] = useState(initialData?.gender || "L");
   const [jatuhTempo, setJatuhTempo] = useState(String(initialData?.jatuh_tempo || ""));
   const [deposit, setDeposit] = useState(String(initialData?.deposit || ""));
 
@@ -71,6 +74,7 @@ export default function PenyewaForm({
       nama,
       no_hp: noHp || null,
       email: email || null,
+      gender,
       room_id: roomId || "",
       jatuh_tempo: parseInt(jatuhTempo),
       deposit: parseInt(deposit) || 0,
@@ -106,6 +110,20 @@ export default function PenyewaForm({
             placeholder="08123456789"
           />
         </div>
+
+        {/* Gender - only in create mode */}
+        {mode === "create" && (
+          <div className="space-y-2">
+            <Label>Gender</Label>
+            <div className="flex gap-2">
+              {[{ v: "L", l: "Laki-laki" }, { v: "P", l: "Perempuan" }].map((g) => (
+                <button key={g.v} type="button" onClick={() => setGender(g.v)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${gender === g.v ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border"}`}
+                >{g.l}</button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Kamar - only in create mode */}
         {mode === "create" && (

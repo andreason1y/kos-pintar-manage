@@ -150,6 +150,7 @@ export default function PenyewaPage() {
     nama: string;
     no_hp: string | null;
     email: string | null;
+    gender: string;
     room_id: string;
     tanggal_masuk?: string;
     durasi_bulan?: number;
@@ -170,7 +171,7 @@ export default function PenyewaPage() {
         noHp: formData.no_hp,
         email: formData.email,
         jatuhTempoHari: formData.jatuh_tempo,
-        gender: "L" as "L" | "P",
+        gender: (formData.gender || "L") as "L" | "P",
         tanggalMasuk: tanggalMasukStr,
         tanggalKeluar,
         depositAmount: formData.deposit,
@@ -187,7 +188,7 @@ export default function PenyewaPage() {
       p_nama: formData.nama,
       p_no_hp: formData.no_hp,
       p_email: formData.email,
-      p_gender: "L",
+      p_gender: formData.gender || "L",
       p_tanggal_masuk: tanggalMasukStr,
       p_tanggal_keluar: tanggalKeluar,
       p_deposit_amount: formData.deposit,
