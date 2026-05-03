@@ -139,7 +139,7 @@ export const profileService = {
     return data || null;
   },
 
-  async updateProfile(userId: string, updates: Record<string, any>) {
+  async updateProfile(userId: string, updates: Record<string, unknown>) {
     const { data, error } = await supabase
       .from("profiles")
       .update(updates)
@@ -185,7 +185,7 @@ export const roomService = {
       throw typesError;
     }
 
-    const typeIds = (roomTypes || []).map((t: any) => t.id);
+    const typeIds = (roomTypes || []).map(t => t.id);
 
     if (typeIds.length === 0) {
       return [];
@@ -270,7 +270,7 @@ export const broadcastService = {
  * Generic error handler for API operations
  * Centralizes error logging and user-facing error messages
  */
-export function handleApiError(error: any, context: string): string {
+export function handleApiError(error: unknown, context: string): string {
   console.error(`API Error [${context}]:`, error);
 
   Sentry.captureException(error, {

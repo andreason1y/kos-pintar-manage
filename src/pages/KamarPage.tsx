@@ -94,12 +94,12 @@ export default function KamarPage() {
     }
     if (!roomData || !tenantData) return [] as RoomType[];
     const tenantsByRoom: Record<string, { nama: string; id: string }> = {};
-    tenantData.filter((t: any) => t.status === "aktif" && t.room_id).forEach((t: any) => {
-      tenantsByRoom[t.room_id] = { nama: t.nama, id: t.id };
+    tenantData.filter(t => t.status === "aktif" && t.room_id).forEach(t => {
+      tenantsByRoom[t.room_id!] = { nama: t.nama, id: t.id };
     });
-    return roomData.roomTypes.map((t: any) => ({
+    return roomData.roomTypes.map(t => ({
       ...t,
-      rooms: roomData.rooms.filter((r: any) => r.room_type_id === t.id).map((r: any) => ({
+      rooms: roomData.rooms.filter(r => r.room_type_id === t.id).map(r => ({
         ...r, tenantName: tenantsByRoom[r.id]?.nama, tenantId: tenantsByRoom[r.id]?.id,
       })),
     })) as RoomType[];
@@ -115,7 +115,7 @@ export default function KamarPage() {
       return;
     }
     if (!activeProperty) return;
-    const { error } = await supabase.from("room_types").insert({ property_id: activeProperty.id, nama, harga_per_bulan: parseInt(harga) || 0 } as any);
+    const { error } = await supabase.from("room_types").insert({ property_id: activeProperty.id, nama, harga_per_bulan: parseInt(harga) || 0 });
     if (error) toast.error(error.message);
     else { toast.success("Tipe kamar ditambahkan!"); setShowAdd(false); setNama(""); setHarga(""); refetchAll(); }
   };
@@ -128,7 +128,7 @@ export default function KamarPage() {
       toast.success("Tipe kamar diperbarui!"); setShowEditType(null);
       return;
     }
-    const { error } = await supabase.from("room_types").update({ nama, harga_per_bulan: parseInt(harga) || 0 } as any).eq("id", showEditType.id);
+    const { error } = await supabase.from("room_types").update({ nama, harga_per_bulan: parseInt(harga) || 0 }).eq("id", showEditType.id);
     if (error) toast.error(error.message);
     else { toast.success("Tipe kamar diperbarui!"); setShowEditType(null); refetchAll(); }
   };
@@ -145,7 +145,7 @@ export default function KamarPage() {
       toast.success("Tipe kamar dihapus");
       return;
     }
-    const { error } = await supabase.from("room_types").delete().eq("id", id) as any;
+    const { error } = await supabase.from("room_types").delete().eq("id", id);
     if (error) toast.error(error.message);
     else { toast.success("Tipe kamar dihapus"); refetchAll(); }
   };
@@ -162,7 +162,7 @@ export default function KamarPage() {
       toast.success("Kamar dihapus");
       return;
     }
-    const { error } = await supabase.from("rooms").delete().eq("id", id) as any;
+    const { error } = await supabase.from("rooms").delete().eq("id", id);
     if (error) toast.error(error.message);
     else { toast.success("Kamar dihapus"); refetchAll(); }
   };
@@ -175,7 +175,7 @@ export default function KamarPage() {
       toast.success("Kamar diperbarui!"); setShowEditRoom(null);
       return;
     }
-    const { error } = await supabase.from("rooms").update({ nomor: editRoomNomor, lantai: parseInt(editRoomLantai) || 1 } as any).eq("id", showEditRoom.id);
+    const { error } = await supabase.from("rooms").update({ nomor: editRoomNomor, lantai: parseInt(editRoomLantai) || 1 }).eq("id", showEditRoom.id);
     if (error) toast.error(error.message);
     else { toast.success("Kamar diperbarui!"); setShowEditRoom(null); refetchAll(); }
   };
@@ -203,7 +203,7 @@ export default function KamarPage() {
       return;
     }
     const roomsToInsert = Array.from({ length: n }, (_, i) => ({ room_type_id: showAddRooms, nomor: `${prefix}${start + i}`, lantai: lt, status: "kosong" as const }));
-    const { error } = await supabase.from("rooms").insert(roomsToInsert as any);
+    const { error } = await supabase.from("rooms").insert(roomsToInsert);
     if (error) {
       // Gracefully handle plan limit trigger error from DB
       if (error.message?.toLowerCase().includes("batas kamar")) {

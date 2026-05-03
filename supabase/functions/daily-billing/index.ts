@@ -27,81 +27,98 @@ Deno.serve(async (req) => {
   const currentYear = today.getFullYear();
 
   try {
-    // 1. Auto-generate monthly invoices
-    // Find active tenants whose tanggal_masuk day matches today
     const { data: tenants, error: tErr } = await supabase
       .from("tenants")
       .select("id, nama, no_hp, property_id, room_id, tanggal_masuk, status")
       .eq("status", "aktif");
 
     if (tErr) throw tErr;
-
-    for (const tenant of tenants || []) {
-      const startDay = new Date(tenant.tanggal_masuk).getDate();
-      if (startDay !== dayOfMonth) continue;
-      if (!tenant.room_id) continue;
-
-      // Check if transaction already exists for this month
-      const { data: existing } = await supabase
-        .from("transactions")
-        .select("id")
-        .eq("tenant_id", tenant.id)
-        .eq("periode_bulan", currentMonth)
-        .eq("periode_tahun", currentYear)
-        .limit(1);
-
-      if (existing && existing.length > 0) continue;
-
-      // Get room price
-      const { data: room } = await supabase
-        .from("rooms")
-        .select("room_type_id")
-        .eq("id", tenant.room_id)
-        .single();
-
-      if (!room) continue;
-
-      const { data: roomType } = await supabase
-        .from("room_types")
-        .select("harga_per_bulan")
-        .eq("id", room.room_type_id)
-        .single();
-
-      if (!roomType) continue;
-
-      await supabase.from("transactions").insert({
-        tenant_id: tenant.id,
-        property_id: tenant.property_id,
-        periode_bulan: currentMonth,
-        periode_tahun: currentYear,
-        total_tagihan: roomType.harga_per_bulan,
-        jumlah_dibayar: 0,
-        status: "belum_bayar",
+    if (!tenants || tenants.length === 0) {
+      return new Response(JSON.stringify({ success: true, processed: 0 }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // 2. Generate reminders (H-3, H0, H+3)
-    for (const tenant of tenants || []) {
+    const roomIds = tenants.map(t => t.room_id).filter((id): id is string => id != null);
+
+    // Batch fetch semua rooms dan room_types sekaligus
+    const [roomsRes, existingTxRes] = await Promise.all([
+      roomIds.length > 0
+        ? supabase.from("rooms").select("id, room_type_id").in("id", roomIds)
+        : Promise.resolve({ data: [] as { id: string; room_type_id: string }[], error: null }),
+      supabase
+        .from("transactions")
+        .select("id, tenant_id, total_tagihan, jumlah_dibayar, status")
+        .in("tenant_id", tenants.map(t => t.id))
+        .eq("periode_bulan", currentMonth)
+        .eq("periode_tahun", currentYear),
+    ]);
+
+    if (roomsRes.error) throw roomsRes.error;
+    if (existingTxRes.error) throw existingTxRes.error;
+
+    const rooms = roomsRes.data || [];
+    const roomTypeIds = [...new Set(rooms.map(r => r.room_type_id))];
+
+    const roomTypesRes = roomTypeIds.length > 0
+      ? await supabase.from("room_types").select("id, harga_per_bulan").in("id", roomTypeIds)
+      : { data: [] as { id: string; harga_per_bulan: number }[], error: null };
+
+    if (roomTypesRes.error) throw roomTypesRes.error;
+
+    // Build lookup maps
+    const roomMap = Object.fromEntries(rooms.map(r => [r.id, r]));
+    const roomTypeMap = Object.fromEntries((roomTypesRes.data || []).map(rt => [rt.id, rt]));
+    const txByTenant = Object.fromEntries((existingTxRes.data || []).map(tx => [tx.tenant_id, tx]));
+
+    // 1. Auto-generate monthly invoices via upsert (idempotent)
+    for (const tenant of tenants) {
+      const startDay = new Date(tenant.tanggal_masuk).getDate();
+      if (startDay !== dayOfMonth || !tenant.room_id) continue;
+
+      const room = roomMap[tenant.room_id];
+      if (!room) continue;
+      const roomType = roomTypeMap[room.room_type_id];
+      if (!roomType) continue;
+
+      // Upsert with conflict do nothing — idempotent insert
+      await supabase.from("transactions").upsert(
+        {
+          tenant_id: tenant.id,
+          property_id: tenant.property_id,
+          periode_bulan: currentMonth,
+          periode_tahun: currentYear,
+          total_tagihan: roomType.harga_per_bulan,
+          jumlah_dibayar: 0,
+          status: "belum_bayar",
+        },
+        { onConflict: "tenant_id,periode_bulan,periode_tahun", ignoreDuplicates: true }
+      );
+    }
+
+    // 2. Generate reminders (H-3, H0, H+3) — fetch updated tx map after inserts
+    const { data: updatedTxData } = await supabase
+      .from("transactions")
+      .select("id, tenant_id, total_tagihan, jumlah_dibayar, status")
+      .in("tenant_id", tenants.map(t => t.id))
+      .eq("periode_bulan", currentMonth)
+      .eq("periode_tahun", currentYear)
+      .neq("status", "lunas");
+
+    const unpaidTxByTenant = Object.fromEntries(
+      (updatedTxData || []).map(tx => [tx.tenant_id, tx])
+    );
+
+    for (const tenant of tenants) {
       if (!tenant.room_id) continue;
       const startDay = new Date(tenant.tanggal_masuk).getDate();
 
-      // Due date is the billing day of current month
       const dueDate = new Date(currentYear, currentMonth - 1, startDay);
       const diffDays = Math.round((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-      // Check if there's an unpaid transaction for this month
-      const { data: unpaidTx } = await supabase
-        .from("transactions")
-        .select("id, total_tagihan, jumlah_dibayar, status")
-        .eq("tenant_id", tenant.id)
-        .eq("periode_bulan", currentMonth)
-        .eq("periode_tahun", currentYear)
-        .neq("status", "lunas")
-        .limit(1);
+      const tx = unpaidTxByTenant[tenant.id];
+      if (!tx) continue;
 
-      if (!unpaidTx || unpaidTx.length === 0) continue;
-
-      const tx = unpaidTx[0];
       const sisa = tx.total_tagihan - tx.jumlah_dibayar;
       const phone = tenant.no_hp ? tenant.no_hp.replace(/^0/, "62") : "";
 
@@ -123,7 +140,6 @@ Deno.serve(async (req) => {
 
       const waLink = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}` : null;
 
-      // Insert reminder (unique constraint prevents duplicates)
       await supabase.from("reminders").upsert(
         {
           property_id: tenant.property_id,
@@ -138,7 +154,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    // Re-fetch existing tx map to check which ones were pre-existing (used for logging only)
+    const preExistingCount = Object.keys(txByTenant).length;
+
+    return new Response(JSON.stringify({ success: true, tenants: tenants.length, pre_existing_tx: preExistingCount }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

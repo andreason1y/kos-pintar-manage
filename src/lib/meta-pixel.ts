@@ -2,8 +2,10 @@
 
 declare global {
   interface Window {
-    fbq: (...args: any[]) => void;
-    _fbq: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fbq: (...args: unknown[]) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _fbq: unknown;
   }
 }
 
@@ -13,7 +15,8 @@ export function initMetaPixel() {
   const pixelId = import.meta.env.VITE_META_PIXEL_ID;
   if (!pixelId || initialized) return;
 
-  // fbq snippet
+  // Standard FB pixel snippet — disable lint for this block
+  /* eslint-disable @typescript-eslint/no-explicit-any, prefer-spread, prefer-rest-params, @typescript-eslint/no-unused-expressions */
   (function (f: any, b: any, e: any, v: any) {
     if (f.fbq) return;
     const n: any = (f.fbq = function () {
@@ -30,13 +33,14 @@ export function initMetaPixel() {
     const s = b.getElementsByTagName(e)[0];
     s.parentNode?.insertBefore(t, s);
   })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+  /* eslint-enable @typescript-eslint/no-explicit-any, prefer-spread, prefer-rest-params, @typescript-eslint/no-unused-expressions */
 
   window.fbq("init", pixelId);
   window.fbq("track", "PageView");
   initialized = true;
 }
 
-export function trackEvent(event: string, data?: Record<string, any>) {
+export function trackEvent(event: string, data?: Record<string, unknown>) {
   if (typeof window.fbq === "function") {
     window.fbq("track", event, data);
   }

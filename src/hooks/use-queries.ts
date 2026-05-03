@@ -1,10 +1,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 
 const STALE_TIME = 5 * 60 * 1000; // 5 minutes
+
+type RoomRow = Database["public"]["Tables"]["rooms"]["Row"];
+type DepositRow = Database["public"]["Tables"]["deposits"]["Row"];
 
 // ---- Raw data fetchers (non-demo) ----
 
@@ -13,12 +17,12 @@ async function fetchRoomTypesAndRooms(propertyId: string) {
     .from("room_types")
     .select("*")
     .eq("property_id", propertyId)
-    .order("created_at") as any;
+    .order("created_at");
   if (typesError) Sentry.captureException(typesError, { tags: { source: "fetchRoomTypes", propertyId } });
-  const rtIds = (types || []).map((t: any) => t.id);
-  let rooms: any[] = [];
+  const rtIds = (types || []).map(t => t.id);
+  let rooms: RoomRow[] = [];
   if (rtIds.length > 0) {
-    const { data, error: roomsError } = await supabase.from("rooms").select("*").in("room_type_id", rtIds).order("nomor") as any;
+    const { data, error: roomsError } = await supabase.from("rooms").select("*").in("room_type_id", rtIds).order("nomor");
     if (roomsError) Sentry.captureException(roomsError, { tags: { source: "fetchRooms", propertyId } });
     rooms = data || [];
   }
@@ -30,9 +34,9 @@ async function fetchTenants(propertyId: string) {
     .from("tenants")
     .select("*")
     .eq("property_id", propertyId)
-    .order("created_at", { ascending: false }) as any;
+    .order("created_at", { ascending: false });
   if (error) Sentry.captureException(error, { tags: { source: "fetchTenants", propertyId } });
-  return (data || []) as any[];
+  return data || [];
 }
 
 async function fetchTransactions(propertyId: string) {
@@ -40,9 +44,9 @@ async function fetchTransactions(propertyId: string) {
     .from("transactions")
     .select("*")
     .eq("property_id", propertyId)
-    .order("created_at", { ascending: false }) as any;
+    .order("created_at", { ascending: false });
   if (error) Sentry.captureException(error, { tags: { source: "fetchTransactions", propertyId } });
-  return (data || []) as any[];
+  return data || [];
 }
 
 async function fetchExpenses(propertyId: string, startDate: string, endDate: string) {
@@ -52,21 +56,21 @@ async function fetchExpenses(propertyId: string, startDate: string, endDate: str
     .eq("property_id", propertyId)
     .gte("tanggal", startDate)
     .lt("tanggal", endDate)
-    .order("tanggal", { ascending: false }) as any;
+    .order("tanggal", { ascending: false });
   if (error) Sentry.captureException(error, { tags: { source: "fetchExpenses", propertyId } });
-  return (data || []) as any[];
+  return data || [];
 }
 
 async function fetchDeposits(propertyId: string) {
   const { data, error } = await supabase
     .from("deposits")
     .select("*")
-    .eq("property_id", propertyId) as any;
+    .eq("property_id", propertyId);
   if (error) Sentry.captureException(error, { tags: { source: "fetchDeposits", propertyId } });
   // Deduplicate by id — guards against duplicate rows that can arise from
   // RLS policies or other DB-level multiplications.
-  const rows = (data || []) as any[];
-  const seen = new Map<string, any>();
+  const rows = data || [];
+  const seen = new Map<string, DepositRow>();
   for (const row of rows) seen.set(row.id, row);
   return Array.from(seen.values());
 }
@@ -78,9 +82,9 @@ async function fetchReminders(propertyId: string, bulan: number, tahun: number) 
     .eq("property_id", propertyId)
     .eq("periode_bulan", bulan)
     .eq("periode_tahun", tahun)
-    .eq("is_read", false) as any;
+    .eq("is_read", false);
   if (error) Sentry.captureException(error, { tags: { source: "fetchReminders", propertyId } });
-  return (data || []) as any[];
+  return data || [];
 }
 
 async function fetchBroadcasts() {
@@ -90,13 +94,13 @@ async function fetchBroadcasts() {
     .from("broadcasts")
     .select("id, message, created_at")
     .gte("created_at", sevenDaysAgo.toISOString())
-    .order("created_at", { ascending: false }) as any;
+    .order("created_at", { ascending: false });
   if (error) Sentry.captureException(error, { tags: { source: "fetchBroadcasts" } });
-  return (data || []) as any[];
+  return data || [];
 }
 
 async function fetchProfile(userId: string) {
-  const { data, error } = await supabase.from("profiles").select("nama, no_hp").eq("id", userId).single() as any;
+  const { data, error } = await supabase.from("profiles").select("nama, no_hp").eq("id", userId).single();
   if (error) Sentry.captureException(error, { tags: { source: "fetchProfile", userId } });
   return data;
 }
@@ -106,10 +110,10 @@ async function fetchOverduePaymentStats(propertyId: string) {
     .from("transactions")
     .select("id, is_overdue, overdue_days")
     .eq("property_id", propertyId)
-    .eq("is_overdue", true) as any;
+    .eq("is_overdue", true);
   if (error) Sentry.captureException(error, { tags: { source: "fetchOverduePaymentStats", propertyId } });
 
-  const overduePayments = (data || []) as any[];
+  const overduePayments = data || [];
   return {
     count: overduePayments.length,
     totalDays: overduePayments.reduce((sum, tx) => sum + (tx.overdue_days || 0), 0),

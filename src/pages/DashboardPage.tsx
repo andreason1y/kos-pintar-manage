@@ -75,6 +75,7 @@ export default function DashboardPage() {
 
   // Prefetch other routes
   const prefetch = usePrefetchRoutes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { prefetch(); }, [activeProperty]);
 
   // React Query hooks
@@ -103,7 +104,7 @@ export default function DashboardPage() {
       const overdue = txBulanIni.filter(t => {
         if (t.jumlah_dibayar >= t.total_tagihan) return false;
         const tenant = demo.tenants.find(tt => tt.id === t.tenant_id);
-        const jatuhTempoHari = (tenant as any)?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
+        const jatuhTempoHari = tenant?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
         const dueDate = new Date(t.periode_tahun, t.periode_bulan - 1, jatuhTempoHari);
         return dueDate < todayDate;
       }).length;
@@ -144,18 +145,18 @@ export default function DashboardPage() {
 
     const allRooms = roomData.rooms;
     const tenants = tenantData;
-    const txThisMonth = txData.filter((t: any) => t.periode_bulan === bulanIni && t.periode_tahun === tahunIni);
-    const txLastMonth = txData.filter((t: any) => t.periode_bulan === bulanLalu && t.periode_tahun === tahunLalu);
+    const txThisMonth = txData.filter(t => t.periode_bulan === bulanIni && t.periode_tahun === tahunIni);
+    const txLastMonth = txData.filter(t => t.periode_bulan === bulanLalu && t.periode_tahun === tahunLalu);
     const expenses = expData;
 
-    const pemasukan = txThisMonth.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
-    const pengeluaran = expenses.reduce((s: number, e: any) => s + (e.jumlah || 0), 0);
+    const pemasukan = txThisMonth.reduce((s, t) => s + (t.jumlah_dibayar || 0), 0);
+    const pengeluaran = expenses.reduce((s, e) => s + (e.jumlah || 0), 0);
 
     const unpaid: UnpaidTenant[] = txThisMonth
-      .filter((tx: any) => tx.jumlah_dibayar < tx.total_tagihan)
-      .map((tx: any) => {
-        const tenant = tenants.find((t: any) => t.id === tx.tenant_id);
-        const room = tenant?.room_id ? allRooms.find((r: any) => r.id === tenant.room_id) : null;
+      .filter(tx => tx.jumlah_dibayar < tx.total_tagihan)
+      .map(tx => {
+        const tenant = tenants.find(t => t.id === tx.tenant_id);
+        const room = tenant?.room_id ? allRooms.find(r => r.id === tenant.room_id) : null;
         return {
           nama: tenant?.nama || "-",
           no_hp: tenant?.no_hp || null,
@@ -165,9 +166,9 @@ export default function DashboardPage() {
         };
       });
 
-    const overdueCount = txThisMonth.filter((tx: any) => {
+    const overdueCount = txThisMonth.filter(tx => {
       if (tx.jumlah_dibayar >= tx.total_tagihan) return false;
-      const tenant = tenants.find((t: any) => t.id === tx.tenant_id);
+      const tenant = tenants.find(t => t.id === tx.tenant_id);
       const jatuhTempoHari = tenant?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
       const dueDate = new Date(tx.periode_tahun, tx.periode_bulan - 1, jatuhTempoHari);
       return dueDate < todayDate;
@@ -175,17 +176,17 @@ export default function DashboardPage() {
 
     return {
       stats: {
-        totalPenyewa: tenants.filter((t: any) => t.status === "aktif").length,
-        kamarTerisi: allRooms.filter((r: any) => r.status === "terisi").length,
-        kamarKosong: allRooms.filter((r: any) => r.status === "kosong").length,
-        tagihanBelumLunas: txThisMonth.filter((t: any) => t.jumlah_dibayar < t.total_tagihan).length,
+        totalPenyewa: tenants.filter(t => t.status === "aktif").length,
+        kamarTerisi: allRooms.filter(r => r.status === "terisi").length,
+        kamarKosong: allRooms.filter(r => r.status === "kosong").length,
+        tagihanBelumLunas: txThisMonth.filter(t => t.jumlah_dibayar < t.total_tagihan).length,
         overduePayments: overdueCount,
         pemasukanBulanIni: pemasukan,
         pengeluaranBulanIni: pengeluaran,
-        pemasukanBulanLalu: txLastMonth.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0),
-        pengeluaranBulanLalu: (expLastData || []).reduce((s: number, e: any) => s + (e.jumlah || 0), 0),
+        pemasukanBulanLalu: txLastMonth.reduce((s, t) => s + (t.jumlah_dibayar || 0), 0),
+        pengeluaranBulanLalu: (expLastData || []).reduce((s, e) => s + (e.jumlah || 0), 0),
         totalTxBulanIni: txThisMonth.length,
-        lunasBulanIni: txThisMonth.filter((t: any) => t.jumlah_dibayar >= t.total_tagihan).length,
+        lunasBulanIni: txThisMonth.filter(t => t.jumlah_dibayar >= t.total_tagihan).length,
       } as DashboardStats,
       unpaidTenants: unpaid,
     };
@@ -283,7 +284,7 @@ export default function DashboardPage() {
       jumlah: parseInt(jumlah) || 0,
       tanggal,
       is_recurring: isRecurring
-    } as any);
+    });
     if (error) {
       toast.error(error.message);
       return;
@@ -312,8 +313,8 @@ export default function DashboardPage() {
     }
     if (!roomData) return [];
     const { roomTypes, rooms } = roomData;
-    return rooms.filter((r: any) => r.status === "kosong").map((r: any) => ({
-      ...r, room_type: roomTypes.find((rt: any) => rt.id === r.room_type_id)
+    return rooms.filter(r => r.status === "kosong").map(r => ({
+      ...r, room_type: roomTypes.find(rt => rt.id === r.room_type_id)
     }));
   }, [demo.isDemo, roomData, demo.rooms, demo.roomTypes]);
 

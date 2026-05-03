@@ -40,13 +40,14 @@ export default function AdminSubscriptions() {
   const fetchData = async () => {
     setLoading(true);
     const [subsRes, usersRes] = await Promise.all([
-      supabase.from("subscriptions").select("*") as any,
-      supabase.rpc("admin_get_users") as any,
+      supabase.from("subscriptions").select("*"),
+      supabase.rpc("admin_get_users"),
     ]);
     const allSubs = (subsRes.data || []) as SubRow[];
     const userMap: Record<string, { email: string; nama: string | null }> = {};
-    ((usersRes.data || []) as any[]).forEach((u: any) => {
-      userMap[u.id] = { email: u.email, nama: u.nama };
+    (usersRes.data || []).forEach(u => {
+      const row = u as { id: string; email: string; nama: string | null };
+      userMap[row.id] = { email: row.email, nama: row.nama };
     });
     const merged = allSubs.map(s => ({
       ...s,
@@ -74,8 +75,8 @@ export default function AdminSubscriptions() {
     setSaving(true);
 
     // Find user by email
-    const { data: usersData } = await supabase.rpc("admin_get_users") as any;
-    const found = ((usersData || []) as any[]).find((u: any) => u.email === activateEmail.trim());
+    const { data: usersData } = await supabase.rpc("admin_get_users");
+    const found = (usersData || []).find(u => (u as { email: string }).email === activateEmail.trim()) as { id: string; email: string } | undefined;
     if (!found) { toast.error("User tidak ditemukan"); setSaving(false); return; }
 
     const months = parseInt(activateMonths) || 12;
@@ -84,15 +85,15 @@ export default function AdminSubscriptions() {
 
     // Check existing sub
     const { data: existingSub } = await supabase.from("subscriptions")
-      .select("*").eq("user_id", found.id).limit(1) as any;
+      .select("*").eq("user_id", found.id).limit(1);
 
     if (existingSub && existingSub.length > 0) {
       await supabase.from("subscriptions")
-        .update({ plan: activatePlan, status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any)
+        .update({ plan: activatePlan, status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] })
         .eq("user_id", found.id);
     } else {
       await supabase.from("subscriptions")
-        .insert({ user_id: found.id, plan: activatePlan, status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any);
+        .insert({ user_id: found.id, plan: activatePlan, status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
     }
 
     toast.success(`Subscription ${activatePlan} diaktifkan untuk ${activateEmail}`);
@@ -106,12 +107,12 @@ export default function AdminSubscriptions() {
     if (!extendEmail.trim()) { toast.error("Email harus diisi"); return; }
     setSaving(true);
 
-    const { data: usersData } = await supabase.rpc("admin_get_users") as any;
-    const found = ((usersData || []) as any[]).find((u: any) => u.email === extendEmail.trim());
+    const { data: usersData } = await supabase.rpc("admin_get_users");
+    const found = (usersData || []).find(u => (u as { email: string }).email === extendEmail.trim()) as { id: string; email: string } | undefined;
     if (!found) { toast.error("User tidak ditemukan"); setSaving(false); return; }
 
     const { data: existingSub } = await supabase.from("subscriptions")
-      .select("*").eq("user_id", found.id).limit(1) as any;
+      .select("*").eq("user_id", found.id).limit(1);
 
     if (!existingSub || existingSub.length === 0) {
       toast.error("User belum punya subscription"); setSaving(false); return;
@@ -124,7 +125,7 @@ export default function AdminSubscriptions() {
     startDate.setMonth(startDate.getMonth() + months);
 
     await supabase.from("subscriptions")
-      .update({ status: "aktif", expires_at: startDate.toISOString().split("T")[0] } as any)
+      .update({ status: "aktif", expires_at: startDate.toISOString().split("T")[0] })
       .eq("user_id", found.id);
 
     toast.success(`Subscription diperpanjang ${months} bulan`);

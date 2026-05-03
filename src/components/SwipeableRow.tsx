@@ -13,7 +13,7 @@ export default function SwipeableRow({ children, onEdit, onDelete }: SwipeableRo
   const x = useMotionValue(0);
   const actionsWidth = 120;
 
-  const handleDragEnd = (_: any, info: PanInfo) => {
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
     if (info.offset.x < -50) {
       setIsOpen(true);
     } else {

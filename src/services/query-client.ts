@@ -11,8 +11,9 @@ export const queryClient = new QueryClient({
        * Retry failed queries up to 2 times
        * Skip retries on 4xx errors (client errors)
        */
-      retry: (failureCount, error: any) => {
-        if (error?.status >= 400 && error?.status < 500) {
+      retry: (failureCount, error: unknown) => {
+        const err = error as { status?: number };
+        if (err?.status !== undefined && err.status >= 400 && err.status < 500) {
           return false; // Don't retry client errors
         }
         return failureCount < 2; // Retry up to 2 times for server errors

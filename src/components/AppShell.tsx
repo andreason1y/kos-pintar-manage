@@ -26,13 +26,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     supabase.from("settings").select("key, value").then(({ data }) => {
       const map: Record<string, number> = {};
-      ((data || []) as any[]).forEach((r: any) => { map[r.key] = r.value; });
+      (data || []).forEach(r => { map[r.key] = r.value; });
       if (map.maintenance_mode === 1) setMaintenanceMode(true);
       if (map.in_app_announcement_active === 1) setInAppAnnouncementActive(true);
     });
     supabase.from("settings_text").select("key, value").then(({ data }) => {
       const map: Record<string, string> = {};
-      ((data || []) as any[]).forEach((r: any) => { map[r.key] = r.value; });
+      (data || []).forEach(r => { map[r.key] = r.value; });
       if (map.in_app_announcement_text) setInAppAnnouncement(map.in_app_announcement_text);
     });
   }, []);
@@ -40,7 +40,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // Update last_login
   useEffect(() => {
     if (user && !isDemo) {
-      supabase.from("profiles").update({ last_login: new Date().toISOString() } as any).eq("id", user.id).then(() => {});
+      supabase.from("profiles").update({ last_login: new Date().toISOString() }).eq("id", user.id).then(() => {});
     }
   }, [user?.id]);
 
