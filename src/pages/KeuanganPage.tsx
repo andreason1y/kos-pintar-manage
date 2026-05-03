@@ -30,7 +30,7 @@ export default function KeuanganPage() {
   const demo = useDemo();
   const invalidate = useInvalidate();
   const [showAdd, setShowAdd] = useState(false);
-  const [showEdit, setShowEdit] = useState<any>(null);
+  const [showEdit, setShowEdit] = useState<{ id: string; label: string; kategori?: string; amount: number; date: string; is_recurring?: boolean } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [depositOpen, setDepositOpen] = useState(false);
   const pendingActionRef = useRef<string | null>(null);
@@ -104,18 +104,18 @@ export default function KeuanganPage() {
     }
     if (!depositData || !tenantData || !roomData) return [];
     const seen = new Set<string>();
-    return (depositData as any[])
-      .filter((d: any) => {
+    return depositData
+      .filter(d => {
         if (d.status !== "ditahan") return false;
-        const tenant = (tenantData as any[]).find((t: any) => t.id === d.tenant_id);
+        const tenant = tenantData.find(t => t.id === d.tenant_id);
         if (!tenant || tenant.tanggal_keluar != null) return false;
         if (seen.has(d.id)) return false;
         seen.add(d.id);
         return true;
       })
-      .map((d: any) => {
-        const tenant = (tenantData as any[]).find((t: any) => t.id === d.tenant_id);
-        const room = tenant?.room_id ? (roomData.rooms as any[]).find((r: any) => r.id === tenant.room_id) : null;
+      .map(d => {
+        const tenant = tenantData.find(t => t.id === d.tenant_id);
+        const room = tenant?.room_id ? roomData.rooms.find(r => r.id === tenant.room_id) : null;
         return { id: d.id, tenantId: d.tenant_id, nama: tenant?.nama || "-", kamar: room?.nomor || "-", jumlah: d.jumlah };
       });
   }, [demo.isDemo, depositData, tenantData, roomData, demo.deposits, demo.tenants, demo.rooms]);
@@ -171,25 +171,22 @@ export default function KeuanganPage() {
 
     if (!txData || !expData) return null;
 
-    const txMonth = txData.filter((t: any) => t.periode_bulan === bulan && t.periode_tahun === tahun);
-    const txLast = txData.filter((t: any) => t.periode_bulan === bulanLalu && t.periode_tahun === tahunLalu);
-    const pemasukan = txMonth.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
-    const pengeluaran = expData.reduce((s: number, e: any) => s + (e.jumlah || 0), 0);
-    const pemasukanLalu = txLast.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
-    const pengeluaranLalu = (expLastData || []).reduce((s: number, e: any) => s + (e.jumlah || 0), 0);
+    const txMonth = txData.filter(t => t.periode_bulan === bulan && t.periode_tahun === tahun);
+    const txLast = txData.filter(t => t.periode_bulan === bulanLalu && t.periode_tahun === tahunLalu);
+    const pemasukan = txMonth.reduce((s, t) => s + (t.jumlah_dibayar || 0), 0);
+    const pengeluaran = expData.reduce((s, e) => s + (e.jumlah || 0), 0);
+    const pemasukanLalu = txLast.reduce((s, t) => s + (t.jumlah_dibayar || 0), 0);
+    const pengeluaranLalu = (expLastData || []).reduce((s, e) => s + (e.jumlah || 0), 0);
 
-    const unpaidTx = txMonth.filter((t: any) => t.total_tagihan - t.jumlah_dibayar > 0);
+    const unpaidTx = txMonth.filter(t => t.total_tagihan - t.jumlah_dibayar > 0);
     const tenants = tenantData || [];
     const rooms = roomData?.rooms || [];
     const rTypes = roomData?.roomTypes || [];
-    const tenantMap: Record<string, any> = {};
-    (tenants as any[]).forEach((t: any) => { tenantMap[t.id] = t; });
-    const roomMap: Record<string, any> = {};
-    (rooms as any[]).forEach((r: any) => { roomMap[r.id] = r; });
-    const rtMap: Record<string, string> = {};
-    (rTypes as any[]).forEach((rt: any) => { rtMap[rt.id] = rt.nama; });
+    const tenantMap = Object.fromEntries(tenants.map(t => [t.id, t]));
+    const roomMap = Object.fromEntries(rooms.map(r => [r.id, r]));
+    const rtMap = Object.fromEntries(rTypes.map(rt => [rt.id, rt.nama]));
 
-    const unpaid = unpaidTx.map((tx: any) => {
+    const unpaid = unpaidTx.map(tx => {
       const t = tenantMap[tx.tenant_id];
       return { nama: t?.nama || "-", kamar: t?.room_id ? roomMap[t.room_id]?.nomor || "-" : "-", sisa: tx.total_tagihan - tx.jumlah_dibayar };
     });
@@ -198,14 +195,14 @@ export default function KeuanganPage() {
     for (let i = 5; i >= 0; i--) {
       let mb = bulan - i, mt = tahun;
       while (mb <= 0) { mb += 12; mt--; }
-      const txM = txData.filter((t: any) => t.periode_bulan === mb && t.periode_tahun === mt);
-      const inc = txM.reduce((s: number, t: any) => s + (t.jumlah_dibayar || 0), 0);
+      const txM = txData.filter(t => t.periode_bulan === mb && t.periode_tahun === mt);
+      const inc = txM.reduce((s, t) => s + (t.jumlah_dibayar || 0), 0);
       const exp = i === 0 ? pengeluaran : (pengeluaranLalu > 0 ? pengeluaranLalu : pengeluaran);
       bars.push({ bulan: getMonthName(mb).slice(0, 3), pemasukan: inc, pengeluaran: exp });
     }
 
     const pieMap: Record<string, number> = {};
-    txMonth.forEach((tx: any) => {
+    txMonth.forEach(tx => {
       const t = tenantMap[tx.tenant_id];
       const room = t?.room_id ? roomMap[t.room_id] : null;
       const rtName = room ? rtMap[room.room_type_id] || "Lainnya" : "Lainnya";
@@ -213,28 +210,28 @@ export default function KeuanganPage() {
     });
 
     const seenDepIds = new Set<string>();
-    const totalDep = (depositData || []).filter((d: any) => {
+    const totalDep = (depositData || []).filter(d => {
       if (d.status !== "ditahan") return false;
-      const tenant = (tenants as any[]).find((t: any) => t.id === d.tenant_id);
+      const tenant = tenants.find(t => t.id === d.tenant_id);
       if (!tenant || tenant.tanggal_keluar != null) return false;
       if (seenDepIds.has(d.id)) return false;
       seenDepIds.add(d.id);
       return true;
-    }).reduce((s: number, d: any) => s + (d.jumlah || 0), 0);
+    }).reduce((s, d) => s + (d.jumlah || 0), 0);
 
     const items = [
-      ...txMonth.filter((t: any) => t.jumlah_dibayar > 0).map((t: any) => {
+      ...txMonth.filter(t => t.jumlah_dibayar > 0).map(t => {
         const tenant = tenantMap[t.tenant_id];
-        return { id: t.id, type: "income", amount: t.jumlah_dibayar, label: `Sewa ${getMonthName(t.periode_bulan)} - ${tenant?.nama || "-"}`, date: t.tanggal_bayar || t.created_at };
+        return { id: t.id, type: "income" as const, amount: t.jumlah_dibayar, label: `Sewa ${getMonthName(t.periode_bulan)} - ${tenant?.nama || "-"}`, date: t.tanggal_bayar || t.created_at };
       }),
-      ...expData.map((e: any) => ({ id: e.id, type: "expense", amount: e.jumlah, label: e.judul, date: e.tanggal, kategori: e.kategori, is_recurring: e.is_recurring })),
+      ...expData.map(e => ({ id: e.id, type: "expense" as const, amount: e.jumlah, label: e.judul, date: e.tanggal, kategori: e.kategori, is_recurring: e.is_recurring })),
     ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return {
       pemasukan, pengeluaran, pemasukanLalu, pengeluaranLalu,
       barData: bars,
       pieData: Object.entries(pieMap).filter(([, v]) => v > 0).map(([name, value]) => ({ name, value })),
-      unpaidList: unpaid, totalUnpaid: unpaid.reduce((s: number, u: any) => s + u.sisa, 0),
+      unpaidList: unpaid, totalUnpaid: unpaid.reduce((s, u) => s + u.sisa, 0),
       totalDeposit: totalDep,
       items,
     };
@@ -250,7 +247,7 @@ export default function KeuanganPage() {
       return;
     }
     if (!activeProperty) return;
-    const { error } = await supabase.from("expenses").insert({ property_id: activeProperty.id, judul, kategori, jumlah: parseInt(jumlah) || 0, tanggal, is_recurring: isRecurring } as any);
+    const { error } = await supabase.from("expenses").insert({ property_id: activeProperty.id, judul, kategori, jumlah: parseInt(jumlah) || 0, tanggal, is_recurring: isRecurring });
     if (error) toast.error(error.message);
     else { toast.success("Pengeluaran ditambahkan!"); setShowAdd(false); setJudul(""); setJumlah(""); refetch(); }
   };
@@ -263,7 +260,7 @@ export default function KeuanganPage() {
       toast.success("Pengeluaran diperbarui!"); setShowEdit(null);
       return;
     }
-    const { error } = await supabase.from("expenses").update({ judul, kategori, jumlah: parseInt(jumlah) || 0, tanggal, is_recurring: isRecurring } as any).eq("id", showEdit.id);
+    const { error } = await supabase.from("expenses").update({ judul, kategori, jumlah: parseInt(jumlah) || 0, tanggal, is_recurring: isRecurring }).eq("id", showEdit.id);
     if (error) toast.error(error.message);
     else { toast.success("Pengeluaran diperbarui!"); setShowEdit(null); refetch(); }
   };
@@ -274,7 +271,7 @@ export default function KeuanganPage() {
       toast.success("Pengeluaran dihapus");
       return;
     }
-    const { error } = await supabase.from("expenses").delete().eq("id", id) as any;
+    const { error } = await supabase.from("expenses").delete().eq("id", id);
     if (error) toast.error(error.message);
     else { toast.success("Pengeluaran dihapus"); refetch(); }
   };
@@ -286,11 +283,11 @@ export default function KeuanganPage() {
     const { pemasukan, pengeluaran, totalDeposit, items } = computed;
     const laba = pemasukan - pengeluaran;
 
-    const incomeItems = items.filter((i: any) => i.type === "income");
-    const expenseItems = items.filter((i: any) => i.type === "expense");
+    const incomeItems = items.filter(i => i.type === "income");
+    const expenseItems = items.filter(i => i.type === "expense");
 
     // Build tenant+room info for income items
-    const incomeRows = incomeItems.map((item: any) => {
+    const incomeRows = incomeItems.map(item => {
       let tenantName = "-";
       let roomNo = "-";
       if (demo.isDemo) {
@@ -302,11 +299,11 @@ export default function KeuanganPage() {
           roomNo = room?.nomor || "-";
         }
       } else if (txData && tenantData && roomData) {
-        const tx = (txData as any[]).find((t: any) => t.id === item.id);
+        const tx = txData.find(t => t.id === item.id);
         if (tx) {
-          const tenant = (tenantData as any[]).find((t: any) => t.id === tx.tenant_id);
+          const tenant = tenantData.find(t => t.id === tx.tenant_id);
           tenantName = tenant?.nama || "-";
-          const room = tenant?.room_id ? (roomData.rooms as any[]).find((r: any) => r.id === tenant.room_id) : null;
+          const room = tenant?.room_id ? roomData.rooms.find(r => r.id === tenant.room_id) : null;
           roomNo = room?.nomor || "-";
         }
       }
@@ -314,13 +311,13 @@ export default function KeuanganPage() {
     });
 
     const expByKategori: Record<string, { label: string; date: string; amount: number }[]> = {};
-    expenseItems.forEach((e: any) => {
+    expenseItems.forEach(e => {
       const k = e.kategori || "Lainnya";
       if (!expByKategori[k]) expByKategori[k] = [];
-      expByKategori[k].push(e);
+      expByKategori[k].push({ label: e.label, date: e.date, amount: e.amount });
     });
 
-    const totalPengeluaran = expenseItems.reduce((s: number, e: any) => s + e.amount, 0);
+    const totalPengeluaran = expenseItems.reduce((s, e) => s + e.amount, 0);
     const generateDate = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 
     const html = `
@@ -381,7 +378,7 @@ export default function KeuanganPage() {
               <th style="text-align:left;padding:8px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase">Kamar</th>
               <th style="text-align:right;padding:8px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase">Jumlah</th>
             </tr>
-            ${incomeRows.map((r: any, i: number) => `
+            ${incomeRows.map((r, i) => `
               <tr style="background:${i % 2 === 0 ? "#ffffff" : "#f9fafb"}">
                 <td style="padding:6px;border-bottom:1px solid #f3f4f6">${formatDate(r.date)}</td>
                 <td style="padding:6px;border-bottom:1px solid #f3f4f6">${r.label}</td>
@@ -411,9 +408,9 @@ export default function KeuanganPage() {
               <th style="text-align:right;padding:8px 6px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase">Jumlah</th>
             </tr>
             ${Object.entries(expByKategori).map(([kat, items]) => {
-              const subtotal = items.reduce((s: number, e: any) => s + e.amount, 0);
+              const subtotal = items.reduce((s, e) => s + e.amount, 0);
               return `
-                ${items.map((e: any, i: number) => `
+                ${items.map((e, i) => `
                   <tr style="background:${i % 2 === 0 ? "#ffffff" : "#f9fafb"}">
                     <td style="padding:6px;border-bottom:1px solid #f3f4f6">${formatDate(e.date)}</td>
                     <td style="padding:6px;border-bottom:1px solid #f3f4f6">${e.label}</td>
@@ -552,13 +549,13 @@ export default function KeuanganPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={pieData} cx="50%" cy="50%" innerRadius={25} outerRadius={50} dataKey="value" strokeWidth={0} paddingAngle={2}>
-                          {pieData.map((_: any, idx: number) => <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />)}
+                          {pieData.map((_, idx) => <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />)}
                         </Pie>
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                   <div className="space-y-1.5">
-                    {pieData.map((d: any, idx: number) => (
+                    {pieData.map((d, idx) => (
                       <div key={d.name} className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full" style={{ background: PIE_COLORS[idx % PIE_COLORS.length] }} />
                         <div className="grid grid-cols-2 gap-2 w-full text-xs text-muted-foreground">
@@ -586,7 +583,7 @@ export default function KeuanganPage() {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                       <p className="text-lg font-bold text-destructive mb-3">{formatRupiah(totalUnpaid)}</p>
                       <div className="space-y-2">
-                        {unpaidList.map((u: any, i: number) => (
+                        {unpaidList.map((u, i) => (
                           <div key={i} className="flex justify-between items-center text-sm">
                             <div><p className="font-medium text-foreground">{u.nama}</p><p className="text-xs text-muted-foreground">Kamar {u.kamar}</p></div>
                             <span className="font-semibold text-destructive">{formatRupiah(u.sisa)}</span>
@@ -659,7 +656,7 @@ export default function KeuanganPage() {
                     <EmptyState title="Belum ada transaksi" description="Transaksi akan muncul di sini" />
                   ) : (
                     <div className="space-y-2">
-                      {items.map((item: any, i: number) => {
+                      {items.map((item, i) => {
                         const rowContent = (
                           <div className="flex items-center px-4 py-3 border border-border rounded-lg shadow-sm">
                             <div className="flex items-center gap-3 flex-1 min-w-0">

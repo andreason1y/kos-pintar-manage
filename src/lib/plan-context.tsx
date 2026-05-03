@@ -96,7 +96,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
       .limit(1)
       .then(({ data }) => {
         if (data && data.length > 0) {
-          const sub = data[0] as any;
+          const sub = data[0] as { plan: string; expires_at: string | null };
           setPlan(migratePlanType(sub.plan || "starter"));
           setExpiresAt(sub.expires_at || null);
         } else {

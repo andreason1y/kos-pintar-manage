@@ -50,7 +50,7 @@ export default function ProfilPage() {
 
   useEffect(() => {
     supabase.from("settings_text").select("key, value").eq("key", "app_version").then(({ data }) => {
-      if (data && data.length > 0) setAppVersion((data[0] as any).value);
+      if (data && data.length > 0) setAppVersion(data[0].value);
     });
   }, []);
 
@@ -71,7 +71,7 @@ export default function ProfilPage() {
     try {
       const { error } = await supabase
         .from("profiles")
-        .upsert({ id: user.id, nama: editNama, no_hp: editHp || null } as any, { onConflict: "id" });
+        .upsert({ id: user.id, nama: editNama, no_hp: editHp || null }, { onConflict: "id" });
       if (error) {
         console.error("Profile save error:", error);
         toast.error(error.message);
@@ -81,7 +81,7 @@ export default function ProfilPage() {
         // Force immediate refetch
         await invalidate.profile();
       }
-    } catch (err: any) {
+    } catch {
       console.error("Profile save exception:", err);
       toast.error("Gagal menyimpan profil");
     }
@@ -92,7 +92,7 @@ export default function ProfilPage() {
     e.preventDefault();
     if (demo.isDemo || !user) return;
     setSaving(true);
-    const { error } = await supabase.from("properties").update({ nama_kos: editKosName, alamat: editKosAlamat || null } as any).eq("id", editPropertyId);
+    const { error } = await supabase.from("properties").update({ nama_kos: editKosName, alamat: editKosAlamat || null }).eq("id", editPropertyId);
     if (error) toast.error(error.message);
     else {
       toast.success("Properti diperbarui!");

@@ -33,7 +33,7 @@ export default function OnboardingPage() {
       user_id: user.id,
       nama_kos: namaKos,
       alamat: alamat || null,
-    } as any);
+    });
     if (error) toast.error("Gagal menambahkan kos: " + error.message);
     else {
       toast.success("Kos berhasil ditambahkan!");

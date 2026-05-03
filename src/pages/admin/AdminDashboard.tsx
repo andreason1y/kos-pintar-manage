@@ -41,10 +41,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     const load = async () => {
       const [usersRes, subsRes, settingsRes, statsRes] = await Promise.all([
-        supabase.rpc("admin_get_users") as any,
-        supabase.from("subscriptions").select("*") as any,
-        supabase.from("settings").select("*") as any,
-        supabase.rpc("admin_get_user_stats") as any,
+        supabase.rpc("admin_get_users"),
+        supabase.from("subscriptions").select("*"),
+        supabase.from("settings").select("*"),
+        supabase.rpc("admin_get_user_stats"),
       ]);
       const usersData = (usersRes.data || []) as UserRow[];
       const subsData = (subsRes.data || []) as SubRow[];
@@ -54,18 +54,21 @@ export default function AdminDashboard() {
       setStats(statsData);
 
       const s: Record<string, number> = {};
-      ((settingsRes.data || []) as any[]).forEach((r: any) => { s[r.key] = r.value; });
+      (settingsRes.data || []).forEach(r => {
+        const row = r as { key: string; value: number };
+        s[row.key] = row.value;
+      });
       setSettings(s);
 
       // Top 5 users by transaction count — fetch transactions grouped
-      const { data: txData } = await supabase.from("transactions").select("tenant_id, property_id") as any;
+      const { data: txData } = await supabase.from("transactions").select("tenant_id, property_id");
       if (txData) {
         const countByUser: Record<string, number> = {};
         // We need to map property_id -> user_id
-        const { data: propsData } = await supabase.from("properties").select("id, user_id") as any;
+        const { data: propsData } = await supabase.from("properties").select("id, user_id");
         const propToUser: Record<string, string> = {};
-        (propsData || []).forEach((p: any) => { propToUser[p.id] = p.user_id; });
-        (txData as any[]).forEach((tx: any) => {
+        (propsData || []).forEach(p => { propToUser[p.id] = p.user_id; });
+        txData.forEach(tx => {
           const uid = propToUser[tx.property_id];
           if (uid) countByUser[uid] = (countByUser[uid] || 0) + 1;
         });

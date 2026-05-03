@@ -21,7 +21,7 @@ export default function AdminBroadcast() {
     const { error } = await supabase.from("broadcasts").insert({
       message: message.trim(),
       created_by: user?.id,
-    } as any);
+    });
     if (error) {
       toast.error(error.message);
     } else {

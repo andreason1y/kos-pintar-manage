@@ -172,14 +172,14 @@ export default function LandingPage() {
 
     Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase.from("settings").select("key, value") as any,
-      supabase.from("settings_text").select("key, value") as any,
+      supabase.from("settings").select("key, value"),
+      supabase.from("settings_text").select("key, value"),
     ]).then(([profileRes, settingsRes, textRes]) => {
       const userCount = profileRes.count || 0;
       setSlotsUsed(userCount);
 
       const numMap: Record<string, number> = {};
-      ((settingsRes.data || []) as any[]).forEach((r: any) => { numMap[r.key] = r.value; });
+      (settingsRes.data || []).forEach(r => { numMap[r.key] = r.value; });
       setCfg(numMap);
 
       // Check maintenance mode
@@ -188,7 +188,7 @@ export default function LandingPage() {
       }
 
       const txtMap: Record<string, string> = {};
-      ((textRes.data || []) as any[]).forEach((r: any) => { txtMap[r.key] = r.value; });
+      (textRes.data || []).forEach(r => { txtMap[r.key] = r.value; });
       setCfgText(txtMap);
 
       // Parse FAQ from DB

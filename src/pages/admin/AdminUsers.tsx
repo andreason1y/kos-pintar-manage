@@ -74,28 +74,29 @@ export default function AdminUsers() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const [usersRes, statsRes, subsRes, propsRes, profilesRes] = await Promise.all([
-      supabase.rpc("admin_get_users") as any,
-      supabase.rpc("admin_get_user_stats") as any,
-      supabase.from("subscriptions").select("*") as any,
-      supabase.from("properties").select("id, user_id, nama_kos") as any,
-      supabase.from("profiles").select("id, last_login") as any,
+      supabase.rpc("admin_get_users"),
+      supabase.rpc("admin_get_user_stats"),
+      supabase.from("subscriptions").select("*"),
+      supabase.from("properties").select("id, user_id, nama_kos"),
+      supabase.from("profiles").select("id, last_login"),
     ]);
 
     const allUsers = (usersRes.data || []) as UserRow[];
     const statsMap: Record<string, { property_count: number; room_count: number }> = {};
-    ((statsRes.data || []) as any[]).forEach((s: any) => {
-      statsMap[s.user_id] = { property_count: Number(s.property_count), room_count: Number(s.room_count) };
+    (statsRes.data || []).forEach(s => {
+      const row = s as { user_id: string; property_count: number; room_count: number };
+      statsMap[row.user_id] = { property_count: Number(row.property_count), room_count: Number(row.room_count) };
     });
     const subMap: Record<string, { status: string; plan: string; expires_at: string; started_at: string }> = {};
-    ((subsRes.data || []) as any[]).forEach((s: any) => {
+    (subsRes.data || []).forEach(s => {
       subMap[s.user_id] = { status: s.status, plan: s.plan, expires_at: s.expires_at, started_at: s.started_at };
     });
     const propMap: Record<string, string> = {};
-    ((propsRes.data || []) as any[]).forEach((p: any) => {
+    (propsRes.data || []).forEach(p => {
       if (!propMap[p.user_id]) propMap[p.user_id] = p.nama_kos;
     });
     const loginMap: Record<string, string> = {};
-    ((profilesRes.data || []) as any[]).forEach((p: any) => {
+    (profilesRes.data || []).forEach(p => {
       if (p.last_login) loginMap[p.id] = p.last_login;
     });
 
@@ -132,7 +133,7 @@ export default function AdminUsers() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const callEdgeFunction = async (body: any) => {
+  const callEdgeFunction = async (body: Record<string, unknown>) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error("Not authenticated");
     const res = await supabase.functions.invoke("admin-manage-user", { body });
@@ -151,12 +152,12 @@ export default function AdminUsers() {
     try {
       await callEdgeFunction({ action: "create_user", ...addForm });
       toast.success("User berhasil dibuat");
-      supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "create_user", detail: addForm.email } as any).then(() => {});
+      supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "create_user", detail: addForm.email }).then(() => {});
       setShowAdd(false);
       setAddForm({ nama: "", email: "", no_hp: "", password: "", plan: "starter", nama_kos: "", started_at: new Date().toISOString().split("T")[0], expires_at: "" });
       fetchData();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err) {
+      toast.error((err as Error).message);
     }
     setSaving(false);
   };
@@ -179,8 +180,8 @@ export default function AdminUsers() {
       toast.success("User berhasil diupdate");
       setEditUser(null);
       fetchData();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err) {
+      toast.error((err as Error).message);
     }
     setSaving(false);
   };
@@ -204,8 +205,8 @@ export default function AdminUsers() {
       }
       setResetUser(null);
       setNewPassword("");
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err) {
+      toast.error((err as Error).message);
     }
     setSaving(false);
   };
@@ -226,11 +227,11 @@ export default function AdminUsers() {
 
     if (showExtend.sub_status !== "none") {
       await supabase.from("subscriptions")
-        .update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any)
+        .update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] })
         .eq("user_id", showExtend.id);
     } else {
       await supabase.from("subscriptions")
-        .insert({ user_id: showExtend.id, plan: "starter", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any);
+        .insert({ user_id: showExtend.id, plan: "starter", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
     }
     toast.success(`Subscription diperpanjang ${months} bulan`);
     setSaving(false);
@@ -239,8 +240,8 @@ export default function AdminUsers() {
   };
 
   const handleDeactivate = async (userId: string) => {
-    await supabase.from("subscriptions").update({ status: "expired" } as any).eq("user_id", userId);
-    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "deactivate_user", detail: userId } as any).then(() => {});
+    await supabase.from("subscriptions").update({ status: "expired" }).eq("user_id", userId);
+    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "deactivate_user", detail: userId }).then(() => {});
     toast.success("Subscription dinonaktifkan");
     fetchData();
   };
@@ -251,10 +252,10 @@ export default function AdminUsers() {
     const existing = users.find(u => u.id === userId);
     if (existing?.sub_status === "none") {
       await supabase.from("subscriptions")
-        .insert({ user_id: userId, plan: "starter", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any);
+        .insert({ user_id: userId, plan: "starter", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
     } else {
       await supabase.from("subscriptions")
-        .update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any)
+        .update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] })
         .eq("user_id", userId);
     }
     toast.success("Subscription diaktifkan");
@@ -270,8 +271,8 @@ export default function AdminUsers() {
       juragan: "bisnis", // Legacy migration
     };
     const newPlan = planCycle[currentPlan] || "starter";
-    await supabase.from("subscriptions").update({ plan: newPlan } as any).eq("user_id", userId);
-    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "switch_plan", detail: `${userId}: ${currentPlan} → ${newPlan}` } as any).then(() => {});
+    await supabase.from("subscriptions").update({ plan: newPlan }).eq("user_id", userId);
+    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "switch_plan", detail: `${userId}: ${currentPlan} → ${newPlan}` }).then(() => {});
     toast.success(`Paket diubah ke ${newPlan}`);
     fetchData();
   };
@@ -281,7 +282,7 @@ export default function AdminUsers() {
     await supabase.from("subscriptions").delete().eq("user_id", deleteUser.id);
     await supabase.from("profiles").delete().eq("id", deleteUser.id);
     toast.success("Data user dihapus");
-    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "delete_user", detail: deleteUser.email } as any).then(() => {});
+    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "delete_user", detail: deleteUser.email }).then(() => {});
     setDeleteUser(null);
     fetchData();
   };
@@ -290,7 +291,7 @@ export default function AdminUsers() {
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
   };
@@ -310,9 +311,9 @@ export default function AdminUsers() {
     for (const id of selectedIds) {
       const u = users.find(u => u.id === id);
       if (u?.sub_status === "none") {
-        await supabase.from("subscriptions").insert({ user_id: id, plan: "starter", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any);
+        await supabase.from("subscriptions").insert({ user_id: id, plan: "starter", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
       } else {
-        await supabase.from("subscriptions").update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] } as any).eq("user_id", id);
+        await supabase.from("subscriptions").update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] }).eq("user_id", id);
       }
     }
     toast.success(`${selectedIds.size} user diaktifkan`);
@@ -324,7 +325,7 @@ export default function AdminUsers() {
   const handleBulkDeactivate = async () => {
     setSaving(true);
     for (const id of selectedIds) {
-      await supabase.from("subscriptions").update({ status: "expired" } as any).eq("user_id", id);
+      await supabase.from("subscriptions").update({ status: "expired" }).eq("user_id", id);
     }
     toast.success(`${selectedIds.size} user dinonaktifkan`);
     setSelectedIds(new Set());

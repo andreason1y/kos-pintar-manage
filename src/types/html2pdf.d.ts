@@ -3,8 +3,8 @@ declare module "html2pdf.js" {
     margin?: number | number[];
     filename?: string;
     image?: { type?: string; quality?: number };
-    html2canvas?: Record<string, any>;
-    jsPDF?: Record<string, any>;
+    html2canvas?: Record<string, unknown>;
+    jsPDF?: Record<string, unknown>;
     enableLinks?: boolean;
   }
 
@@ -13,7 +13,7 @@ declare module "html2pdf.js" {
     from(element: HTMLElement | string): Html2PdfInstance;
     save(): Promise<void>;
     toPdf(): Html2PdfInstance;
-    output(type: string): Promise<any>;
+    output(type: string): Promise<unknown>;
   }
 
   function html2pdf(): Html2PdfInstance;

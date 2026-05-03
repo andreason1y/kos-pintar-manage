@@ -59,7 +59,7 @@ export default function PenyewaPage() {
   }, []);
 
   const [showEndContract, setShowEndContract] = useState<Tenant | null>(null);
-  const [depositInfo, setDepositInfo] = useState<any>(null);
+  const [depositInfo, setDepositInfo] = useState<{ jumlah: number; id: string } | null>(null);
   const [returnAmount, setReturnAmount] = useState("");
   const [deductionNote, setDeductionNote] = useState("");
   const [depositAction, setDepositAction] = useState<"full" | "partial" | "forfeit">("full");
@@ -95,23 +95,23 @@ export default function PenyewaPage() {
       return { tenants: mapped, emptyRooms: empty, allRooms: all };
     }
 
-    if (!roomData || !tenantData || !txData) return { tenants: [] as Tenant[], emptyRooms: [] as any[], allRooms: [] as any[] };
+    if (!roomData || !tenantData || !txData) return { tenants: [] as Tenant[], emptyRooms: [], allRooms: [] };
 
     const { roomTypes, rooms } = roomData;
-    const transactions = txData.filter((tx: any) => tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni);
+    const transactions = txData.filter(tx => tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni);
 
-    const mapped: Tenant[] = tenantData.map((t: any) => {
-      const room = rooms.find((r: any) => r.id === t.room_id);
-      const rt = room ? roomTypes.find((rr: any) => rr.id === room.room_type_id) : null;
-      const tx = transactions.find((tx: any) => tx.tenant_id === t.id);
+    const mapped: Tenant[] = tenantData.map(t => {
+      const room = rooms.find(r => r.id === t.room_id);
+      const rt = room ? roomTypes.find(rr => rr.id === room.room_type_id) : null;
+      const tx = transactions.find(tx => tx.tenant_id === t.id);
       const sisaHari = t.tanggal_keluar ? Math.ceil((new Date(t.tanggal_keluar).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : undefined;
       return { ...t, roomLabel: room && rt ? `${rt.nama} - No. ${room.nomor}` : "-", latestTxIsPaid: tx ? tx.jumlah_dibayar >= tx.total_tagihan : undefined, sisaHari };
     });
-    const empty = rooms.filter((r: any) => r.status === "kosong").map((r: any) => ({
-      ...r, room_type: roomTypes.find((rt: any) => rt.id === r.room_type_id)
+    const empty = rooms.filter(r => r.status === "kosong").map(r => ({
+      ...r, room_type: roomTypes.find(rt => rt.id === r.room_type_id)
     }));
-    const all = rooms.map((r: any) => ({
-      ...r, room_type: roomTypes.find((rt: any) => rt.id === r.room_type_id)
+    const all = rooms.map(r => ({
+      ...r, room_type: roomTypes.find(rt => rt.id === r.room_type_id)
     }));
     return { tenants: mapped, emptyRooms: empty, allRooms: all };
   }, [demo.isDemo, roomData, tenantData, txData, demo.tenants, demo.rooms, demo.roomTypes, demo.transactions]);
@@ -253,7 +253,7 @@ export default function PenyewaPage() {
       toast.success("Penyewa dihapus");
       return;
     }
-    const { error } = await supabase.rpc("delete_tenant", { p_tenant_id: id } as any);
+    const { error } = await supabase.rpc("delete_tenant", { p_tenant_id: id });
     if (error) { toast.error(error.message); return; }
     toast.success("Penyewa dihapus");
     // Invalidate all queries to refresh data, especially deposits
@@ -272,7 +272,7 @@ export default function PenyewaPage() {
       setReturnAmount(dep ? String(dep.jumlah) : "0");
       return;
     }
-    const { data } = await supabase.from("deposits").select("*").eq("tenant_id", tenant.id).eq("status", "ditahan").single() as any;
+    const { data } = await supabase.from("deposits").select("*").eq("tenant_id", tenant.id).eq("status", "ditahan").single();
     if (data) {
       setDepositInfo(data);
       setReturnAmount(String(data.jumlah));
@@ -302,7 +302,7 @@ export default function PenyewaPage() {
       p_deposit_action: depositInfo ? depositAction : "none",
       p_return_amount: parseInt(returnAmount) || 0,
       p_deduction_note: deductionNote || null,
-    } as any);
+    });
     if (error) { toast.error(error.message); return; }
     toast.success("Kontrak berakhir, penyewa dikeluarkan");
     setShowEndContract(null); setDepositInfo(null);

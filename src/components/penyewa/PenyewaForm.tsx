@@ -77,7 +77,7 @@ export default function PenyewaForm({
       ...(mode === "create" && { tanggal_masuk: tanggalMasuk }),
     };
 
-    onSubmit(data as any);
+    onSubmit(data);
   };
 
   // For edit mode, use allRooms if provided, otherwise use emptyRooms

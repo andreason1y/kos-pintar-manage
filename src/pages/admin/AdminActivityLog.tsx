@@ -21,7 +21,7 @@ export default function AdminActivityLog() {
         .from("admin_activity_log")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(200) as any;
+        .limit(200);
       setLogs((data || []) as LogEntry[]);
       setLoading(false);
     };

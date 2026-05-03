@@ -60,14 +60,14 @@ export default function NotificationBell() {
     const items: Notification[] = [];
 
     // Broadcasts
-    (broadcastData || []).forEach((b: any) => {
+    (broadcastData || []).forEach(b => {
       items.push({ id: `bc-${b.id}`, type: "broadcast", title: "Pengumuman", subtitle: b.message });
     });
 
     // Reminders
     const tenantMap: Record<string, string> = {};
-    (tenantData || []).forEach((t: any) => { tenantMap[t.id] = t.nama; });
-    (reminderData || []).forEach((r: any) => {
+    (tenantData || []).forEach(t => { tenantMap[t.id] = t.nama; });
+    (reminderData || []).forEach(r => {
       items.push({ id: r.id, type: "reminder", title: tenantMap[r.tenant_id] || "Penyewa", subtitle: r.message, waLink: r.wa_link });
     });
 

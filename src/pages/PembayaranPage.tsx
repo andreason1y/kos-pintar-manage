@@ -91,7 +91,7 @@ export default function PembayaranPage() {
   const bulanIni = today.getMonth() + 1;
   const tahunIni = today.getFullYear();
 
-  const mapPayment = (tx: any, tenantNama: string, tenantHp: string | null, kamar: string, jatuhTempoHari: number): Payment => {
+  const mapPayment = (tx: { id: string; periode_bulan: number; periode_tahun: number; total_tagihan: number; jumlah_dibayar: number; status: string; metode_bayar: string | null; tanggal_bayar: string | null; nota_number: string | null }, tenantNama: string, tenantHp: string | null, kamar: string, jatuhTempoHari: number): Payment => {
     // Due date = jatuh_tempo_hari in the transaction's period
     const dueDate = new Date(tx.periode_tahun, tx.periode_bulan - 1, jatuhTempoHari);
     const diffMs = dueDate.getTime() - todayDate.getTime();
@@ -118,19 +118,19 @@ export default function PembayaranPage() {
           const tenant = demo.tenants.find(t => t.id === tx.tenant_id);
           const room = tenant?.room_id ? demo.rooms.find(r => r.id === tenant.room_id) : null;
           // Use jatuh_tempo_hari; fall back to tanggal_masuk day for legacy demo data
-          const jatuhTempoHari = (tenant as any)?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
+          const jatuhTempoHari = tenant?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
           return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp || null, room?.nomor || "-", jatuhTempoHari);
         });
     } else if (txData && tenantData && roomData) {
       const rooms = roomData.rooms;
       allPayments = txData
-        .filter((tx: any) => tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni)
-        .map((tx: any) => {
-          const tenant = tenantData.find((t: any) => t.id === tx.tenant_id);
-          const room = tenant?.room_id ? rooms.find((r: any) => r.id === tenant.room_id) : null;
+        .filter(tx => tx.periode_bulan === bulanIni && tx.periode_tahun === tahunIni)
+        .map(tx => {
+          const tenant = tenantData.find(t => t.id === tx.tenant_id);
+          const room = tenant?.room_id ? rooms.find(r => r.id === tenant.room_id) : null;
           // Use jatuh_tempo_hari; fall back to tanggal_masuk day for tenants without it
           const jatuhTempoHari = tenant?.jatuh_tempo_hari || (tenant?.tanggal_masuk ? new Date(tenant.tanggal_masuk).getDate() : 1);
-          return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp, room?.nomor || "-", jatuhTempoHari);
+          return mapPayment(tx, tenant?.nama || "-", tenant?.no_hp ?? null, room?.nomor || "-", jatuhTempoHari);
         });
     }
 
@@ -220,7 +220,7 @@ export default function PembayaranPage() {
       setShowPay(null); setCatatan("");
       return;
     }
-    const { error } = await supabase.from("transactions").update({ jumlah_dibayar: totalBayar, status: newStatus, metode_bayar: metode, tanggal_bayar: new Date().toISOString().split("T")[0], catatan, nota_number: nota } as any).eq("id", showPay.id);
+    const { error } = await supabase.from("transactions").update({ jumlah_dibayar: totalBayar, status: newStatus, metode_bayar: metode, tanggal_bayar: new Date().toISOString().split("T")[0], catatan, nota_number: nota }).eq("id", showPay.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Pembayaran lunas!");
     setShowPay(null); setCatatan("");
@@ -257,7 +257,7 @@ export default function PembayaranPage() {
       setShowEdit(null);
       return;
     }
-    const { error } = await supabase.from("transactions").update({ status: editStatus, metode_bayar: editMetode } as any).eq("id", showEdit.id);
+    const { error } = await supabase.from("transactions").update({ status: editStatus, metode_bayar: editMetode }).eq("id", showEdit.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Transaksi diperbarui");
     setShowEdit(null);
@@ -270,7 +270,7 @@ export default function PembayaranPage() {
       toast.success("Transaksi dihapus");
       return;
     }
-    const { error } = await supabase.from("transactions").delete().eq("id", id) as any;
+    const { error } = await supabase.from("transactions").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Transaksi dihapus");
     refetch();

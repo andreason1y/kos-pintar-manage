@@ -17,7 +17,7 @@ interface FaqItem { q: string; a: string; }
 interface TestimonialItem { quote: string; name: string; kos: string; stars: number; }
 
 function logActivity(action: string, detail?: string) {
-  supabase.from("admin_activity_log").insert({ admin_email: "admin", action, detail } as any).then(() => {});
+  supabase.from("admin_activity_log").insert({ admin_email: "admin", action, detail }).then(() => {});
 }
 
 export default function AdminSettings() {
@@ -76,8 +76,8 @@ export default function AdminSettings() {
   useEffect(() => {
     const load = async () => {
       const [numRes, textRes] = await Promise.all([
-        supabase.from("settings").select("*") as any,
-        supabase.from("settings_text").select("*") as any,
+        supabase.from("settings").select("*"),
+        supabase.from("settings_text").select("*"),
       ]);
       const rows = (numRes.data || []) as SettingRow[];
       const textRows = (textRes.data || []) as SettingTextRow[];
@@ -135,18 +135,18 @@ export default function AdminSettings() {
   const upsertNum = async (key: string, value: number) => {
     const existing = settings.find(s => s.key === key);
     if (existing) {
-      await supabase.from("settings").update({ value } as any).eq("id", existing.id);
+      await supabase.from("settings").update({ value }).eq("id", existing.id);
     } else {
-      await supabase.from("settings").insert({ key, value } as any);
+      await supabase.from("settings").insert({ key, value });
     }
   };
 
   const upsertText = async (key: string, value: string) => {
     const existing = settingsText.find(s => s.key === key);
     if (existing) {
-      await supabase.from("settings_text").update({ value } as any).eq("id", existing.id);
+      await supabase.from("settings_text").update({ value }).eq("id", existing.id);
     } else {
-      await supabase.from("settings_text").insert({ key, value } as any);
+      await supabase.from("settings_text").insert({ key, value });
     }
   };
 
