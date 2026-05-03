@@ -47,7 +47,7 @@ const CATEGORIES: { key: Category; label: string; badgeClass: string }[] = [
   { key: "terlambat", label: "Terlambat", badgeClass: "bg-destructive text-destructive-foreground" },
   { key: "jatuh_tempo_hari_ini", label: "Jatuh Tempo Hari Ini", badgeClass: "bg-[hsl(0,50%,35%)] text-white" },
   { key: "akan_jatuh_tempo", label: "Akan Jatuh Tempo", badgeClass: "bg-[hsl(38,92%,50%)] text-white" },
-  { key: "belum_lunas", label: "Belum Lunas", badgeClass: "bg-muted text-muted-foreground" },
+  { key: "belum_lunas", label: "Belum Jatuh Tempo", badgeClass: "bg-muted text-muted-foreground" },
   { key: "lunas", label: "Lunas", badgeClass: "bg-[hsl(142,71%,45%)] text-white" },
 ];
 

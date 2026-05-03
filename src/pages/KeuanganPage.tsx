@@ -578,7 +578,7 @@ export default function KeuanganPage() {
                   <CollapsibleTrigger className="w-full p-4 flex items-center justify-between rounded-t-xl">
                     <div className="flex items-center gap-2">
                       <AlertTriangle size={16} className="text-[hsl(38,92%,50%)]" />
-                      <p className="text-sm font-semibold text-foreground">Tagihan Belum Lunas</p>
+                      <p className="text-sm font-semibold text-foreground">Piutang Bulan Ini</p>
                     </div>
                     <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200" />
                   </CollapsibleTrigger>

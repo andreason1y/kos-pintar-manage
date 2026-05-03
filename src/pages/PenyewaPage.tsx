@@ -26,7 +26,6 @@ interface Tenant {
   id: string;
   nama: string;
   no_hp: string | null;
-  email?: string | null;
   jatuh_tempo_hari?: number | null;
   gender: string;
   tanggal_masuk: string;
@@ -144,12 +143,18 @@ export default function PenyewaPage() {
     return list;
   }, [tenants, activeTab, search, sortBy]);
 
+  const tabCounts = useMemo(() => ({
+    "Semua": tenants.filter(t => t.status === "aktif").length,
+    "Lunas": tenants.filter(t => t.status === "aktif" && t.latestTxIsPaid === true).length,
+    "Jatuh Tempo": tenants.filter(t => t.status === "aktif" && t.latestTxIsPaid === false).length,
+    "Keluar": tenants.filter(t => t.status === "keluar").length,
+  }), [tenants]);
+
   const refetchAll = () => invalidate.all();
 
   const handleAdd = async (formData: {
     nama: string;
     no_hp: string | null;
-    email: string | null;
     gender: string;
     room_id: string;
     tanggal_masuk?: string;
@@ -169,7 +174,7 @@ export default function PenyewaPage() {
         roomId: formData.room_id,
         nama: formData.nama,
         noHp: formData.no_hp,
-        email: formData.email,
+        email: null,
         jatuhTempoHari: formData.jatuh_tempo,
         gender: (formData.gender || "L") as "L" | "P",
         tanggalMasuk: tanggalMasukStr,
@@ -187,7 +192,7 @@ export default function PenyewaPage() {
       p_room_id: formData.room_id,
       p_nama: formData.nama,
       p_no_hp: formData.no_hp,
-      p_email: formData.email,
+      p_email: null,
       p_gender: formData.gender || "L",
       p_tanggal_masuk: tanggalMasukStr,
       p_tanggal_keluar: tanggalKeluar,
@@ -203,7 +208,6 @@ export default function PenyewaPage() {
   const handleEditTenant = async (formData: {
     nama: string;
     no_hp: string | null;
-    email: string | null;
     room_id: string;
     durasi_bulan?: number;
     jatuh_tempo?: number;
@@ -222,7 +226,6 @@ export default function PenyewaPage() {
     if (demo.isDemo) {
       demo.updateTenant(showEdit.id, {
         no_hp: formData.no_hp,
-        email: formData.email,
         jatuh_tempo_hari: formData.jatuh_tempo ?? null,
         ...(tanggalKeluar && { tanggal_keluar: tanggalKeluar }),
       });
@@ -234,7 +237,6 @@ export default function PenyewaPage() {
       .from("tenants")
       .update({
         no_hp: formData.no_hp,
-        email: formData.email,
         jatuh_tempo_hari: formData.jatuh_tempo ?? null,
         ...(tanggalKeluar && { tanggal_keluar: tanggalKeluar }),
       })
@@ -324,7 +326,7 @@ export default function PenyewaPage() {
           {tabsList.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${activeTab === tab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-            >{tab}</button>
+            >{tab} {tabCounts[tab as keyof typeof tabCounts] > 0 && <span className="ml-1 opacity-80">({tabCounts[tab as keyof typeof tabCounts]})</span>}</button>
           ))}
         </div>
         <div className="flex items-center gap-2">
@@ -434,7 +436,6 @@ export default function PenyewaPage() {
                 id: showEdit.id,
                 nama: showEdit.nama,
                 no_hp: showEdit.no_hp,
-                email: showEdit.email,
                 room_id: showEdit.room_id,
                 jatuh_tempo: showEdit.jatuh_tempo_hari ?? undefined,
                 tanggal_masuk: showEdit.tanggal_masuk,

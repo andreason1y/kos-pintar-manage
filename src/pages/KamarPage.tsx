@@ -72,7 +72,6 @@ export default function KamarPage() {
   const [editRoomLantai, setEditRoomLantai] = useState("1");
   const [tenantNama, setTenantNama] = useState("");
   const [tenantHp, setTenantHp] = useState("");
-  const [tenantEmail, setTenantEmail] = useState("");
   const [tenantGender, setTenantGender] = useState("L");
   const [tenantTanggalMasuk, setTenantTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
   const [tenantDurasi, setTenantDurasi] = useState("1");
@@ -226,14 +225,14 @@ export default function KamarPage() {
     const keluarStr = keluar.toISOString().split("T")[0];
 
     const resetTenantForm = () => {
-      setTenantNama(""); setTenantHp(""); setTenantEmail(""); setTenantGender("L");
+      setTenantNama(""); setTenantHp(""); setTenantGender("L");
       setTenantDurasi("1"); setTenantDeposit(""); setTenantJatuhTempo("1");
     };
 
     if (demo.isDemo) {
       demo.demoAddTenantAtomic({
         roomId: showAddTenant, nama: tenantNama, noHp: tenantHp || null,
-        email: tenantEmail || null,
+        email: null,
         gender: tenantGender as "L" | "P", tanggalMasuk: tenantTanggalMasuk,
         tanggalKeluar: keluarStr, depositAmount: parseInt(tenantDeposit) || 0,
         jatuhTempoHari: parseInt(tenantJatuhTempo) || 1,
@@ -249,7 +248,7 @@ export default function KamarPage() {
       p_room_id: showAddTenant,
       p_nama: tenantNama,
       p_no_hp: tenantHp || null,
-      p_email: tenantEmail || null,
+      p_email: null,
       p_gender: tenantGender,
       p_tanggal_masuk: tenantTanggalMasuk,
       p_tanggal_keluar: keluarStr,
@@ -506,10 +505,6 @@ export default function KamarPage() {
           <div className="space-y-2">
             <Label>Deposit (Rp)</Label>
             <Input type="number" value={tenantDeposit} onChange={e => setTenantDeposit(e.target.value)} placeholder="0 (opsional)" />
-          </div>
-          <div className="space-y-2">
-            <Label>Email (opsional)</Label>
-            <Input type="email" value={tenantEmail} onChange={e => setTenantEmail(e.target.value)} placeholder="penyewa@email.com" />
           </div>
           </div>
           <div className="bottom-sheet-footer">

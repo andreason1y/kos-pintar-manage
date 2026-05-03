@@ -204,7 +204,7 @@ export default function DashboardPage() {
   const handleAddTenant = async (formData: {
     nama: string;
     no_hp: string | null;
-    email: string | null;
+    gender: string;
     room_id: string;
     tanggal_masuk?: string;
     jatuh_tempo?: number;
@@ -225,7 +225,7 @@ export default function DashboardPage() {
         roomId: formData.room_id,
         nama: formData.nama,
         noHp: formData.no_hp,
-        email: formData.email,
+        email: null,
         jatuhTempoHari: formData.jatuh_tempo,
         gender: (formData.gender || "L") as "L" | "P",
         tanggalMasuk: tanggalMasukStr,
@@ -243,7 +243,7 @@ export default function DashboardPage() {
       p_room_id: formData.room_id,
       p_nama: formData.nama,
       p_no_hp: formData.no_hp,
-      p_email: formData.email,
+      p_email: null,
       p_gender: formData.gender || "L",
       p_tanggal_masuk: tanggalMasukStr,
       p_tanggal_keluar: tanggalKeluar,
