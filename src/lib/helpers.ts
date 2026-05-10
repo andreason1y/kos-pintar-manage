@@ -36,3 +36,20 @@ export function waTagihanLink(nama: string, kamar: string, bulan: string, tangga
   const phone = hp ? hp.replace(/^0/, "62") : "";
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
+
+
+/**
+ * Safely add months to a date, clamping to the last day of the target month
+ * to avoid overflow (e.g., Jan 31 + 1 month = Feb 28, not Mar 3).
+ */
+export function addMonths(date: Date, months: number): Date {
+  const result = new Date(date);
+  const targetMonth = result.getMonth() + months;
+  result.setMonth(targetMonth);
+  // If the day overflowed (e.g., 31 Jan + 1 month → 3 Mar instead of 28 Feb),
+  // set to last day of the intended target month
+  if (result.getMonth() !== ((targetMonth % 12) + 12) % 12) {
+    result.setDate(0); // sets to last day of previous month
+  }
+  return result;
+}

@@ -278,7 +278,8 @@ export default function KeuanganPage() {
 
   const handleExportPDF = async () => {
     if (!computed) return;
-    const { default: html2pdf } = await import("html2pdf.js");
+    try {
+      const { default: html2pdf } = await import("html2pdf.js");
 
     const { pemasukan, pengeluaran, totalDeposit, items } = computed;
     const laba = pemasukan - pengeluaran;
@@ -453,6 +454,9 @@ export default function KeuanganPage() {
 
     document.body.removeChild(container);
     toast.success("PDF berhasil diunduh!");
+    } catch (err) {
+      toast.error("Gagal mengunduh PDF. Silakan coba lagi.");
+    }
   };
 
   // Auto-trigger export PDF from dashboard quick action

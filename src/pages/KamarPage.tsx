@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { usePlan } from "@/lib/plan-context";
-import { formatRupiah } from "@/lib/helpers";
+import { formatRupiah, addMonths } from "@/lib/helpers";
 import { getAvatarColor, getInitials } from "@/lib/avatar-colors";
 import { useRoomTypesAndRooms, useTenants, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
@@ -220,8 +220,7 @@ export default function KamarPage() {
     if (!showAddTenant) return;
     const d = parseInt(tenantDurasi);
     const masuk = new Date(tenantTanggalMasuk);
-    const keluar = new Date(masuk);
-    keluar.setMonth(keluar.getMonth() + d);
+    const keluar = addMonths(masuk, d);
     const keluarStr = keluar.toISOString().split("T")[0];
 
     const resetTenantForm = () => {
