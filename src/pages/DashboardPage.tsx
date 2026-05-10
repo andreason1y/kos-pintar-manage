@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import PenyewaForm from "@/components/penyewa/PenyewaForm";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
-import { formatRupiah, getMonthName, waTagihanLink } from "@/lib/helpers";
+import { formatRupiah, getMonthName, waTagihanLink, addMonths } from "@/lib/helpers";
 import { useRoomTypesAndRooms, useTenants, useTransactions, useExpenses, usePrefetchRoutes, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
@@ -218,8 +218,7 @@ export default function DashboardPage() {
 
     const tanggalMasukStr = formData.tanggal_masuk || new Date().toISOString().split("T")[0];
     const masuk = new Date(tanggalMasukStr);
-    masuk.setMonth(masuk.getMonth() + 1);
-    const tanggalKeluar = masuk.toISOString().split("T")[0];
+    const tanggalKeluar = addMonths(masuk, 1).toISOString().split("T")[0];
 
     if (demo.isDemo) {
       demo.demoAddTenantAtomic({

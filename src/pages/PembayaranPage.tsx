@@ -201,7 +201,6 @@ export default function PembayaranPage() {
 
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPayError("");
     if (!showPay) return;
     const totalBayar = showPay.total_tagihan;
     const newStatus = totalBayar >= showPay.total_tagihan ? "lunas" : "belum_lunas";

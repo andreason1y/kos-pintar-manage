@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { getInitials, getAvatarColor } from "@/lib/avatar-colors";
-import { formatRupiah } from "@/lib/helpers";
+import { formatRupiah, addMonths } from "@/lib/helpers";
 import { useRoomTypesAndRooms, useTenants, useTransactions, useDeposits, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
@@ -166,8 +166,7 @@ export default function PenyewaPage() {
 
     const tanggalMasukStr = formData.tanggal_masuk || new Date().toISOString().split("T")[0];
     const masuk = new Date(tanggalMasukStr);
-    masuk.setMonth(masuk.getMonth() + (formData.durasi_bulan || 1));
-    const tanggalKeluar = masuk.toISOString().split("T")[0];
+    const tanggalKeluar = addMonths(masuk, formData.durasi_bulan || 1).toISOString().split("T")[0];
 
     if (demo.isDemo) {
       demo.demoAddTenantAtomic({
@@ -219,8 +218,7 @@ export default function PenyewaPage() {
     let tanggalKeluar: string | undefined;
     if (formData.durasi_bulan && showEdit.tanggal_masuk) {
       const masuk = new Date(showEdit.tanggal_masuk);
-      masuk.setMonth(masuk.getMonth() + formData.durasi_bulan);
-      tanggalKeluar = masuk.toISOString().split("T")[0];
+      tanggalKeluar = addMonths(masuk, formData.durasi_bulan).toISOString().split("T")[0];
     }
 
     if (demo.isDemo) {

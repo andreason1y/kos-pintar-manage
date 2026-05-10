@@ -94,7 +94,15 @@ export function PlanProvider({ children }: { children: ReactNode }) {
       .eq("status", "aktif")
       .order("created_at", { ascending: false })
       .limit(1)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          // Fail gracefully — default to starter plan
+          console.warn("[PlanContext] Failed to fetch subscription:", error.message);
+          setPlan("starter");
+          setExpiresAt(null);
+          setLoading(false);
+          return;
+        }
         if (data && data.length > 0) {
           const sub = data[0] as { plan: string; expires_at: string | null };
           setPlan(migratePlanType(sub.plan || "starter"));
