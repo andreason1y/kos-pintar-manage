@@ -77,17 +77,17 @@ export default function NotificationBell() {
   const count = notifications.length;
 
   const iconForType = (type: string) => {
-    if (type === "expiring") return <Clock size={16} className="text-warning" />;
-    if (type === "reminder") return <MessageCircle size={16} className="text-foreground" />;
+    if (type === "expiring") return <Clock size={16} className="text-[hsl(38,92%,50%)]" />;
+    if (type === "reminder") return <MessageCircle size={16} className="text-primary" />;
     if (type === "broadcast") return <Megaphone size={16} className="text-accent" />;
     return <AlertTriangle size={16} className="text-destructive" />;
   };
 
   const bgForType = (type: string) => {
-    if (type === "expiring") return "bg-warning/10";
-    if (type === "reminder") return "bg-foreground/5";
-    if (type === "broadcast") return "bg-accent/10";
-    return "bg-destructive/10";
+    if (type === "expiring") return "bg-[hsl(38,92%,50%)]/20";
+    if (type === "reminder") return "bg-primary/20";
+    if (type === "broadcast") return "bg-accent/20";
+    return "bg-destructive/20";
   };
 
   return (

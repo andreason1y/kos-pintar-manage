@@ -318,9 +318,9 @@ export default function DashboardPage() {
   }, [demo.isDemo, roomData, demo.rooms, demo.roomTypes]);
 
   const quickActions = [
-    { icon: UserPlus, label: "Tambah Penyewa", action: () => setShowAddTenant(true), color: "bg-foreground/5 text-foreground" },
-    { icon: CreditCard, label: "Pembayaran", action: () => navigate("/pembayaran"), color: "bg-accent/10 text-accent" },
-    { icon: Send, label: "Kirim Tagihan", action: () => setShowTagihan(true), color: "bg-foreground/5 text-foreground" },
+    { icon: UserPlus, label: "Tambah Penyewa", action: () => setShowAddTenant(true), color: "bg-primary/10 text-primary" },
+    { icon: CreditCard, label: "Pembayaran", action: () => navigate("/pembayaran"), color: "bg-[hsl(142,71%,45%)]/10 text-[hsl(142,71%,45%)]" },
+    { icon: Send, label: "Kirim Tagihan", action: () => setShowTagihan(true), color: "bg-accent/10 text-accent" },
     { icon: Receipt, label: "Pengeluaran", action: () => setShowAddExpense(true), color: "bg-destructive/10 text-destructive" },
   ];
 
@@ -335,7 +335,7 @@ export default function DashboardPage() {
     { name: "Lunas", value: stats.lunasBulanIni },
     { name: "Belum", value: stats.totalTxBulanIni - stats.lunasBulanIni },
   ] : [];
-  const DONUT_COLORS = ["hsl(221, 83%, 53%)", "hsl(0, 0%, 90%)"];
+  const DONUT_COLORS = ["hsl(142, 71%, 45%)", "hsl(220, 13%, 91%)"];
 
   return (
     <AppShell>
@@ -363,12 +363,12 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.15 }}
-              className="bg-foreground rounded-xl p-5 text-background"
+              className="gradient-primary rounded-xl p-5 text-primary-foreground shadow-lg"
             >
-              <p className="text-xs font-medium text-background/60">Laba Bulan Ini</p>
-              <p className="text-2xl font-bold mt-1 tracking-tight">{formatRupiah(laba)}</p>
-              <div className="flex items-center gap-1.5 mt-2 text-xs text-background/50">
-                {labaDiff >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+              <p className="text-sm opacity-80">Laba Bulan Ini</p>
+              <p className="text-2xl font-bold mt-1">{formatRupiah(laba)}</p>
+              <div className="flex items-center gap-1 mt-2 text-xs opacity-80">
+                {labaDiff >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                 <span>{labaDiff >= 0 ? "+" : ""}{formatRupiah(labaDiff)} dari bulan lalu</span>
               </div>
             </motion.div>
@@ -380,7 +380,7 @@ export default function DashboardPage() {
                   icon: DoorOpen,
                   label: "Kamar Terisi",
                   value: `${stats.kamarTerisi}/${stats.kamarTerisi + stats.kamarKosong}`,
-                  color: "text-accent",
+                  color: "text-[hsl(142,71%,45%)]",
                   action: null
                 },
                 {
@@ -396,11 +396,11 @@ export default function DashboardPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03, duration: 0.15 }}
-                  className={`bg-card rounded-xl p-4 border border-border ${stat.action ? "cursor-pointer hover:border-foreground/20 transition-colors" : ""}`}
+                  className={`bg-card rounded-xl p-4 border border-border shadow-sm ${stat.action ? "cursor-pointer hover:bg-muted transition-colors" : ""}`}
                   onClick={stat.action}
                 >
-                  <stat.icon size={18} className={stat.color} />
-                  <p className="text-2xl font-bold text-foreground mt-2 tracking-tight">{stat.value}</p>
+                  <stat.icon size={20} className={stat.color} />
+                  <p className="text-2xl font-bold text-foreground mt-2">{stat.value}</p>
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
                 </motion.div>
               ))}
@@ -412,7 +412,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1, duration: 0.15 }}
-                className="bg-card rounded-xl border border-border p-4"
+                className="bg-card rounded-xl border border-border p-4 shadow-sm"
               >
                 <p className="text-sm font-semibold text-foreground mb-3">Pembayaran Bulan Ini</p>
                 <div className="flex items-center gap-4">
@@ -438,16 +438,16 @@ export default function DashboardPage() {
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-lg font-bold text-foreground tracking-tight">{lunasPct}%</span>
+                      <span className="text-lg font-bold text-foreground">{lunasPct}%</span>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: DONUT_COLORS[0] }} />
+                      <div className="w-3 h-3 rounded-full" style={{ background: DONUT_COLORS[0] }} />
                       <span className="text-xs text-muted-foreground">Lunas ({stats.lunasBulanIni})</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: DONUT_COLORS[1] }} />
+                      <div className="w-3 h-3 rounded-full" style={{ background: DONUT_COLORS[1] }} />
                       <span className="text-xs text-muted-foreground">Belum ({stats.totalTxBulanIni - stats.lunasBulanIni})</span>
                     </div>
                   </div>
@@ -458,20 +458,19 @@ export default function DashboardPage() {
             {/* Quick Actions */}
             <div>
               <h2 className="text-sm font-semibold text-foreground mb-3">Aksi Cepat</h2>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-3">
                 {quickActions.map((action, i) => (
                   <motion.button
                     key={action.label}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.15, delay: i * 0.03 }}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
+                    transition={{ duration: 0.15, delay: i * 0.05 }}
+                    whileHover={{ scale: 1.02 }}
                     onClick={action.action}
-                    className="bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-2 hover:border-foreground/20 transition-colors"
+                    className="bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-muted transition-colors shadow-sm"
                   >
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${action.color}`}>
-                      <action.icon size={16} />
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${action.color}`}>
+                      <action.icon size={18} />
                     </div>
                     <span className="text-xs font-medium text-foreground text-center leading-tight">{action.label}</span>
                   </motion.button>

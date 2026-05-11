@@ -52,7 +52,7 @@ export default function OnboardingPage() {
           <h1 className="text-xl font-bold text-foreground">Tambah Kos Pertama Anda</h1>
           <p className="text-sm text-muted-foreground mt-1">Mulai kelola properti Anda</p>
         </div>
-        <div className="bg-card rounded-xl p-6  border border-border">
+        <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="namaKos">Nama Kos</Label>

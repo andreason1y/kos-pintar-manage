@@ -38,11 +38,11 @@ export function AppSidebar() {
   const avatarColor = getAvatarColor(displayName);
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/60">
+    <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2.5">
-          <img src={logoIcon} alt="KosPintar" className="w-7 h-7 rounded-md object-contain shrink-0" />
-          <span className="font-bold text-sm text-foreground tracking-tight group-data-[collapsible=icon]:hidden">
+        <div className="flex items-center gap-2">
+          <img src={logoIcon} alt="KosPintar" className="w-8 h-8 rounded-lg object-contain shrink-0" />
+          <span className="font-extrabold text-lg text-foreground group-data-[collapsible=icon]:hidden">
             KosPintar
           </span>
         </div>
@@ -60,10 +60,10 @@ export function AppSidebar() {
                       isActive={active}
                       onClick={() => navigate(item.url)}
                       tooltip={item.title}
-                      className={active ? "bg-foreground text-background font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}
+                      className={active ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground"}
                     >
-                      <item.icon className="h-4 w-4" />
-                      <span className="text-sm">{item.title}</span>
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -74,13 +74,13 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4">
-        <div className="flex items-center gap-2.5 group-data-[collapsible=icon]:justify-center">
-          <Avatar className="h-7 w-7 shrink-0" style={{ backgroundColor: avatarColor.bg }}>
-            <AvatarFallback className="text-[10px] font-semibold" style={{ backgroundColor: avatarColor.bg, color: avatarColor.fg }}>
+        <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
+          <Avatar className="h-8 w-8 shrink-0" style={{ backgroundColor: avatarColor.bg }}>
+            <AvatarFallback className="text-xs font-bold" style={{ backgroundColor: avatarColor.bg, color: avatarColor.fg }}>
               {initials}
             </AvatarFallback>
           </Avatar>
-          <span className="text-xs font-medium text-foreground truncate group-data-[collapsible=icon]:hidden">
+          <span className="text-sm font-medium text-foreground truncate group-data-[collapsible=icon]:hidden">
             {displayName}
           </span>
         </div>

@@ -290,7 +290,7 @@ export default function KamarPage() {
             const terisi = rt.rooms.filter(r => r.status === "terisi").length;
             const isExpanded = expanded === rt.id;
             return (
-              <motion.div key={rt.id} layout className="bg-card rounded-xl border border-border overflow-hidden ">
+              <motion.div key={rt.id} layout className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
                 <div className="flex items-center">
                   <button className="flex-1 p-4 flex items-center justify-between" onClick={() => setExpanded(isExpanded ? null : rt.id)}>
                     <div className="text-left">
@@ -361,7 +361,7 @@ export default function KamarPage() {
                                 {room.status === "kosong" && (
                                   <span className="text-[10px] font-medium text-primary flex items-center gap-0.5"><UserPlus size={12} /> Isi</span>
                                 )}
-                                <Badge className={`text-[10px] border-0 ${room.status === "terisi" ? "bg-success text-white" : "bg-muted text-muted-foreground"}`}>
+                                <Badge className={`text-[10px] border-0 ${room.status === "terisi" ? "bg-[hsl(142,71%,45%)] text-white" : "bg-muted text-muted-foreground"}`}>
                                   {room.status === "terisi" ? "Terisi" : "Kosong"}
                                 </Badge>
                               </div>

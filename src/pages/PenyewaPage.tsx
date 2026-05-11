@@ -348,7 +348,7 @@ export default function PenyewaPage() {
             const avatarColor = getAvatarColor(t.nama);
             return (
               <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02, duration: 0.15 }}
-                className="bg-card rounded-xl border border-border p-4 "
+                className="bg-card rounded-xl border border-border p-4 shadow-sm"
               >
                 <div className="flex items-start gap-3">
                   <div
@@ -367,7 +367,7 @@ export default function PenyewaPage() {
                           const nextDue = dueThisMonth >= now ? dueThisMonth : new Date(now.getFullYear(), now.getMonth() + 1, t.jatuh_tempo_hari);
                           const daysUntilDue = Math.ceil((nextDue.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
                           return (
-                            <p className={`text-xs mt-1 ${daysUntilDue <= 7 ? "text-warning" : "text-muted-foreground"}`}>
+                            <p className={`text-xs mt-1 ${daysUntilDue <= 7 ? "text-[hsl(38,92%,50%)]" : "text-muted-foreground"}`}>
                               {daysUntilDue === 0 ? "Jatuh tempo: hari ini" : `Jatuh tempo: ${daysUntilDue} hari lagi`}
                             </p>
                           );
@@ -377,8 +377,8 @@ export default function PenyewaPage() {
                         <StatusBadge status={t.latestTxIsPaid === true ? "lunas" : t.latestTxIsPaid === false ? "belum_bayar" : undefined} />
                         {t.no_hp && (
                           <a href={`https://wa.me/${t.no_hp.replace(/^0/, "62")}`} target="_blank" rel="noreferrer"
-                            className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
-                            <MessageCircle size={16} className="text-success" />
+                            className="w-8 h-8 rounded-full bg-[hsl(142,71%,45%)]/10 flex items-center justify-center">
+                            <MessageCircle size={16} className="text-[hsl(142,71%,45%)]" />
                           </a>
                         )}
                         <DropdownMenu>

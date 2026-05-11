@@ -1,13 +1,13 @@
 // Deterministic avatar colors based on name hash
 const AVATAR_COLORS = [
-  { bg: "hsl(221, 83%, 53%)", fg: "hsl(0, 0%, 100%)" },     // blue
+  { bg: "hsl(174, 84%, 32%)", fg: "hsl(0, 0%, 100%)" },     // teal
+  { bg: "hsl(38, 92%, 50%)", fg: "hsl(0, 0%, 100%)" },      // amber
   { bg: "hsl(262, 52%, 47%)", fg: "hsl(0, 0%, 100%)" },     // purple
   { bg: "hsl(346, 77%, 50%)", fg: "hsl(0, 0%, 100%)" },     // rose
   { bg: "hsl(199, 89%, 48%)", fg: "hsl(0, 0%, 100%)" },     // sky
   { bg: "hsl(142, 71%, 35%)", fg: "hsl(0, 0%, 100%)" },     // green
   { bg: "hsl(25, 95%, 53%)", fg: "hsl(0, 0%, 100%)" },      // orange
   { bg: "hsl(271, 91%, 65%)", fg: "hsl(0, 0%, 100%)" },     // violet
-  { bg: "hsl(0, 0%, 15%)", fg: "hsl(0, 0%, 100%)" },        // charcoal
 ];
 
 function hashName(name: string): number {

@@ -15,7 +15,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Inter"', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -77,10 +77,6 @@ export default {
       },
       maxWidth: {
         app: "480px",
-      },
-      letterSpacing: {
-        tighter: "-0.04em",
-        tight: "-0.02em",
       },
       keyframes: {
         "accordion-down": {

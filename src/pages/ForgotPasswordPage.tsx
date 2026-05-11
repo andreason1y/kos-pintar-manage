@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
           <p className="text-sm text-muted-foreground mt-1">Kelola kos-kosan lebih mudah</p>
         </div>
 
-        <div className="bg-card rounded-xl p-6  border border-border">
+        <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
           {sent ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
