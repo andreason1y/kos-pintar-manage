@@ -173,16 +173,6 @@ export default function LandingPage() {
               </div>
             </FadeIn>
           </div>
-          {/* Screenshots row */}
-          <FadeIn delay={0.3} className="mt-14 md:mt-20">
-            <div className="flex gap-4 justify-center overflow-x-auto pb-4 snap-x md:overflow-visible" style={{ scrollbarWidth: "none" }}>
-              {SCREENSHOTS.slice(0, 3).map((s, i) => (
-                <PhoneMockup key={s.label} className={`w-44 md:w-52 flex-shrink-0 snap-center ${i === 1 ? "md:scale-110 md:z-10" : "md:opacity-80"}`}>
-                  <img src={s.src} alt={s.label} className="w-full object-cover object-top" loading="lazy" />
-                </PhoneMockup>
-              ))}
-            </div>
-          </FadeIn>
         </Section>
 
         {/* Problem → Solution */}
