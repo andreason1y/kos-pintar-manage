@@ -8,10 +8,6 @@ interface AuthGuardProps {
   fallbackPath?: string;
 }
 
-/**
- * Guard that requires authentication
- * Redirects to login if not authenticated (unless in demo mode)
- */
 export function AuthGuard({ children, fallbackPath = "/" }: AuthGuardProps) {
   const { user, loading: authLoading } = useAuth();
   const { isDemo } = useDemo();
@@ -24,13 +20,18 @@ export function AuthGuard({ children, fallbackPath = "/" }: AuthGuardProps) {
     );
   }
 
-  // Demo mode bypasses auth
   if (isDemo) {
     return children;
   }
 
-  // Require authentication
   if (!user) {
+    return <Navigate to={fallbackPath} replace />;
+  }
+
+  // Blokir akses jika OTP belum diverifikasi untuk sesi ini
+  // (redirect ke login → AuthPage akan otomatis tampilkan step OTP)
+  const otpVerified = sessionStorage.getItem("otp_verified") === user.id;
+  if (!otpVerified) {
     return <Navigate to={fallbackPath} replace />;
   }
 
