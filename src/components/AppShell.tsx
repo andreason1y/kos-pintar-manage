@@ -37,28 +37,26 @@ export default function AppShell({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Update last_login
   useEffect(() => {
     if (user && !isDemo) {
       supabase.from("profiles").update({ last_login: new Date().toISOString() }).eq("id", user.id).then(() => {});
     }
   }, [user?.id]);
 
-  // Maintenance mode — redirect to maintenance screen (except admin)
   if (maintenanceMode && !isDemo && user?.email !== "andreassina9a@gmail.com") {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8 text-center">
-        <img src={logoIcon} alt="KosPintar" className="h-16 w-16 rounded-xl mb-6" />
-        <h1 className="text-2xl font-extrabold text-foreground mb-3">Sedang dalam Pemeliharaan</h1>
-        <p className="text-muted-foreground max-w-md">Kami sedang melakukan pemeliharaan sistem. Silakan kembali lagi nanti.</p>
+        <img src={logoIcon} alt="KosPintar" className="h-12 w-12 rounded-xl mb-5" />
+        <h1 className="text-lg font-bold text-foreground mb-2">Sedang dalam Pemeliharaan</h1>
+        <p className="text-sm text-muted-foreground max-w-md">Kami sedang melakukan pemeliharaan sistem. Silakan kembali lagi nanti.</p>
       </div>
     );
   }
 
   const announcementBanner = inAppAnnouncementActive && inAppAnnouncement && !bannerDismissed && (
-    <div className="bg-accent/20 border-b border-accent/30 px-4 py-2 flex items-center gap-2">
+    <div className="bg-muted border-b border-border/60 px-4 py-2 flex items-center gap-2">
       <p className="flex-1 text-xs font-medium text-foreground">{inAppAnnouncement}</p>
-      <button onClick={() => setBannerDismissed(true)} className="text-muted-foreground hover:text-foreground">
+      <button onClick={() => setBannerDismissed(true)} className="text-muted-foreground hover:text-foreground transition-colors">
         <X size={14} />
       </button>
     </div>
@@ -68,13 +66,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-screen bg-background">
         {announcementBanner}
-        <div className="mx-auto max-w-app pb-20">
+        <div className="mx-auto max-w-app pb-16">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -12 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
             >
               {children}
@@ -88,7 +86,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-muted/30">
+      <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <main className="flex-1 overflow-auto">
           {announcementBanner}
@@ -96,9 +94,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
               >
                 {children}

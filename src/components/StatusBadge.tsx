@@ -5,17 +5,17 @@ interface StatusBadgeProps {
 }
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
-  if (!status) return <Badge variant="outline" className="text-[10px]">-</Badge>;
+  if (!status) return <Badge variant="outline" className="text-[10px] font-medium">-</Badge>;
 
   if (status === "lunas") {
     return (
-      <Badge className="bg-[hsl(142,71%,45%)] text-white border-0 text-[10px] px-2 py-0.5 shadow-sm">
+      <Badge className="bg-success text-white border-0 text-[10px] px-2 py-0.5 font-medium">
         Lunas
       </Badge>
     );
   }
   return (
-    <Badge className="bg-destructive text-destructive-foreground border-0 text-[10px] px-2 py-0.5 shadow-sm">
+    <Badge className="bg-destructive text-destructive-foreground border-0 text-[10px] px-2 py-0.5 font-medium">
       Belum Bayar
     </Badge>
   );

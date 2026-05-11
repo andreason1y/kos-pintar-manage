@@ -46,9 +46,9 @@ type Category = "terlambat" | "akan_jatuh_tempo" | "jatuh_tempo_hari_ini" | "bel
 const CATEGORIES: { key: Category; label: string; badgeClass: string }[] = [
   { key: "terlambat", label: "Terlambat", badgeClass: "bg-destructive text-destructive-foreground" },
   { key: "jatuh_tempo_hari_ini", label: "Jatuh Tempo Hari Ini", badgeClass: "bg-[hsl(0,50%,35%)] text-white" },
-  { key: "akan_jatuh_tempo", label: "Akan Jatuh Tempo", badgeClass: "bg-[hsl(38,92%,50%)] text-white" },
+  { key: "akan_jatuh_tempo", label: "Akan Jatuh Tempo", badgeClass: "bg-warning text-white" },
   { key: "belum_lunas", label: "Belum Jatuh Tempo", badgeClass: "bg-muted text-muted-foreground" },
-  { key: "lunas", label: "Lunas", badgeClass: "bg-[hsl(142,71%,45%)] text-white" },
+  { key: "lunas", label: "Lunas", badgeClass: "bg-success text-white" },
 ];
 
 function getDueDateLabel(days: number): string {
@@ -58,7 +58,7 @@ function getDueDateLabel(days: number): string {
 }
 
 function getDueDateColor(days: number): string {
-  if (days > 1) return "text-[hsl(38,92%,50%)]";
+  if (days > 1) return "text-warning";
   if (days === 0) return "text-destructive";
   return "text-[hsl(0,50%,35%)]";
 }
@@ -329,7 +329,7 @@ export default function PembayaranPage() {
         ) : (
           visiblePayments.map((p, i) => (
             <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02, duration: 0.15 }}
-              className="bg-card rounded-xl border border-border p-4 shadow-sm"
+              className="bg-card rounded-xl border border-border p-4 "
             >
               <div className="flex justify-between items-start mb-2">
                 <div>

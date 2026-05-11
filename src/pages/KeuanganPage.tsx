@@ -59,7 +59,7 @@ export default function KeuanganPage() {
   const [isRecurring, setIsRecurring] = useState(false);
 
   const PIE_COLORS = [
-    "hsl(171, 77%, 32%)", "hsl(38, 92%, 50%)", "hsl(262, 52%, 47%)",
+    "hsl(221, 83%, 53%)", "hsl(38, 92%, 50%)", "hsl(262, 52%, 47%)",
     "hsl(199, 89%, 48%)", "hsl(142, 71%, 45%)", "hsl(0, 72%, 51%)",
   ];
 
@@ -327,38 +327,38 @@ export default function KeuanganPage() {
         <table style="width:100%;margin-bottom:12px"><tr>
           <td style="width:50px;vertical-align:top"><img src="${window.location.origin}/logo-icon.png" style="width:40px;height:40px;border-radius:8px" onerror="this.style.display='none'" /></td>
           <td style="vertical-align:top;padding-left:8px">
-            <div style="font-size:10px;color:#0d9488;font-weight:700;letter-spacing:1px">KOSPINTAR</div>
+            <div style="font-size:10px;color:#2563eb;font-weight:700;letter-spacing:1px">KOSPINTAR</div>
           </td>
           <td style="text-align:right;vertical-align:top">
             <div style="font-size:16px;font-weight:700;color:#1a1a2e">${propertyName}</div>
             ${propertyAlamat ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${propertyAlamat}</div>` : ""}
-            <div style="font-size:12px;color:#0d9488;font-weight:600;margin-top:4px">${getMonthName(bulan)} ${tahun}</div>
+            <div style="font-size:12px;color:#2563eb;font-weight:600;margin-top:4px">${getMonthName(bulan)} ${tahun}</div>
           </td>
         </tr></table>
-        <div style="height:2px;background:linear-gradient(90deg,#0d9488,#14b8a6,#99f6e4);border-radius:2px;margin-bottom:20px"></div>
+        <div style="height:2px;background:linear-gradient(90deg,#2563eb,#3b82f6,#93c5fd);border-radius:2px;margin-bottom:20px"></div>
 
         <div style="font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:12px">LAPORAN KEUANGAN</div>
 
         <!-- Summary Box -->
-        <div style="background:#f0fdfa;border:1px solid #ccfbf1;border-radius:10px;padding:16px;margin-bottom:20px">
+        <div style="background:#eff6ff;border:1px solid #dbeafe;border-radius:10px;padding:16px;margin-bottom:20px">
           <table style="width:100%;border-collapse:collapse">
             <tr>
               <td style="width:33%;text-align:center;padding:4px">
                 <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px">Pemasukan</div>
                 <div style="font-size:16px;font-weight:700;color:#16a34a;margin-top:4px">${formatRupiah(pemasukan)}</div>
               </td>
-              <td style="width:33%;text-align:center;padding:4px;border-left:1px solid #d1fae5;border-right:1px solid #d1fae5">
+              <td style="width:33%;text-align:center;padding:4px;border-left:1px solid #bfdbfe;border-right:1px solid #bfdbfe">
                 <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px">Pengeluaran</div>
                 <div style="font-size:16px;font-weight:700;color:#dc2626;margin-top:4px">${formatRupiah(pengeluaran)}</div>
               </td>
               <td style="width:33%;text-align:center;padding:4px">
                 <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px">Laba Bersih</div>
-                <div style="font-size:16px;font-weight:700;color:#0d9488;margin-top:4px">${formatRupiah(laba)}</div>
+                <div style="font-size:16px;font-weight:700;color:#2563eb;margin-top:4px">${formatRupiah(laba)}</div>
               </td>
             </tr>
           </table>
           ${totalDeposit > 0 ? `
-            <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #99f6e4;text-align:center">
+            <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #93c5fd;text-align:center">
               <span style="font-size:11px;color:#6b7280">Deposit Ditahan: </span>
               <span style="font-size:12px;font-weight:600;color:#6b7280">${formatRupiah(totalDeposit)}</span>
             </div>
@@ -388,9 +388,9 @@ export default function KeuanganPage() {
                 <td style="padding:6px;border-bottom:1px solid #f3f4f6;text-align:right;color:#16a34a;font-weight:600">${formatRupiah(r.amount)}</td>
               </tr>
             `).join("")}
-            <tr style="background:#f0fdf4">
-              <td colspan="4" style="padding:8px 6px;font-weight:700;border-top:2px solid #bbf7d0">Total Pemasukan</td>
-              <td style="padding:8px 6px;text-align:right;font-weight:700;color:#16a34a;border-top:2px solid #bbf7d0">${formatRupiah(pemasukan)}</td>
+            <tr style="background:#eff6ff">
+              <td colspan="4" style="padding:8px 6px;font-weight:700;border-top:2px solid #93c5fd">Total Pemasukan</td>
+              <td style="padding:8px 6px;text-align:right;font-weight:700;color:#16a34a;border-top:2px solid #93c5fd">${formatRupiah(pemasukan)}</td>
             </tr>
           </table>
         ` : ""}
@@ -498,37 +498,37 @@ export default function KeuanganPage() {
         ) : (
           <>
             <div className="grid grid-cols-3 gap-2">
-              <div className="bg-card rounded-xl border border-border p-3 text-center shadow-sm">
-                <TrendingUp size={18} className="text-[hsl(142,71%,45%)] mx-auto" />
+              <div className="bg-card rounded-xl border border-border p-3 text-center ">
+                <TrendingUp size={18} className="text-success mx-auto" />
                 <p className="text-xs text-muted-foreground mt-1">Pemasukan</p>
                 <p className="text-sm font-bold text-foreground">{formatRupiahCompact(pemasukan)}</p>
                 <div className="flex items-center justify-center gap-0.5 mt-1">
-                  {pemasukanDiff >= 0 ? <TrendingUp size={10} className="text-[hsl(142,71%,45%)]" /> : <TrendingDown size={10} className="text-destructive" />}
-                  <span className={`text-[10px] ${pemasukanDiff >= 0 ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>
+                  {pemasukanDiff >= 0 ? <TrendingUp size={10} className="text-success" /> : <TrendingDown size={10} className="text-destructive" />}
+                  <span className={`text-[10px] ${pemasukanDiff >= 0 ? "text-success" : "text-destructive"}`}>
                     {pemasukanDiff >= 0 ? "+" : ""}{formatRupiah(pemasukanDiff)}
                   </span>
                 </div>
               </div>
-              <div className="bg-card rounded-xl border border-border p-3 text-center shadow-sm">
+              <div className="bg-card rounded-xl border border-border p-3 text-center ">
                 <TrendingDown size={18} className="text-destructive mx-auto" />
                 <p className="text-xs text-muted-foreground mt-1">Pengeluaran</p>
                 <p className="text-sm font-bold text-foreground">{formatRupiahCompact(pengeluaran)}</p>
                 <div className="flex items-center justify-center gap-0.5 mt-1">
-                  {pengeluaranDiff <= 0 ? <TrendingDown size={10} className="text-[hsl(142,71%,45%)]" /> : <TrendingUp size={10} className="text-destructive" />}
-                  <span className={`text-[10px] ${pengeluaranDiff <= 0 ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>
+                  {pengeluaranDiff <= 0 ? <TrendingDown size={10} className="text-success" /> : <TrendingUp size={10} className="text-destructive" />}
+                  <span className={`text-[10px] ${pengeluaranDiff <= 0 ? "text-success" : "text-destructive"}`}>
                     {pengeluaranDiff >= 0 ? "+" : ""}{formatRupiah(pengeluaranDiff)}
                   </span>
                 </div>
               </div>
-              <div className="bg-card rounded-xl border border-border p-3 text-center shadow-sm">
-                <Minus size={18} className={`mx-auto ${selisih >= 0 ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`} />
+              <div className="bg-card rounded-xl border border-border p-3 text-center ">
+                <Minus size={18} className={`mx-auto ${selisih >= 0 ? "text-success" : "text-destructive"}`} />
                 <p className="text-xs text-muted-foreground mt-1">Selisih</p>
-                <p className={`text-sm font-bold ${selisih >= 0 ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>{formatRupiahCompact(selisih)}</p>
+                <p className={`text-sm font-bold ${selisih >= 0 ? "text-success" : "text-destructive"}`}>{formatRupiahCompact(selisih)}</p>
               </div>
             </div>
 
             {barData.length > 0 && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 ">
                 <p className="text-sm font-semibold text-foreground mb-3">Tren 6 Bulan Terakhir</p>
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
@@ -537,7 +537,7 @@ export default function KeuanganPage() {
                       <XAxis dataKey="bulan" tick={{ fontSize: 11 }} stroke="hsl(220, 9%, 46%)" />
                       <YAxis tick={{ fontSize: 10 }} stroke="hsl(220, 9%, 46%)" tickFormatter={v => `${(v / 1000000).toFixed(1)}jt`} />
                       <Tooltip formatter={(v: number) => formatRupiah(v)} />
-                      <Bar dataKey="pemasukan" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} name="Pemasukan" />
+                      <Bar dataKey="pemasukan" fill="hsl(221, 83%, 53%)" radius={[4, 4, 0, 0]} name="Pemasukan" />
                       <Bar dataKey="pengeluaran" fill="hsl(0, 72%, 51%)" radius={[4, 4, 0, 0]} name="Pengeluaran" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -546,7 +546,7 @@ export default function KeuanganPage() {
             )}
 
             {pieData.length > 0 && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 ">
                 <p className="text-sm font-semibold text-foreground mb-3">Pemasukan per Tipe Kamar</p>
                 <div className="flex items-center gap-4">
                   <div className="w-28 h-28">
@@ -575,10 +575,10 @@ export default function KeuanganPage() {
 
             {unpaidList.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08, duration: 0.15 }}>
-                <Collapsible defaultOpen={false} className="bg-card rounded-xl border border-border shadow-sm">
+                <Collapsible defaultOpen={false} className="bg-card rounded-xl border border-border ">
                   <CollapsibleTrigger className="w-full p-4 flex items-center justify-between rounded-t-xl">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle size={16} className="text-[hsl(38,92%,50%)]" />
+                      <AlertTriangle size={16} className="text-warning" />
                       <p className="text-sm font-semibold text-foreground">Piutang Bulan Ini</p>
                     </div>
                     <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200" />
@@ -605,7 +605,7 @@ export default function KeuanganPage() {
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.15 }}>
                 <button
                   onClick={() => setDepositOpen(!depositOpen)}
-                  className="w-full bg-card rounded-xl border border-border p-4 shadow-sm text-left"
+                  className="w-full bg-card rounded-xl border border-border p-4  text-left"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -623,7 +623,7 @@ export default function KeuanganPage() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="bg-card rounded-b-xl border border-t-0 border-border px-4 pb-4 shadow-sm overflow-hidden"
+                      className="bg-card rounded-b-xl border border-t-0 border-border px-4 pb-4  overflow-hidden"
                     >
                       <div className="space-y-2 pt-2">
                         {depositList.map((d) => (
@@ -646,7 +646,7 @@ export default function KeuanganPage() {
               </motion.div>
             )}
 
-            <Collapsible defaultOpen={false} className="bg-card rounded-xl border border-border shadow-sm">
+            <Collapsible defaultOpen={false} className="bg-card rounded-xl border border-border ">
               <CollapsibleTrigger className="w-full p-4 flex items-center justify-between rounded-t-xl">
                 <h2 className="text-sm font-semibold text-foreground">Transaksi ({items.length} item{items.length !== 1 ? 's' : ''})</h2>
                 <div className="flex items-center gap-2">
@@ -662,17 +662,17 @@ export default function KeuanganPage() {
                     <div className="space-y-2">
                       {items.map((item, i) => {
                         const rowContent = (
-                          <div className="flex items-center px-4 py-3 border border-border rounded-lg shadow-sm">
+                          <div className="flex items-center px-4 py-3 border border-border rounded-lg ">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${item.type === "income" ? "bg-[hsl(142,71%,45%)]/10" : "bg-destructive/10"}`}>
-                                {item.type === "income" ? <TrendingUp size={14} className="text-[hsl(142,71%,45%)]" /> : <TrendingDown size={14} className="text-destructive" />}
+                              <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${item.type === "income" ? "bg-success/10" : "bg-destructive/10"}`}>
+                                {item.type === "income" ? <TrendingUp size={14} className="text-success" /> : <TrendingDown size={14} className="text-destructive" />}
                               </div>
                               <div className="min-w-0">
                                 <p className="text-sm font-medium text-foreground truncate">{item.label}</p>
                                 <p className="text-xs text-muted-foreground">{formatDate(item.date)}</p>
                               </div>
                             </div>
-                            <span className={`text-sm font-semibold flex-shrink-0 text-right ${item.type === "income" ? "text-[hsl(142,71%,45%)]" : "text-destructive"}`}>
+                            <span className={`text-sm font-semibold flex-shrink-0 text-right ${item.type === "income" ? "text-success" : "text-destructive"}`}>
                               {item.type === "income" ? "+" : "-"}{formatRupiah(item.amount)}
                             </span>
                           </div>

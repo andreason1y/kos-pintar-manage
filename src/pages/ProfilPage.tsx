@@ -112,7 +112,7 @@ export default function ProfilPage() {
       <PageHeader title="Profil" />
       <div className="px-4 space-y-4">
         {/* User profile card */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="bg-card rounded-xl border border-border p-4 ">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
               <User size={24} className="text-primary-foreground" />
@@ -139,7 +139,7 @@ export default function ProfilPage() {
 
         {/* Plan + room usage card */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03, duration: 0.15 }}
-          className="bg-card rounded-xl border border-border p-4 shadow-sm">
+          className="bg-card rounded-xl border border-border p-4 ">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center">
               <Crown size={20} className="text-accent" />
@@ -147,7 +147,7 @@ export default function ProfilPage() {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="font-semibold text-foreground">Paket {planLabel}</p>
-                <span className="px-2 py-0.5 rounded-full bg-[hsl(142,71%,45%)]/15 text-[hsl(142,71%,45%)] text-[10px] font-bold">AKTIF</span>
+                <span className="px-2 py-0.5 rounded-full bg-success/15 text-success text-[10px] font-bold">AKTIF</span>
               </div>
               <p className="text-xs text-muted-foreground">Kamar: {roomCount}/{limits.maxRooms}</p>
               {expiresAt && !demo.isDemo && (
@@ -172,7 +172,7 @@ export default function ProfilPage() {
           <div>
             <h2 className="text-sm font-semibold text-foreground mb-3">Properti</h2>
             <div className="relative">
-              <div className="w-full text-left p-3 rounded-xl border border-primary bg-secondary shadow-sm">
+              <div className="w-full text-left p-3 rounded-xl border border-primary bg-secondary ">
                 <div className="flex items-center gap-2">
                   <Building2 size={18} className="text-primary" />
                   <div className="flex-1 min-w-0">

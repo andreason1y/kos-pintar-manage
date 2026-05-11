@@ -45,7 +45,7 @@ export default function AuthPage() {
         <div style={{
           width: "2rem",
           height: "2rem",
-          border: "2px solid #0d9488",
+          border: "2px solid #171717",
           borderTopColor: "transparent",
           borderRadius: "50%",
           animation: "spin 1s linear infinite",
@@ -98,12 +98,12 @@ export default function AuthPage() {
           <p className="text-sm text-muted-foreground mt-1">Kelola kos-kosan lebih mudah</p>
         </div>
 
-        <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
+        <div className="bg-card rounded-xl p-6  border border-border">
           <div className="flex gap-2 mb-6 bg-muted rounded-lg p-1">
             <button
               onClick={() => setIsLogin(true)}
               className={`flex-1 text-sm font-medium py-2 rounded-md transition-colors ${
-                isLogin ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                isLogin ? "bg-card text-foreground " : "text-muted-foreground"
               }`}
             >
               Masuk
@@ -111,7 +111,7 @@ export default function AuthPage() {
             <button
               onClick={() => setIsLogin(false)}
               className={`flex-1 text-sm font-medium py-2 rounded-md transition-colors ${
-                !isLogin ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                !isLogin ? "bg-card text-foreground " : "text-muted-foreground"
               }`}
             >
               Daftar
