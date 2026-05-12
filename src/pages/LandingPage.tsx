@@ -112,7 +112,7 @@ export default function LandingPage() {
   const plans = [
     { name: "Starter", rooms: "10 kamar", normal: starterNormal, eb: starterEB, features: ["Maks 10 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
     { name: "Pro", rooms: "25 kamar", normal: proNormal, eb: proEB, popular: true, features: ["Maks 25 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
-    { name: "Bisnis", rooms: "60 kamar", normal: bisnisNormal, eb: bisnisEB, features: ["Maks 60 kamar", "Semua fitur lengkap", "Update gratis selamanya", "Prioritas support", "Konsultasi bisnis"] },
+    { name: "Bisnis", rooms: "60 kamar", normal: bisnisNormal, eb: bisnisEB, features: ["Maks 60 kamar", "Semua fitur lengkap", "Update gratis selamanya", "Prioritas support"] },
   ];
 
   const formatPerMonth = (yearly: number) => {

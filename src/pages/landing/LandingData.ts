@@ -33,7 +33,7 @@ export const COMPARISON: { feature: string; kp: string | boolean; sk: string | b
 
 export const DEFAULT_FAQS = [
   { q: "Apakah data kos saya aman?", a: "Ya. Data disimpan di server terenkripsi. Hanya Anda yang bisa mengakses data kos Anda." },
-  { q: "Apa bedanya paket Starter, Pro, dan Bisnis?", a: "Perbedaannya di jumlah kamar: Starter hingga 10 kamar (Rp 12rb/bln), Pro hingga 25 kamar (Rp 21rb/bln), Bisnis hingga 60 kamar (Rp 42rb/bln) + konsultasi bisnis." },
+  { q: "Apa bedanya paket Starter, Pro, dan Bisnis?", a: "Perbedaannya di jumlah kamar: Starter hingga 10 kamar (Rp 12rb/bln), Pro hingga 25 kamar (Rp 21rb/bln), Bisnis hingga 60 kamar (Rp 42rb/bln) + prioritas support." },
   { q: "Apakah WA dikirim otomatis ke penyewa?", a: "Bukan otomatis. Anda mendapat notifikasi jatuh tempo, lalu tinggal 1 klik untuk kirim pesan tagihan ke WA penyewa." },
   { q: "Apakah ada biaya per kamar?", a: "Tidak. Harga flat per tahun — mau 1 kamar atau maksimal paket, bayarnya tetap sama." },
   { q: "Bisa dicoba dulu sebelum bayar?", a: "Ya. Ada mode demo yang bisa langsung dicoba tanpa daftar." },
