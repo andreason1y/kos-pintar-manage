@@ -30,7 +30,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { properties, loading: propLoading } = useProperty();
-  const { isDemo } = useDemo();
+  const { isDemo, setIsDemo } = useDemo();
 
   const [slotsUsed, setSlotsUsed] = useState(0);
   const [slotsLoaded, setSlotsLoaded] = useState(false);
@@ -169,7 +169,7 @@ export default function LandingPage() {
                 <Button size="lg" className="font-semibold text-sm px-8" onClick={handleRegister}>
                   Mulai Sekarang <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
-                <Button size="lg" variant="outline" className="font-semibold text-sm px-8" onClick={() => window.open("https://wa.me/628184776220?text=Halo%2C%20saya%20tertarik%20demo%20KosPintar", "_blank")}>
+                <Button size="lg" variant="outline" className="font-semibold text-sm px-8" onClick={() => setIsDemo(true)}>
                   Coba Demo Gratis
                 </Button>
               </div>
