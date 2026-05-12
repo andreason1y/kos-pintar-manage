@@ -122,10 +122,10 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Banner */}
+      {/* Banner — promo launching */}
       {slotsLoaded && earlyBirdActive && bannerActive && (
         <div className="bg-foreground text-background text-center py-2.5 px-4 text-xs font-medium tracking-tight">
-          {bannerText}
+          Promo Launching — Diskon 50% untuk pendaftar awal
         </div>
       )}
 
@@ -342,6 +342,7 @@ export default function LandingPage() {
                             <span className="text-sm font-normal text-muted-foreground">/bln</span>
                           </p>
                           <p className="text-[11px] text-muted-foreground mt-1">Dibayar {formatRupiahLanding(plan.eb)}/tahun</p>
+                          <p className="text-[10px] text-accent font-medium mt-0.5">Promo Launching</p>
                         </>
                       ) : (
                         <>
@@ -373,18 +374,11 @@ export default function LandingPage() {
               </FadeIn>
             ))}
           </div>
-          {slotsLoaded && earlyBirdActive && (
-            <FadeIn delay={0.3}>
-              <div className="mt-6 max-w-sm mx-auto bg-muted rounded-lg p-4 text-center">
-                <p className="text-xs font-medium text-foreground">
-                  Tersisa <span className="font-bold text-accent">{slotsRemaining}</span> slot early bird
-                </p>
-                <div className="mt-2 h-1.5 bg-border rounded-full overflow-hidden">
-                  <div className="h-full bg-foreground rounded-full transition-all duration-700" style={{ width: `${((slotTotal - slotsRemaining) / slotTotal) * 100}%` }} />
-                </div>
-              </div>
-            </FadeIn>
-          )}
+          <FadeIn delay={0.3}>
+            <p className="mt-6 text-xs text-muted-foreground text-center">
+              Dibayar per tahun. Semua paket termasuk semua fitur.
+            </p>
+          </FadeIn>
         </Section>
 
         {/* FAQ */}
