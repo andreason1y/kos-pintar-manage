@@ -1,4 +1,4 @@
-import { ClipboardList, Wallet, Home, FileText, BarChart3, Bell } from "lucide-react";
+import { ClipboardList, Wallet, Home, FileText, BarChart3, Bell, UserPlus, Zap } from "lucide-react";
 
 export const FEATURES = [
   { icon: ClipboardList, title: "Data Penyewa Terpusat", desc: "Semua data penyewa, kontrak, dan riwayat bayar dalam satu tempat." },
@@ -7,6 +7,12 @@ export const FEATURES = [
   { icon: FileText, title: "Nota PDF Instan", desc: "Generate nota pembayaran profesional, langsung kirim via WhatsApp." },
   { icon: BarChart3, title: "Laporan Keuangan", desc: "Pemasukan, pengeluaran, dan laba bersih dihitung otomatis tiap bulan." },
   { icon: Bell, title: "Notifikasi Jatuh Tempo", desc: "Dapat reminder saat tagihan jatuh tempo — langsung kirim WA 1 klik." },
+];
+
+export const HOW_IT_WORKS = [
+  { step: 1, icon: UserPlus, title: "Daftar & buat profil kos", desc: "Isi nama kos, alamat, dan tipe kamar. Tidak perlu training — langsung paham." },
+  { step: 2, icon: Home, title: "Tambah penyewa", desc: "Input data penyewa, kamar, dan tanggal masuk. Deposit otomatis tercatat." },
+  { step: 3, icon: Zap, title: "Kelola tanpa ribet", desc: "Tagihan muncul otomatis tiap bulan. Notifikasi jatuh tempo. Kirim WA 1 klik." },
 ];
 
 export const PAIN_POINTS = [

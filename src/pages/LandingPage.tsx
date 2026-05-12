@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import logoIcon from "@/assets/logo-icon.png";
 import { FadeIn, PhoneMockup, Section, SectionHeading } from "./landing/LandingComponents";
 import {
-  FEATURES, PAIN_POINTS, COMPARISON, DEFAULT_FAQS, DEFAULT_TESTIMONIALS,
+  FEATURES, HOW_IT_WORKS, PAIN_POINTS, COMPARISON, DEFAULT_FAQS, DEFAULT_TESTIMONIALS,
   SCREENSHOTS, TEXT_DEFAULTS, DEFAULTS
 } from "./landing/LandingData";
 
@@ -195,6 +195,28 @@ export default function LandingPage() {
                 </div>
               </FadeIn>
             )}
+          </div>
+        </Section>
+
+        {/* How It Works */}
+        <Section>
+          <SectionHeading
+            tag="Cara Kerja"
+            title="Mulai dalam 3 langkah mudah"
+          />
+          <div className="grid md:grid-cols-3 gap-4 md:gap-6 max-w-3xl mx-auto">
+            {HOW_IT_WORKS.map((item, i) => (
+              <FadeIn key={item.step} delay={i * 0.08}>
+                <div className="p-5 rounded-xl border border-border text-center space-y-3 hover:border-foreground/20 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-foreground text-background text-sm font-bold flex items-center justify-center mx-auto">
+                    {item.step}
+                  </div>
+                  <item.icon className="w-5 h-5 text-muted-foreground mx-auto" />
+                  <h3 className="font-semibold text-sm text-foreground">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                </div>
+              </FadeIn>
+            ))}
           </div>
         </Section>
 
