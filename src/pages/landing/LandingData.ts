@@ -18,9 +18,9 @@ export const PAIN_POINTS = [
 ];
 
 export const COMPARISON: { feature: string; kp: string | boolean; sk: string | boolean }[] = [
-  { feature: "Harga Starter (10 kamar)", kp: "Rp 199k/tahun*", sk: "Rp 600k-1.2jt/bln" },
-  { feature: "Harga Pro (25 kamar)", kp: "Rp 349k/tahun*", sk: "Rp 1.5jt-3jt/bln" },
-  { feature: "Harga Bisnis (60 kamar)", kp: "Rp 599k/tahun*", sk: "Rp 3.6jt-7.2jt/bln" },
+  { feature: "Harga Starter (10 kamar)", kp: "Rp 12rb/bln", sk: "Rp 600k-1.2jt/bln" },
+  { feature: "Harga Pro (25 kamar)", kp: "Rp 21rb/bln", sk: "Rp 1.5jt-3jt/bln" },
+  { feature: "Harga Bisnis (60 kamar)", kp: "Rp 42rb/bln", sk: "Rp 3.6jt-7.2jt/bln" },
   { feature: "Manajemen penyewa", kp: true, sk: true },
   { feature: "Nota PDF", kp: true, sk: true },
   { feature: "Reminder WA ke penyewa", kp: true, sk: true },
@@ -33,8 +33,8 @@ export const COMPARISON: { feature: string; kp: string | boolean; sk: string | b
 
 export const DEFAULT_FAQS = [
   { q: "Apakah data saya aman?", a: "Ya. Data disimpan di server terenkripsi dengan standar enterprise. Hanya Anda yang bisa mengakses data kos Anda." },
-  { q: "Apa beda paket Starter, Pro, dan Bisnis?", a: "Perbedaannya di jumlah kamar: Starter (10 kamar), Pro (25 kamar), Bisnis (60 kamar). Semua fitur tersedia di semua paket." },
-  { q: "Apakah ada biaya tambahan per kamar?", a: "Tidak. Harga flat per tahun — mau 1 kamar atau maksimal paket, bayarnya sama." },
+  { q: "Apa beda paket Starter, Pro, dan Bisnis?", a: "Perbedaannya di jumlah kamar: Starter (10 kamar, Rp 12rb/bln), Pro (25 kamar, Rp 21rb/bln), Bisnis (60 kamar, Rp 42rb/bln). Semua fitur tersedia di semua paket." },
+  { q: "Apakah ada biaya tambahan per kamar?", a: "Tidak. Harga flat — mau 1 kamar atau maksimal paket, bayarnya sama." },
   { q: "Bagaimana cara perpanjang langganan?", a: "Notifikasi dikirim sebelum masa aktif habis. Perpanjang langsung dari dalam aplikasi." },
   { q: "Apakah bisa dicoba dulu?", a: "Ya. Tersedia mode demo tanpa daftar — langsung coba semua fitur." },
   { q: "Berapa lama proses setup?", a: "Kurang dari 5 menit. Daftar, buat properti, tambah kamar — langsung pakai." },
@@ -56,14 +56,14 @@ export const SCREENSHOTS = [
 
 export const TEXT_DEFAULTS: Record<string, string> = {
   earlybird_label: "Early Bird — Hemat 50%",
-  starter_sublabel: "Kurang dari Rp 700/hari",
+  starter_sublabel: "",
   pro_sublabel: "",
   bisnis_sublabel: "",
   starter_earlybird_badge: "Early Bird",
   pro_earlybird_badge: "Early Bird",
   bisnis_earlybird_badge: "Early Bird",
   announcement_banner_text: "Early Bird Terbatas — Hemat 50% untuk {slots} pendaftar",
-  pricing_footer_text: "Harga early bird untuk {total} pendaftar pertama",
+  pricing_footer_text: "Harga early bird untuk {total} pendaftar pertama. Dibayar per tahun.",
   hero_headline: "Kelola kos-kosan tanpa ribet.",
   hero_subheadline: "Tagihan otomatis. Reminder WA. Laporan keuangan. Semua dalam satu aplikasi.",
   hero_subtext: "Dibangun khusus untuk pemilik kos Indonesia yang ingin berhenti dari buku tulis dan spreadsheet.",
@@ -74,10 +74,10 @@ export const TEXT_DEFAULTS: Record<string, string> = {
 };
 
 export const DEFAULTS = {
-  mandiri_price_normal: 499000,
-  mandiri_price_earlybird: 249000,
-  juragan_price_normal: 999000,
-  juragan_price_earlybird: 499000,
+  mandiri_price_normal: 299000,
+  mandiri_price_earlybird: 149000,
+  juragan_price_normal: 499000,
+  juragan_price_earlybird: 249000,
   earlybird_active: 1,
   earlybird_slots_total: 100,
   early_bird_slots_taken: 0,

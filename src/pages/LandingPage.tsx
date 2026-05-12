@@ -98,12 +98,12 @@ export default function LandingPage() {
   const slotsRemaining = Math.max(0, slotTotal - (slotsTaken + slotsUsed));
   const earlyBirdActive = ebActive && slotsRemaining > 0;
 
-  const starterNormal = cfg.starter_price_normal ?? 399000;
-  const starterEB = cfg.starter_price_earlybird ?? 199000;
-  const proNormal = cfg.pro_price_normal ?? 699000;
-  const proEB = cfg.pro_price_earlybird ?? 349000;
-  const bisnisNormal = cfg.bisnis_price_normal ?? 1199000;
-  const bisnisEB = cfg.bisnis_price_earlybird ?? 599000;
+  const starterNormal = cfg.starter_price_normal ?? 299000;
+  const starterEB = cfg.starter_price_earlybird ?? 149000;
+  const proNormal = cfg.pro_price_normal ?? 499000;
+  const proEB = cfg.pro_price_earlybird ?? 249000;
+  const bisnisNormal = cfg.bisnis_price_normal ?? 999000;
+  const bisnisEB = cfg.bisnis_price_earlybird ?? 499000;
 
   const bannerActive = (cfg.announcement_banner_active ?? DEFAULTS.announcement_banner_active) === 1;
   const bannerText = t("announcement_banner_text").replace("{slots}", String(slotsRemaining));
@@ -114,6 +114,11 @@ export default function LandingPage() {
     { name: "Pro", rooms: "25 kamar", normal: proNormal, eb: proEB, popular: true, features: ["Maks 25 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
     { name: "Bisnis", rooms: "60 kamar", normal: bisnisNormal, eb: bisnisEB, features: ["Maks 60 kamar", "Semua fitur lengkap", "Update gratis selamanya", "Prioritas support"] },
   ];
+
+  const formatPerMonth = (yearly: number) => {
+    const monthly = Math.round(yearly / 12 / 1000);
+    return `Rp ${monthly}rb`;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -185,19 +190,9 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto">
             {PAIN_POINTS.map((p, i) => (
               <FadeIn key={i} delay={i * 0.05}>
-                <div className="p-4 rounded-lg border border-border hover:border-foreground/20 transition-colors space-y-2.5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
-                      <X className="w-3 h-3 text-destructive" />
-                    </div>
-                    <p className="text-sm text-muted-foreground line-through">{p.before}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-3 h-3 text-accent" />
-                    </div>
-                    <p className="text-sm font-semibold text-foreground">{p.after}</p>
-                  </div>
+                <div className="p-4 rounded-lg border border-border hover:border-foreground/20 transition-colors text-center space-y-1.5">
+                  <p className="text-sm text-muted-foreground line-through">{p.before}</p>
+                  <p className="text-sm font-semibold text-foreground">{p.after} ✓</p>
                 </div>
               </FadeIn>
             ))}
@@ -214,8 +209,8 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
             {FEATURES.map((f, i) => (
               <FadeIn key={f.title} delay={i * 0.06}>
-                <div className="p-5 rounded-xl border border-border hover:border-foreground/20 hover:shadow-sm transition-all group">
-                  <f.icon className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors mb-3" />
+                <div className="p-5 rounded-xl border border-border hover:border-foreground/20 hover:shadow-sm transition-all group text-center">
+                  <f.icon className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors mb-3 mx-auto" />
                   <h3 className="font-semibold text-sm text-foreground mb-1.5">{f.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
                 </div>
@@ -330,9 +325,9 @@ export default function LandingPage() {
             {plans.map((plan, i) => (
               <FadeIn key={plan.name} delay={i * 0.08} className="flex">
                 <Card className={`flex flex-col w-full transition-all hover:shadow-md ${plan.popular ? "border-foreground shadow-sm" : "border-border"}`}>
-                  <CardContent className="p-5 md:p-6 flex flex-col flex-1">
+                  <CardContent className="p-5 md:p-6 flex flex-col flex-1 text-center">
                     <div className="mb-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center gap-2">
                         <p className="font-semibold text-foreground">{plan.name}</p>
                         {plan.popular && <Badge className="bg-foreground text-background text-[10px] px-1.5 py-0">Populer</Badge>}
                       </div>
@@ -341,20 +336,24 @@ export default function LandingPage() {
                     <div className="mb-5">
                       {earlyBirdActive ? (
                         <>
-                          <p className="text-xs text-muted-foreground line-through">{formatRupiahLanding(plan.normal)}/tahun</p>
+                          <p className="text-xs text-muted-foreground line-through">{formatPerMonth(plan.normal)}/bln</p>
                           <p className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-                            {formatRupiahLanding(plan.eb)}
-                            <span className="text-sm font-normal text-muted-foreground">/tahun</span>
+                            {formatPerMonth(plan.eb)}
+                            <span className="text-sm font-normal text-muted-foreground">/bln</span>
                           </p>
+                          <p className="text-[11px] text-muted-foreground mt-1">Dibayar {formatRupiahLanding(plan.eb)}/tahun</p>
                         </>
                       ) : (
-                        <p className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-                          {formatRupiahLanding(plan.normal)}
-                          <span className="text-sm font-normal text-muted-foreground">/tahun</span>
-                        </p>
+                        <>
+                          <p className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+                            {formatPerMonth(plan.normal)}
+                            <span className="text-sm font-normal text-muted-foreground">/bln</span>
+                          </p>
+                          <p className="text-[11px] text-muted-foreground mt-1">Dibayar {formatRupiahLanding(plan.normal)}/tahun</p>
+                        </>
                       )}
                     </div>
-                    <div className="space-y-2.5 mb-6 flex-1">
+                    <div className="space-y-2.5 mb-6 flex-1 text-left">
                       {plan.features.map((f) => (
                         <div key={f} className="flex items-center gap-2.5">
                           <Check className="w-3.5 h-3.5 text-accent flex-shrink-0" />
