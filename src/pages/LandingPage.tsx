@@ -353,9 +353,9 @@ export default function LandingPage() {
                         </>
                       )}
                     </div>
-                    <div className="space-y-2.5 mb-6 flex-1 text-left">
+                    <div className="space-y-2.5 mb-6 flex-1">
                       {plan.features.map((f) => (
-                        <div key={f} className="flex items-center gap-2.5">
+                        <div key={f} className="flex items-center justify-center gap-2">
                           <Check className="w-3.5 h-3.5 text-accent flex-shrink-0" />
                           <span className="text-sm text-muted-foreground">{f}</span>
                         </div>
@@ -391,7 +391,7 @@ export default function LandingPage() {
         <Section id="faq">
           <SectionHeading
             tag="FAQ"
-            title="Pertanyaan yang sering ditanyakan"
+            title=""
           />
           <FadeIn>
             <Accordion type="single" collapsible className="max-w-2xl mx-auto space-y-2">

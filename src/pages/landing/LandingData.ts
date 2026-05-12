@@ -32,18 +32,18 @@ export const COMPARISON: { feature: string; kp: string | boolean; sk: string | b
 ];
 
 export const DEFAULT_FAQS = [
-  { q: "Apakah data saya aman?", a: "Ya. Data disimpan di server terenkripsi dengan standar enterprise. Hanya Anda yang bisa mengakses data kos Anda." },
-  { q: "Apa beda paket Starter, Pro, dan Bisnis?", a: "Perbedaannya di jumlah kamar: Starter (10 kamar, Rp 12rb/bln), Pro (25 kamar, Rp 21rb/bln), Bisnis (60 kamar, Rp 42rb/bln). Semua fitur tersedia di semua paket." },
-  { q: "Apakah ada biaya tambahan per kamar?", a: "Tidak. Harga flat — mau 1 kamar atau maksimal paket, bayarnya sama." },
-  { q: "Bagaimana cara perpanjang langganan?", a: "Notifikasi dikirim sebelum masa aktif habis. Perpanjang langsung dari dalam aplikasi." },
-  { q: "Apakah bisa dicoba dulu?", a: "Ya. Tersedia mode demo tanpa daftar — langsung coba semua fitur." },
-  { q: "Berapa lama proses setup?", a: "Kurang dari 5 menit. Daftar, buat properti, tambah kamar — langsung pakai." },
+  { q: "Apakah data kos saya aman?", a: "Ya. Data disimpan di server terenkripsi. Hanya Anda yang bisa mengakses data kos Anda." },
+  { q: "Apa bedanya paket Starter, Pro, dan Bisnis?", a: "Bedanya hanya di jumlah kamar yang bisa dikelola. Semua fitur sama lengkapnya di setiap paket." },
+  { q: "Apakah WA dikirim otomatis ke penyewa?", a: "Bukan otomatis. Anda mendapat notifikasi jatuh tempo, lalu tinggal 1 klik untuk kirim pesan tagihan ke WA penyewa." },
+  { q: "Apakah ada biaya per kamar?", a: "Tidak. Harga flat per tahun — mau 1 kamar atau maksimal paket, bayarnya tetap sama." },
+  { q: "Bisa dicoba dulu sebelum bayar?", a: "Ya. Ada mode demo yang bisa langsung dicoba tanpa daftar." },
+  { q: "Berapa lama setup awal?", a: "Kurang dari 5 menit. Daftar → buat properti → tambah kamar → langsung pakai." },
 ];
 
 export const DEFAULT_TESTIMONIALS = [
-  { quote: "Dulu saya pakai buku tulis. Sekarang tinggal buka HP, semua data penyewa dan tagihan sudah rapi. Hemat waktu banget.", name: "Pak Hendra S.", kos: "12 kamar, Bandung", stars: 5 },
-  { quote: "Penyewa saya jadi lebih disiplin bayar karena dapat reminder WA otomatis. Saya tidak perlu nagih manual lagi.", name: "Bu Ratna W.", kos: "18 kamar, Yogyakarta", stars: 5 },
-  { quote: "Nota PDF langsung ke WA itu game changer. Penyewa merasa diurus secara profesional, saya juga terlihat lebih kredibel.", name: "Pak Doni A.", kos: "8 kamar, Surabaya", stars: 5 },
+  { quote: "Sekarang tinggal buka HP, semua data penyewa dan tagihan sudah rapi. Gak perlu lagi buka buku tulis.", name: "Pak Hendra S.", kos: "12 kamar, Bandung", stars: 5 },
+  { quote: "Penyewa jadi lebih disiplin bayar. Saya tinggal klik kirim tagihan ke WA, gak perlu nagih manual.", name: "Bu Ratna W.", kos: "18 kamar, Yogyakarta", stars: 5 },
+  { quote: "Nota PDF langsung ke WA itu praktis banget. Penyewa merasa diurus profesional.", name: "Pak Doni A.", kos: "8 kamar, Surabaya", stars: 5 },
 ];
 
 export const SCREENSHOTS = [
