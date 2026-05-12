@@ -222,6 +222,13 @@ export default function LandingPage() {
           </div>
         </Section>
 
+        {/* CTA setelah Cara Kerja */}
+        <div className="text-center pb-2 px-5">
+          <Button size="sm" variant="outline" className="font-medium text-sm" onClick={handleRegister}>
+            Coba Sekarang — Gratis <ArrowRight className="w-3.5 h-3.5 ml-1" />
+          </Button>
+        </div>
+
         {/* Problem → Solution */}
         <Section id="masalah">
           <SectionHeading
@@ -340,6 +347,18 @@ export default function LandingPage() {
             ))}
           </div>
         </Section>
+
+        {/* CTA setelah Testimoni */}
+        <FadeIn>
+          <div className="text-center py-2 px-5">
+            <p className="text-sm text-muted-foreground mb-3">
+              Bergabung bersama pemilik kos lain yang sudah beralih ke cara digital.
+            </p>
+            <Button size="sm" className="font-medium text-sm" onClick={handleRegister}>
+              Mulai Gratis Sekarang <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            </Button>
+          </div>
+        </FadeIn>
 
         {/* Comparison */}
         <Section>
