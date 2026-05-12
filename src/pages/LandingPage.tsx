@@ -173,7 +173,28 @@ export default function LandingPage() {
                   Coba Demo Gratis
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground/60 text-center mt-3">
+                Tidak perlu kartu kredit · Setup kurang dari 5 menit
+              </p>
             </FadeIn>
+            {slotsLoaded && (
+              <FadeIn delay={0.3}>
+                <div className="flex gap-8 justify-center flex-wrap mt-10 pt-8 border-t border-border/40">
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-foreground">{slotsUsed}+</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Pemilik kos aktif</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-foreground">&lt; 5 menit</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Waktu setup awal</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-foreground">1 klik</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Kirim tagihan ke WA</p>
+                  </div>
+                </div>
+              </FadeIn>
+            )}
           </div>
         </Section>
 
