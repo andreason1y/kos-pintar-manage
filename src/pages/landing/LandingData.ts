@@ -1,17 +1,17 @@
 import { ClipboardList, Wallet, Home, FileText, BarChart3, Bell } from "lucide-react";
 
 export const FEATURES = [
-  { icon: ClipboardList, title: "Data Penyewa Terpusat", desc: "Semua data penyewa, kontrak, dan riwayat bayar — satu tempat. Bukan lagi buku tulis yang bisa hilang." },
-  { icon: Wallet, title: "Tagihan Otomatis", desc: "Sistem generate tagihan tiap bulan. Reminder WhatsApp dikirim otomatis H-3, H0, dan H+3." },
-  { icon: Home, title: "Pantau Kamar Real-time", desc: "Lihat status kosong/terisi dalam hitungan detik. Tidak perlu cek fisik ke lokasi." },
-  { icon: FileText, title: "Nota PDF Instan", desc: "Satu klik, nota pembayaran terkirim ke WhatsApp penyewa. Profesional tanpa effort." },
-  { icon: BarChart3, title: "Laporan Keuangan", desc: "Pemasukan, pengeluaran, laba bersih — semua dihitung otomatis tiap bulan." },
-  { icon: Bell, title: "Notifikasi Cerdas", desc: "Kontrak mau habis? Tagihan telat? Anda tahu duluan sebelum jadi masalah." },
+  { icon: ClipboardList, title: "Data Penyewa Terpusat", desc: "Semua data penyewa, kontrak, dan riwayat bayar dalam satu tempat." },
+  { icon: Wallet, title: "Tagihan Otomatis", desc: "Tagihan di-generate tiap bulan. Tinggal 1 klik kirim ke WA penyewa." },
+  { icon: Home, title: "Pantau Kamar Real-time", desc: "Status kosong/terisi langsung terlihat tanpa cek fisik ke lokasi." },
+  { icon: FileText, title: "Nota PDF Instan", desc: "Generate nota pembayaran profesional, langsung kirim via WhatsApp." },
+  { icon: BarChart3, title: "Laporan Keuangan", desc: "Pemasukan, pengeluaran, dan laba bersih dihitung otomatis tiap bulan." },
+  { icon: Bell, title: "Notifikasi Jatuh Tempo", desc: "Dapat reminder saat tagihan jatuh tempo — langsung kirim WA 1 klik." },
 ];
 
 export const PAIN_POINTS = [
   { before: "Catat di buku tulis / Excel", after: "Dashboard digital real-time" },
-  { before: "Lupa tagih penyewa", after: "Reminder WA otomatis" },
+  { before: "Lupa tagih penyewa", after: "Notifikasi + kirim WA 1 klik" },
   { before: "Hitung keuangan manual tiap bulan", after: "Laporan otomatis 1 klik" },
   { before: "Cek kamar harus ke lokasi", after: "Pantau dari HP kapan saja" },
   { before: "Nota tulis tangan", after: "Nota PDF profesional instan" },
@@ -23,7 +23,7 @@ export const COMPARISON: { feature: string; kp: string | boolean; sk: string | b
   { feature: "Harga Bisnis (60 kamar)", kp: "Rp 42rb/bln", sk: "Rp 3.6jt-7.2jt/bln" },
   { feature: "Manajemen penyewa", kp: true, sk: true },
   { feature: "Nota PDF", kp: true, sk: true },
-  { feature: "Reminder WA ke penyewa", kp: true, sk: true },
+  { feature: "Kirim tagihan WA 1 klik", kp: true, sk: true },
   { feature: "Notifikasi jatuh tempo ke owner", kp: true, sk: false },
   { feature: "Laporan keuangan + export PDF", kp: true, sk: false },
   { feature: "Harga flat bukan per kamar", kp: true, sk: false },
@@ -65,7 +65,7 @@ export const TEXT_DEFAULTS: Record<string, string> = {
   announcement_banner_text: "Early Bird Terbatas — Hemat 50% untuk {slots} pendaftar",
   pricing_footer_text: "Harga early bird untuk {total} pendaftar pertama. Dibayar per tahun.",
   hero_headline: "Kelola kos-kosan tanpa ribet.",
-  hero_subheadline: "Tagihan otomatis. Reminder WA. Laporan keuangan. Semua dalam satu aplikasi.",
+  hero_subheadline: "Tagihan otomatis. Kirim WA 1 klik. Laporan keuangan. Semua dalam satu aplikasi.",
   hero_subtext: "Dibangun khusus untuk pemilik kos Indonesia yang ingin berhenti dari buku tulis dan spreadsheet.",
   footer_tagline: "Software manajemen kos-kosan untuk pemilik properti Indonesia.",
   contact_wa: "62818477620",
