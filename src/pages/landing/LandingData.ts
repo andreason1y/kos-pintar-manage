@@ -33,7 +33,7 @@ export const COMPARISON: { feature: string; kp: string | boolean; sk: string | b
 
 export const DEFAULT_FAQS = [
   { q: "Apakah data kos saya aman?", a: "Ya. Data disimpan di server terenkripsi. Hanya Anda yang bisa mengakses data kos Anda." },
-  { q: "Apa bedanya paket Starter, Pro, dan Bisnis?", a: "Bedanya hanya di jumlah kamar yang bisa dikelola. Semua fitur sama lengkapnya di setiap paket." },
+  { q: "Apa bedanya paket Starter, Pro, dan Bisnis?", a: "Perbedaannya di jumlah kamar: Starter hingga 10 kamar (Rp 12rb/bln), Pro hingga 25 kamar (Rp 21rb/bln), Bisnis hingga 60 kamar (Rp 42rb/bln) + konsultasi bisnis." },
   { q: "Apakah WA dikirim otomatis ke penyewa?", a: "Bukan otomatis. Anda mendapat notifikasi jatuh tempo, lalu tinggal 1 klik untuk kirim pesan tagihan ke WA penyewa." },
   { q: "Apakah ada biaya per kamar?", a: "Tidak. Harga flat per tahun — mau 1 kamar atau maksimal paket, bayarnya tetap sama." },
   { q: "Bisa dicoba dulu sebelum bayar?", a: "Ya. Ada mode demo yang bisa langsung dicoba tanpa daftar." },
@@ -42,7 +42,7 @@ export const DEFAULT_FAQS = [
 
 export const DEFAULT_TESTIMONIALS = [
   { quote: "Sekarang tinggal buka HP, semua data penyewa dan tagihan sudah rapi. Gak perlu lagi buka buku tulis.", name: "Pak Hendra S.", kos: "12 kamar, Bandung", stars: 5 },
-  { quote: "Penyewa jadi lebih disiplin bayar. Saya tinggal klik kirim tagihan ke WA, gak perlu nagih manual.", name: "Bu Ratna W.", kos: "18 kamar, Yogyakarta", stars: 5 },
+  { quote: "Sebelumnya saya sering lupa nagih. Sekarang ada notifikasi jatuh tempo, tinggal klik kirim ke WA penyewa.", name: "Bu Ratna W.", kos: "18 kamar, Yogyakarta", stars: 5 },
   { quote: "Nota PDF langsung ke WA itu praktis banget. Penyewa merasa diurus profesional.", name: "Pak Doni A.", kos: "8 kamar, Surabaya", stars: 5 },
 ];
 

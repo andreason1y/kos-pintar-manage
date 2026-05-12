@@ -112,7 +112,7 @@ export default function LandingPage() {
   const plans = [
     { name: "Starter", rooms: "10 kamar", normal: starterNormal, eb: starterEB, features: ["Maks 10 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
     { name: "Pro", rooms: "25 kamar", normal: proNormal, eb: proEB, popular: true, features: ["Maks 25 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
-    { name: "Bisnis", rooms: "60 kamar", normal: bisnisNormal, eb: bisnisEB, features: ["Maks 60 kamar", "Semua fitur lengkap", "Update gratis selamanya", "Prioritas support"] },
+    { name: "Bisnis", rooms: "60 kamar", normal: bisnisNormal, eb: bisnisEB, features: ["Maks 60 kamar", "Semua fitur lengkap", "Update gratis selamanya", "Prioritas support", "Konsultasi bisnis"] },
   ];
 
   const formatPerMonth = (yearly: number) => {
@@ -122,10 +122,10 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Banner — promo launching */}
+      {/* Banner — promo spesial */}
       {slotsLoaded && earlyBirdActive && bannerActive && (
         <div className="bg-foreground text-background text-center py-2.5 px-4 text-xs font-medium tracking-tight">
-          Promo Launching — Diskon 50% untuk pendaftar awal
+          Promo Spesial — Diskon 50% untuk pendaftar awal
         </div>
       )}
 
@@ -342,7 +342,7 @@ export default function LandingPage() {
                             <span className="text-sm font-normal text-muted-foreground">/bln</span>
                           </p>
                           <p className="text-[11px] text-muted-foreground mt-1">Dibayar {formatRupiahLanding(plan.eb)}/tahun</p>
-                          <p className="text-[10px] text-accent font-medium mt-0.5">Promo Launching</p>
+                          <p className="text-[10px] text-accent font-medium mt-0.5">Promo Spesial</p>
                         </>
                       ) : (
                         <>
