@@ -12,8 +12,8 @@ export interface PlanLimits {
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   starter: { maxRooms: 10 },
   pro: { maxRooms: 25 },
-  bisnis: { maxRooms: 60 },
-  demo: { maxRooms: 60 },
+  bisnis: { maxRooms: 80 },
+  demo: { maxRooms: 80 },
 };
 
 export const PLAN_LABELS: Record<PlanType, string> = {

@@ -98,21 +98,18 @@ export default function LandingPage() {
   const slotsRemaining = Math.max(0, slotTotal - (slotsTaken + slotsUsed));
   const earlyBirdActive = ebActive && slotsRemaining > 0;
 
-  const starterNormal = cfg.starter_price_normal ?? 299000;
-  const starterEB = cfg.starter_price_earlybird ?? 149000;
-  const proNormal = cfg.pro_price_normal ?? 499000;
-  const proEB = cfg.pro_price_earlybird ?? 249000;
-  const bisnisNormal = cfg.bisnis_price_normal ?? 999000;
-  const bisnisEB = cfg.bisnis_price_earlybird ?? 499000;
+  const proNormal = cfg.pro_price_normal ?? 199000;
+  const proEB = cfg.pro_price_earlybird ?? 99000;
+  const bisnisNormal = cfg.bisnis_price_normal ?? 399000;
+  const bisnisEB = cfg.bisnis_price_earlybird ?? 199000;
 
   const bannerActive = (cfg.announcement_banner_active ?? DEFAULTS.announcement_banner_active) === 1;
   const bannerText = t("announcement_banner_text").replace("{slots}", String(slotsRemaining));
   const contactWa = t("contact_wa");
 
   const plans = [
-    { name: "Starter", rooms: "10 kamar", normal: starterNormal, eb: starterEB, features: ["Maks 10 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
-    { name: "Pro", rooms: "25 kamar", normal: proNormal, eb: proEB, popular: true, features: ["Maks 25 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
-    { name: "Bisnis", rooms: "60 kamar", normal: bisnisNormal, eb: bisnisEB, features: ["Maks 60 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
+    { name: "Pro", rooms: "Hingga 25 kamar", normal: proNormal, eb: proEB, features: ["Maks 25 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
+    { name: "Bisnis", rooms: "Hingga 80 kamar", normal: bisnisNormal, eb: bisnisEB, popular: true, features: ["Maks 80 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
   ];
 
   const formatPerMonth = (yearly: number) => {
@@ -125,7 +122,7 @@ export default function LandingPage() {
       {/* Banner — promo spesial */}
       {slotsLoaded && earlyBirdActive && bannerActive && (
         <div className="bg-foreground text-background text-center py-2.5 px-4 text-xs font-medium tracking-tight">
-          Promo Spesial — Diskon 50% untuk pendaftar awal
+          Promo Spesial — Diskon 50%
         </div>
       )}
 
@@ -321,7 +318,7 @@ export default function LandingPage() {
             title="Satu harga, semua fitur"
             subtitle="Bayar sekali per tahun. Tidak ada biaya tersembunyi. Tidak ada biaya per kamar."
           />
-          <div className="grid md:grid-cols-3 gap-4 md:gap-5 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-4 md:gap-5 max-w-2xl mx-auto">
             {plans.map((plan, i) => (
               <FadeIn key={plan.name} delay={i * 0.08} className="flex">
                 <Card className={`flex flex-col w-full transition-all hover:shadow-md ${plan.popular ? "border-foreground shadow-sm" : "border-border"}`}>
