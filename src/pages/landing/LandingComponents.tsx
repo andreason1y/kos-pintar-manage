@@ -35,7 +35,7 @@ export function PhoneMockup({ children, className = "" }: { children: React.Reac
 /* ─── Section wrapper ─── */
 export function Section({ children, className = "", id }: { children: React.ReactNode; className?: string; id?: string }) {
   return (
-    <section id={id} className={`px-5 md:px-8 py-16 md:py-24 ${className}`}>
+    <section id={id} className={`px-5 md:px-8 py-5 md:py-7 ${className}`}>
       {children}
     </section>
   );
@@ -44,7 +44,7 @@ export function Section({ children, className = "", id }: { children: React.Reac
 /* ─── Section heading ─── */
 export function SectionHeading({ tag, title, subtitle }: { tag?: string; title: string; subtitle?: string }) {
   return (
-    <div className="text-center max-w-2xl mx-auto mb-10 md:mb-14">
+    <div className="text-center max-w-2xl mx-auto mb-5 md:mb-7">
       {tag && (
         <span className="inline-block text-xs font-semibold tracking-wide uppercase text-accent mb-3">
           {tag}

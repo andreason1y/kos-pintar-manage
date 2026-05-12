@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { initMetaPixel, trackEvent } from "@/lib/meta-pixel";
 import { useNavigate, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import logoIcon from "@/assets/logo-icon.png";
 import { FadeIn, PhoneMockup, Section, SectionHeading } from "./landing/LandingComponents";
 import {
-  FEATURES, PAIN_POINTS, COMPARISON, DEFAULT_FAQS, DEFAULT_TESTIMONIALS,
+  FEATURES, HOW_IT_WORKS, PAIN_POINTS, COMPARISON, DEFAULT_FAQS, DEFAULT_TESTIMONIALS,
   SCREENSHOTS, TEXT_DEFAULTS, DEFAULTS
 } from "./landing/LandingData";
 
@@ -30,7 +31,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { properties, loading: propLoading } = useProperty();
-  const { isDemo } = useDemo();
+  const { isDemo, setIsDemo } = useDemo();
 
   const [slotsUsed, setSlotsUsed] = useState(0);
   const [slotsLoaded, setSlotsLoaded] = useState(false);
@@ -39,6 +40,7 @@ export default function LandingPage() {
   const [faqs, setFaqs] = useState(DEFAULT_FAQS);
   const [testimonials, setTestimonials] = useState(DEFAULT_TESTIMONIALS);
   const [isMaintenance, setIsMaintenance] = useState(false);
+  const [activeScreenshot, setActiveScreenshot] = useState(0);
 
   useEffect(() => {
     if (isDemo) navigate("/beranda", { replace: true });
@@ -98,21 +100,18 @@ export default function LandingPage() {
   const slotsRemaining = Math.max(0, slotTotal - (slotsTaken + slotsUsed));
   const earlyBirdActive = ebActive && slotsRemaining > 0;
 
-  const starterNormal = cfg.starter_price_normal ?? 299000;
-  const starterEB = cfg.starter_price_earlybird ?? 149000;
-  const proNormal = cfg.pro_price_normal ?? 499000;
-  const proEB = cfg.pro_price_earlybird ?? 249000;
-  const bisnisNormal = cfg.bisnis_price_normal ?? 999000;
-  const bisnisEB = cfg.bisnis_price_earlybird ?? 499000;
+  const proNormal = cfg.pro_price_normal ?? 199000;
+  const proEB = cfg.pro_price_earlybird ?? 99000;
+  const bisnisNormal = cfg.bisnis_price_normal ?? 399000;
+  const bisnisEB = cfg.bisnis_price_earlybird ?? 199000;
 
   const bannerActive = (cfg.announcement_banner_active ?? DEFAULTS.announcement_banner_active) === 1;
   const bannerText = t("announcement_banner_text").replace("{slots}", String(slotsRemaining));
   const contactWa = t("contact_wa");
 
   const plans = [
-    { name: "Starter", rooms: "10 kamar", normal: starterNormal, eb: starterEB, features: ["Maks 10 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
-    { name: "Pro", rooms: "25 kamar", normal: proNormal, eb: proEB, popular: true, features: ["Maks 25 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
-    { name: "Bisnis", rooms: "60 kamar", normal: bisnisNormal, eb: bisnisEB, features: ["Maks 60 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
+    { name: "Pro", rooms: "Hingga 25 kamar", normal: proNormal, eb: proEB, features: ["Maks 25 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
+    { name: "Bisnis", rooms: "Hingga 80 kamar", normal: bisnisNormal, eb: bisnisEB, popular: true, features: ["Maks 80 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
   ];
 
   const formatPerMonth = (yearly: number) => {
@@ -125,7 +124,7 @@ export default function LandingPage() {
       {/* Banner — promo spesial */}
       {slotsLoaded && earlyBirdActive && bannerActive && (
         <div className="bg-foreground text-background text-center py-2.5 px-4 text-xs font-medium tracking-tight">
-          Promo Spesial — Diskon 50% untuk pendaftar awal
+          Promo Spesial — Diskon 50%
         </div>
       )}
 
@@ -172,13 +171,63 @@ export default function LandingPage() {
                 <Button size="lg" className="font-semibold text-sm px-8" onClick={handleRegister}>
                   Mulai Sekarang <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
-                <Button size="lg" variant="outline" className="font-semibold text-sm px-8" onClick={() => window.open("https://wa.me/628184776220?text=Halo%2C%20saya%20tertarik%20demo%20KosPintar", "_blank")}>
+                <Button size="lg" variant="outline" className="font-semibold text-sm px-8" onClick={() => setIsDemo(true)}>
                   Coba Demo Gratis
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground/60 text-center mt-3">
+                Tidak perlu kartu kredit · Setup kurang dari 5 menit
+              </p>
             </FadeIn>
+            {slotsLoaded && (
+              <FadeIn delay={0.3}>
+                <div className="flex gap-8 justify-center flex-wrap mt-10 pt-8 border-t border-border/40">
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-foreground">{slotsTaken + slotsUsed}+</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Pemilik kos aktif</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-foreground">&lt; 5 menit</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Waktu setup awal</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-foreground">1 klik</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Kirim tagihan ke WA</p>
+                  </div>
+                </div>
+              </FadeIn>
+            )}
           </div>
         </Section>
+
+        {/* How It Works */}
+        <Section>
+          <SectionHeading
+            tag="Cara Kerja"
+            title="Mulai dalam 3 langkah mudah"
+          />
+          <div className="grid md:grid-cols-3 gap-4 md:gap-6 max-w-3xl mx-auto">
+            {HOW_IT_WORKS.map((item, i) => (
+              <FadeIn key={item.step} delay={i * 0.08}>
+                <div className="p-5 rounded-xl border border-border text-center space-y-3 hover:border-foreground/20 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-foreground text-background text-sm font-bold flex items-center justify-center mx-auto">
+                    {item.step}
+                  </div>
+                  <item.icon className="w-5 h-5 text-muted-foreground mx-auto" />
+                  <h3 className="font-semibold text-sm text-foreground">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </Section>
+
+        {/* CTA setelah Cara Kerja */}
+        <div className="text-center pb-2 px-5">
+          <Button size="sm" variant="outline" className="font-medium text-sm" onClick={handleRegister}>
+            Coba Sekarang — Gratis <ArrowRight className="w-3.5 h-3.5 ml-1" />
+          </Button>
+        </div>
 
         {/* Problem → Solution */}
         <Section id="masalah">
@@ -227,15 +276,39 @@ export default function LandingPage() {
             subtitle="Tidak perlu training — buka aplikasi, langsung bisa pakai."
           />
           <FadeIn>
-            <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:grid md:grid-cols-5 md:gap-5 md:overflow-visible" style={{ scrollbarWidth: "none" }}>
-              {SCREENSHOTS.map((s) => (
-                <div key={s.label} className="snap-center flex-shrink-0 w-40 md:w-auto space-y-2">
-                  <PhoneMockup className="w-full">
-                    <img src={s.src} alt={s.label} className="w-full object-cover object-top" loading="lazy" />
-                  </PhoneMockup>
-                  <p className="text-center text-xs font-medium text-muted-foreground">{s.label}</p>
-                </div>
-              ))}
+            <div className="flex flex-col items-center gap-6">
+              <div className="w-52 md:w-64">
+                <PhoneMockup>
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={activeScreenshot}
+                      src={SCREENSHOTS[activeScreenshot].src}
+                      alt={SCREENSHOTS[activeScreenshot].label}
+                      className="w-full object-cover object-top"
+                      loading="lazy"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.2 }}
+                    />
+                  </AnimatePresence>
+                </PhoneMockup>
+              </div>
+              <div className="flex gap-2 flex-wrap justify-center">
+                {SCREENSHOTS.map((s, i) => (
+                  <button
+                    key={s.label}
+                    onClick={() => setActiveScreenshot(i)}
+                    className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
+                      i === activeScreenshot
+                        ? "border-foreground text-foreground font-semibold bg-foreground/5"
+                        : "border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </FadeIn>
         </Section>
@@ -274,6 +347,18 @@ export default function LandingPage() {
             ))}
           </div>
         </Section>
+
+        {/* CTA setelah Testimoni */}
+        <FadeIn>
+          <div className="text-center py-2 px-5">
+            <p className="text-sm text-muted-foreground mb-3">
+              Bergabung bersama pemilik kos lain yang sudah beralih ke cara digital.
+            </p>
+            <Button size="sm" className="font-medium text-sm" onClick={handleRegister}>
+              Mulai Gratis Sekarang <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            </Button>
+          </div>
+        </FadeIn>
 
         {/* Comparison */}
         <Section>
@@ -321,7 +406,7 @@ export default function LandingPage() {
             title="Satu harga, semua fitur"
             subtitle="Bayar sekali per tahun. Tidak ada biaya tersembunyi. Tidak ada biaya per kamar."
           />
-          <div className="grid md:grid-cols-3 gap-4 md:gap-5 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-4 md:gap-5 max-w-2xl mx-auto">
             {plans.map((plan, i) => (
               <FadeIn key={plan.name} delay={i * 0.08} className="flex">
                 <Card className={`flex flex-col w-full transition-all hover:shadow-md ${plan.popular ? "border-foreground shadow-sm" : "border-border"}`}>

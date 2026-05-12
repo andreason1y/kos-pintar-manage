@@ -1,4 +1,4 @@
-import { ClipboardList, Wallet, Home, FileText, BarChart3, Bell } from "lucide-react";
+import { ClipboardList, Wallet, Home, FileText, BarChart3, Bell, UserPlus, Zap } from "lucide-react";
 
 export const FEATURES = [
   { icon: ClipboardList, title: "Data Penyewa Terpusat", desc: "Semua data penyewa, kontrak, dan riwayat bayar dalam satu tempat." },
@@ -7,6 +7,12 @@ export const FEATURES = [
   { icon: FileText, title: "Nota PDF Instan", desc: "Generate nota pembayaran profesional, langsung kirim via WhatsApp." },
   { icon: BarChart3, title: "Laporan Keuangan", desc: "Pemasukan, pengeluaran, dan laba bersih dihitung otomatis tiap bulan." },
   { icon: Bell, title: "Notifikasi Jatuh Tempo", desc: "Dapat reminder saat tagihan jatuh tempo — langsung kirim WA 1 klik." },
+];
+
+export const HOW_IT_WORKS = [
+  { step: 1, icon: UserPlus, title: "Daftar & buat profil kos", desc: "Isi nama kos, alamat, dan tipe kamar. Tidak perlu training — langsung paham." },
+  { step: 2, icon: Home, title: "Tambah penyewa", desc: "Input data penyewa, kamar, dan tanggal masuk. Deposit otomatis tercatat." },
+  { step: 3, icon: Zap, title: "Kelola tanpa ribet", desc: "Tagihan muncul otomatis tiap bulan. Notifikasi jatuh tempo. Kirim WA 1 klik." },
 ];
 
 export const PAIN_POINTS = [
@@ -18,9 +24,8 @@ export const PAIN_POINTS = [
 ];
 
 export const COMPARISON: { feature: string; kp: string | boolean; sk: string | boolean }[] = [
-  { feature: "Harga Starter (10 kamar)", kp: "Rp 12rb/bln", sk: "Rp 600k-1.2jt/bln" },
-  { feature: "Harga Pro (25 kamar)", kp: "Rp 21rb/bln", sk: "Rp 1.5jt-3jt/bln" },
-  { feature: "Harga Bisnis (60 kamar)", kp: "Rp 42rb/bln", sk: "Rp 3.6jt-7.2jt/bln" },
+  { feature: "Harga (s.d. 25 kamar)", kp: "Rp 17rb/bln", sk: "Rp 1.5jt-3jt/bln" },
+  { feature: "Harga (s.d. 80 kamar)", kp: "Rp 33rb/bln", sk: "Rp 4.8jt-9.6jt/bln" },
   { feature: "Manajemen penyewa", kp: true, sk: true },
   { feature: "Nota PDF", kp: true, sk: true },
   { feature: "Kirim tagihan WA 1 klik", kp: true, sk: true },
@@ -33,7 +38,7 @@ export const COMPARISON: { feature: string; kp: string | boolean; sk: string | b
 
 export const DEFAULT_FAQS = [
   { q: "Apakah data kos saya aman?", a: "Ya. Data disimpan di server terenkripsi. Hanya Anda yang bisa mengakses data kos Anda." },
-  { q: "Apa bedanya paket Starter, Pro, dan Bisnis?", a: "Perbedaannya hanya di jumlah kamar: Starter hingga 10 kamar, Pro hingga 25 kamar, Bisnis hingga 60 kamar. Semua fitur sama di setiap paket." },
+  { q: "Apa bedanya paket Pro dan Bisnis?", a: "Perbedaannya hanya di jumlah kamar: Pro hingga 25 kamar, Bisnis hingga 80 kamar. Semua fitur sama di kedua paket — tidak ada fitur eksklusif untuk paket tertentu." },
   { q: "Apakah WA dikirim otomatis ke penyewa?", a: "Bukan otomatis. Anda mendapat notifikasi jatuh tempo, lalu tinggal 1 klik untuk kirim pesan tagihan ke WA penyewa." },
   { q: "Apakah ada biaya per kamar?", a: "Tidak. Harga flat per tahun — mau 1 kamar atau maksimal paket, bayarnya tetap sama." },
   { q: "Bisa dicoba dulu sebelum bayar?", a: "Ya. Ada mode demo yang bisa langsung dicoba tanpa daftar." },
@@ -42,7 +47,7 @@ export const DEFAULT_FAQS = [
 
 export const DEFAULT_TESTIMONIALS = [
   { quote: "Sekarang tinggal buka HP, semua data penyewa dan tagihan sudah rapi. Gak perlu lagi buka buku tulis.", name: "Pak Hendra S.", kos: "12 kamar, Bandung", stars: 5 },
-  { quote: "Sebelumnya saya sering lupa nagih. Sekarang ada notifikasi jatuh tempo, tinggal klik kirim ke WA penyewa.", name: "Bu Ratna W.", kos: "18 kamar, Yogyakarta", stars: 5 },
+  { quote: "Sebelum ini saya harus telpon satu-satu untuk nagih penyewa. Sekarang langsung kelihatan siapa yang belum bayar, tinggal klik kirim ke WA. Jauh lebih mudah.", name: "Bu Wulan T.", kos: "20 kamar, Semarang", stars: 5 },
   { quote: "Nota PDF langsung ke WA itu praktis banget. Penyewa merasa diurus profesional.", name: "Pak Doni A.", kos: "8 kamar, Surabaya", stars: 5 },
 ];
 
