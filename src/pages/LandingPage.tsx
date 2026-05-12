@@ -183,7 +183,7 @@ export default function LandingPage() {
               <FadeIn delay={0.3}>
                 <div className="flex gap-8 justify-center flex-wrap mt-10 pt-8 border-t border-border/40">
                   <div className="text-center">
-                    <p className="text-xl font-bold text-foreground">{slotsUsed}+</p>
+                    <p className="text-xl font-bold text-foreground">{slotsTaken + slotsUsed}+</p>
                     <p className="text-xs text-muted-foreground mt-0.5">Pemilik kos aktif</p>
                   </div>
                   <div className="text-center">

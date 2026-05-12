@@ -35,7 +35,7 @@ export function PhoneMockup({ children, className = "" }: { children: React.Reac
 /* ─── Section wrapper ─── */
 export function Section({ children, className = "", id }: { children: React.ReactNode; className?: string; id?: string }) {
   return (
-    <section id={id} className={`px-5 md:px-8 py-10 md:py-14 ${className}`}>
+    <section id={id} className={`px-5 md:px-8 py-8 md:py-10 ${className}`}>
       {children}
     </section>
   );
