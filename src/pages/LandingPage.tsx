@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { initMetaPixel, trackEvent } from "@/lib/meta-pixel";
 import { useNavigate, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ export default function LandingPage() {
   const [faqs, setFaqs] = useState(DEFAULT_FAQS);
   const [testimonials, setTestimonials] = useState(DEFAULT_TESTIMONIALS);
   const [isMaintenance, setIsMaintenance] = useState(false);
+  const [activeScreenshot, setActiveScreenshot] = useState(0);
 
   useEffect(() => {
     if (isDemo) navigate("/beranda", { replace: true });
@@ -267,15 +269,39 @@ export default function LandingPage() {
             subtitle="Tidak perlu training — buka aplikasi, langsung bisa pakai."
           />
           <FadeIn>
-            <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:grid md:grid-cols-5 md:gap-5 md:overflow-visible" style={{ scrollbarWidth: "none" }}>
-              {SCREENSHOTS.map((s) => (
-                <div key={s.label} className="snap-center flex-shrink-0 w-40 md:w-auto space-y-2">
-                  <PhoneMockup className="w-full">
-                    <img src={s.src} alt={s.label} className="w-full object-cover object-top" loading="lazy" />
-                  </PhoneMockup>
-                  <p className="text-center text-xs font-medium text-muted-foreground">{s.label}</p>
-                </div>
-              ))}
+            <div className="flex flex-col items-center gap-6">
+              <div className="w-52 md:w-64">
+                <PhoneMockup>
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={activeScreenshot}
+                      src={SCREENSHOTS[activeScreenshot].src}
+                      alt={SCREENSHOTS[activeScreenshot].label}
+                      className="w-full object-cover object-top"
+                      loading="lazy"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.2 }}
+                    />
+                  </AnimatePresence>
+                </PhoneMockup>
+              </div>
+              <div className="flex gap-2 flex-wrap justify-center">
+                {SCREENSHOTS.map((s, i) => (
+                  <button
+                    key={s.label}
+                    onClick={() => setActiveScreenshot(i)}
+                    className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
+                      i === activeScreenshot
+                        ? "border-foreground text-foreground font-semibold bg-foreground/5"
+                        : "border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </FadeIn>
         </Section>
