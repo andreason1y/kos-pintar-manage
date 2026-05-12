@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, X, Instagram, MessageCircle, ArrowRight, Star, ArrowDown } from "lucide-react";
+import { Check, X, Instagram, MessageCircle, ArrowRight, Star } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import logoIcon from "@/assets/logo-icon.png";
 import { FadeIn, PhoneMockup, Section, SectionHeading } from "./landing/LandingComponents";
@@ -185,18 +185,18 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto">
             {PAIN_POINTS.map((p, i) => (
               <FadeIn key={i} delay={i * 0.05}>
-                <div className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-foreground/20 transition-colors">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <div className="w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center">
+                <div className="p-4 rounded-lg border border-border hover:border-foreground/20 transition-colors space-y-2.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
                       <X className="w-3 h-3 text-destructive" />
                     </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
                     <p className="text-sm text-muted-foreground line-through">{p.before}</p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <ArrowDown className="w-3 h-3 text-accent flex-shrink-0" />
-                      <p className="text-sm font-semibold text-foreground">{p.after}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-accent" />
                     </div>
+                    <p className="text-sm font-semibold text-foreground">{p.after}</p>
                   </div>
                 </div>
               </FadeIn>
