@@ -1,5 +1,3 @@
-import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
-
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const HOOK_SECRET = Deno.env.get("SEND_EMAIL_HOOK_SECRET")!;
 const FROM_EMAIL = "KosPintar <noreply@kospintar.id>";
@@ -11,26 +9,46 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Supabase HTTPS hooks kirim JWT HS256 di Authorization header
+async function verifyHookJWT(authHeader: string | null, secret: string): Promise<boolean> {
+  if (!authHeader?.startsWith("Bearer ")) return false;
+  const token = authHeader.slice(7);
+  const parts = token.split(".");
+  if (parts.length !== 3) return false;
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+    const data = encoder.encode(parts[0] + "." + parts[1]);
+    const sig = parts[2].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = sig + "=".repeat((4 - sig.length % 4) % 4);
+    const signature = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+    return await crypto.subtle.verify("HMAC", key, signature, data);
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const payload = await req.text();
-  const headers = Object.fromEntries(req.headers);
-
-  // Verifikasi signature dari Supabase Auth Hook
-  try {
-    const wh = new Webhook(HOOK_SECRET);
-    wh.verify(payload, headers);
-  } catch {
-    return new Response(JSON.stringify({ error: "Invalid signature" }), {
+  const authHeader = req.headers.get("Authorization");
+  const valid = await verifyHookJWT(authHeader, HOOK_SECRET);
+  if (!valid) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
-  const body = JSON.parse(payload) as {
+  const body = await req.json() as {
     user: { email: string; id: string };
     email_data: {
       token: string;
@@ -42,7 +60,7 @@ Deno.serve(async (req) => {
   };
 
   const { user, email_data } = body;
-  const { token_hash, redirect_to, email_action_type, site_url } = email_data;
+  const { token_hash, redirect_to, email_action_type } = email_data;
 
   // Bangun link verifikasi menggunakan Supabase verify endpoint
   const verifyUrl = `${SUPABASE_URL}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(redirect_to || APP_URL)}`;
