@@ -100,10 +100,10 @@ export default function LandingPage() {
   const slotsRemaining = Math.max(0, slotTotal - (slotsTaken + slotsUsed));
   const earlyBirdActive = ebActive && slotsRemaining > 0;
 
-  const proNormal = cfg.pro_price_normal ?? 199000;
-  const proEB = cfg.pro_price_earlybird ?? 99000;
-  const bisnisNormal = cfg.bisnis_price_normal ?? 399000;
-  const bisnisEB = cfg.bisnis_price_earlybird ?? 199000;
+  const proNormal = cfg.pro_price_normal ?? 398000;
+  const proEB = cfg.pro_price_earlybird ?? 199000;
+  const bisnisNormal = cfg.bisnis_price_normal ?? 798000;
+  const bisnisEB = cfg.bisnis_price_earlybird ?? 399000;
 
   const bannerActive = (cfg.announcement_banner_active ?? DEFAULTS.announcement_banner_active) === 1;
   const bannerText = t("announcement_banner_text").replace("{slots}", String(slotsRemaining));
