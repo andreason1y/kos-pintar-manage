@@ -38,7 +38,7 @@ export const COMPARISON: { feature: string; kp: string | boolean; sk: string | b
 
 export const DEFAULT_FAQS = [
   { q: "Apakah data kos saya aman?", a: "Ya. Data disimpan di server terenkripsi. Hanya Anda yang bisa mengakses data kos Anda." },
-  { q: "Apa bedanya paket Pro dan Bisnis?", a: "Perbedaannya hanya di jumlah kamar: Pro hingga 25 kamar, Bisnis hingga 80 kamar. Semua fitur sama di kedua paket — tidak ada fitur eksklusif untuk paket tertentu." },
+  { q: "Apa bedanya paket Mini, Starter, dan Pro?", a: "Perbedaannya hanya di jumlah kamar: Mini hingga 10 kamar, Starter hingga 25 kamar, Pro hingga 60 kamar. Semua fitur tersedia di setiap paket — tidak ada fitur yang dikunci." },
   { q: "Apakah WA dikirim otomatis ke penyewa?", a: "Bukan otomatis. Anda mendapat notifikasi jatuh tempo, lalu tinggal 1 klik untuk kirim pesan tagihan ke WA penyewa." },
   { q: "Apakah ada biaya per kamar?", a: "Tidak. Harga flat per tahun — mau 1 kamar atau maksimal paket, bayarnya tetap sama." },
   { q: "Bisa dicoba dulu sebelum bayar?", a: "Ya. Ada mode demo yang bisa langsung dicoba tanpa daftar." },
@@ -71,8 +71,8 @@ export const TEXT_DEFAULTS: Record<string, string> = {
   pricing_footer_text: "Harga early bird untuk {total} pendaftar pertama. Dibayar per tahun.",
   hero_headline: "Kelola kos-kosan tanpa ribet.",
   hero_subheadline: "Tagihan otomatis. Kirim WA 1 klik. Laporan keuangan. Semua dalam satu aplikasi.",
-  hero_subtext: "Dibangun khusus untuk pemilik kos Indonesia yang ingin berhenti dari buku tulis dan spreadsheet.",
-  footer_tagline: "Software manajemen kos-kosan untuk pemilik properti Indonesia.",
+  hero_subtext: "Tagihan otomatis, reminder WA, nota PDF, dan laporan keuangan — semua dalam satu aplikasi.",
+  footer_tagline: "Aplikasi manajemen kos-kosan untuk pemilik properti Indonesia. Kelola penyewa, tagihan, dan keuangan dalam satu tempat.",
   contact_wa: "62818477620",
   contact_email: "hello@kospintar.id",
   app_version: "2.0.0",

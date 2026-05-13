@@ -340,7 +340,7 @@ export default function LandingPage() {
         <Section>
           <SectionHeading
             tag="Testimoni"
-            title="Dipercaya pemilik kos di seluruh Indonesia"
+            title="Cerita dari pengguna KosPintar"
           />
           <div className="grid md:grid-cols-3 gap-4 md:gap-5">
             {testimonials.map((item, idx) => (
