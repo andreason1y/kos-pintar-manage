@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
+import { usePlan } from "@/lib/plan-context";
 import { formatRupiah, formatRupiahCompact, getMonthName } from "@/lib/helpers";
 import { useTransactions, useExpenses, useDeposits, useTenants, useRoomTypesAndRooms, useInvalidate } from "@/hooks/use-queries";
 import AppShell from "@/components/AppShell";
@@ -28,7 +29,16 @@ const EXPENSE_CATEGORIES = ["Listrik", "Air/PDAM", "Kebersihan", "Perbaikan/Reno
 export default function KeuanganPage() {
   const { activeProperty } = useProperty();
   const demo = useDemo();
+  const { isExpired, triggerUpgrade } = usePlan();
   const invalidate = useInvalidate();
+
+  const guardExpired = () => {
+    if (isExpired && !demo.isDemo) {
+      triggerUpgrade("Langganan Anda sudah berakhir. Perbarui untuk bisa mencatat pengeluaran.", "Perbarui Sekarang →", "/#harga");
+      return true;
+    }
+    return false;
+  };
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<{ id: string; label: string; kategori?: string; amount: number; date: string; is_recurring?: boolean } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
@@ -650,7 +660,7 @@ export default function KeuanganPage() {
               <CollapsibleTrigger className="w-full p-4 flex items-center justify-between rounded-t-xl">
                 <h2 className="text-sm font-semibold text-foreground">Transaksi ({items.length} item{items.length !== 1 ? 's' : ''})</h2>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" onClick={(e) => { e.stopPropagation(); setShowAdd(true); }}><Plus size={14} className="mr-1" /> Pengeluaran</Button>
+                  <Button size="sm" onClick={(e) => { e.stopPropagation(); if (guardExpired()) return; setShowAdd(true); }}><Plus size={14} className="mr-1" /> Pengeluaran</Button>
                   <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200" />
                 </div>
               </CollapsibleTrigger>
@@ -682,7 +692,7 @@ export default function KeuanganPage() {
                           return (
                             <motion.div key={item.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02, duration: 0.15 }}>
                               <SwipeableRow
-                                onEdit={() => { setShowEdit(item); setJudul(item.label); setKategori(item.kategori || "Lainnya"); setJumlah(String(item.amount)); setTanggal(item.date); setIsRecurring(item.is_recurring || false); }}
+                                onEdit={() => { if (guardExpired()) return; setShowEdit(item); setJudul(item.label); setKategori(item.kategori || "Lainnya"); setJumlah(String(item.amount)); setTanggal(item.date); setIsRecurring(item.is_recurring || false); }}
                                 onDelete={() => setDeleteTarget({ id: item.id, name: item.label })}
                               >{rowContent}</SwipeableRow>
                             </motion.div>

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
+import { usePlan } from "@/lib/plan-context";
 import { formatRupiah, getMonthName, generateNotaNumber, waTagihanLink } from "@/lib/helpers";
 import type { DemoTransaction } from "@/lib/demo-context";
 import { downloadNota, getNotaWhatsAppLink } from "@/lib/nota-generator";
@@ -66,7 +67,17 @@ function getDueDateColor(days: number): string {
 export default function PembayaranPage() {
   const { activeProperty } = useProperty();
   const demo = useDemo();
+  const { isExpired, triggerUpgrade } = usePlan();
   const invalidate = useInvalidate();
+
+  const guardExpired = () => {
+    if (isExpired && !demo.isDemo) {
+      triggerUpgrade("Langganan Anda sudah berakhir. Perbarui untuk bisa mencatat pembayaran.", "Perbarui Sekarang →", "/#harga");
+      return true;
+    }
+    return false;
+  };
+
   const [showPay, setShowPay] = useState<Payment | null>(null);
   const [showNota, setShowNota] = useState<Payment | null>(null);
   const [showEdit, setShowEdit] = useState<Payment | null>(null);
@@ -351,6 +362,7 @@ export default function PembayaranPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => {
+                        if (guardExpired()) return;
                         setShowEdit(p); setEditMetode(p.metode_bayar || "tunai"); setEditStatus(p.status);
                       }}>
                         <Pencil size={14} className="mr-2" /> Edit
@@ -374,7 +386,7 @@ export default function PembayaranPage() {
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <Button size="sm" className="flex-1" onClick={() => setShowPay(p)}>
+                  <Button size="sm" className="flex-1" onClick={() => { if (guardExpired()) return; setShowPay(p); }}>
                     <CreditCard size={14} className="mr-1" /> Bayar
                   </Button>
                   {p.tenant_hp && (

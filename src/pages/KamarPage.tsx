@@ -43,7 +43,15 @@ export default function KamarPage() {
   const navigate = useNavigate();
   const { activeProperty } = useProperty();
   const demo = useDemo();
-  const { plan, limits, triggerUpgrade } = usePlan();
+  const { plan, limits, triggerUpgrade, isExpired } = usePlan();
+
+  const guardExpired = () => {
+    if (isExpired && !demo.isDemo) {
+      triggerUpgrade("Langganan Anda sudah berakhir. Perbarui untuk bisa menambah atau mengubah data.", "Perbarui Sekarang →", "/#harga");
+      return true;
+    }
+    return false;
+  };
   const invalidate = useInvalidate();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -183,15 +191,16 @@ export default function KamarPage() {
   const handleBulkAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!showAddRooms) return;
+    if (guardExpired()) return;
     const n = parseInt(count) || 0;
     const start = parseInt(startNum) || 1;
     const lt = parseInt(lantai) || 1;
     const currentRoomCount = roomTypes.reduce((sum, rt) => sum + rt.rooms.length, 0);
     if (currentRoomCount + n > limits.maxRooms) {
-      if (plan === "bisnis" || plan === "demo") {
+      if (plan === "pro" || plan === "demo") {
         triggerUpgrade(`Batas ${limits.maxRooms} kamar tercapai. Hubungi kami untuk solusi enterprise.`, "Hubungi Kami →", "https://wa.me/62818477620");
       } else {
-        triggerUpgrade(`Batas ${limits.maxRooms} kamar tercapai. Upgrade ke paket Bisnis untuk kelola lebih banyak kamar.`);
+        triggerUpgrade(`Batas ${limits.maxRooms} kamar tercapai. Upgrade ke paket Pro untuk kelola lebih banyak kamar.`);
       }
       return;
     }
@@ -205,9 +214,8 @@ export default function KamarPage() {
     const roomsToInsert = Array.from({ length: n }, (_, i) => ({ room_type_id: showAddRooms, nomor: `${prefix}${start + i}`, lantai: lt, status: "kosong" as const }));
     const { error } = await supabase.from("rooms").insert(roomsToInsert);
     if (error) {
-      // Gracefully handle plan limit trigger error from DB
       if (error.message?.toLowerCase().includes("batas kamar")) {
-        const planLabel = plan === "starter" ? "Starter (10 kamar)" : plan === "pro" ? "Pro (25 kamar)" : "Bisnis (60 kamar)";
+        const planLabel = plan === "mini" ? "Mini (10 kamar)" : plan === "starter" ? "Starter (25 kamar)" : "Pro (60 kamar)";
         triggerUpgrade(`Batas kamar plan ${planLabel} telah tercapai. Upgrade untuk menambah lebih banyak kamar.`);
       } else {
         toast.error(error.message);
@@ -270,20 +278,23 @@ export default function KamarPage() {
 
   const handleRoomTap = (room: Room) => {
     if (room.status === "terisi" && room.tenantId) navigate(`/penyewa?id=${room.tenantId}`);
-    else if (room.status === "kosong") setShowAddTenant(room.id);
+    else if (room.status === "kosong") {
+      if (guardExpired()) return;
+      setShowAddTenant(room.id);
+    }
   };
 
   return (
     <AppShell>
       <PageHeader title="Kamar" subtitle="Kelola tipe & unit kamar" action={
-        <Button size="sm" onClick={() => setShowAdd(true)}><Plus size={16} className="mr-1" /> Tipe</Button>
+        <Button size="sm" onClick={() => { if (guardExpired()) return; setShowAdd(true); }}><Plus size={16} className="mr-1" /> Tipe</Button>
       } />
       <div className="px-4 space-y-3">
         {loading ? (
           <div className="space-y-3"><SkeletonCard /><SkeletonCard /><SkeletonCard /></div>
         ) : roomTypes.length === 0 ? (
           <EmptyState title="Belum ada tipe kamar" description="Mulai dengan menambahkan tipe kamar pertama" action={
-            <Button size="sm" onClick={() => setShowAdd(true)}><Plus size={16} className="mr-1" /> Tambah Tipe Kamar</Button>
+            <Button size="sm" onClick={() => { if (guardExpired()) return; setShowAdd(true); }}><Plus size={16} className="mr-1" /> Tambah Tipe Kamar</Button>
           } />
         ) : (
           roomTypes.map((rt) => {
@@ -314,7 +325,7 @@ export default function KamarPage() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => { setShowEditType(rt); setNama(rt.nama); setHarga(String(rt.harga_per_bulan)); }}>
+                      <DropdownMenuItem onClick={() => { if (guardExpired()) return; setShowEditType(rt); setNama(rt.nama); setHarga(String(rt.harga_per_bulan)); }}>
                         <Pencil size={14} className="mr-2" /> Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ type: "room_type", id: rt.id, name: rt.nama })}>
@@ -373,7 +384,7 @@ export default function KamarPage() {
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => { setShowEditRoom(room); setEditRoomNomor(room.nomor); setEditRoomLantai(String(room.lantai)); }}>
+                                <DropdownMenuItem onClick={() => { if (guardExpired()) return; setShowEditRoom(room); setEditRoomNomor(room.nomor); setEditRoomLantai(String(room.lantai)); }}>
                                   <Pencil size={14} className="mr-2" /> Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ type: "room", id: room.id, name: `Kamar ${room.nomor}` })}>
@@ -383,7 +394,7 @@ export default function KamarPage() {
                             </DropdownMenu>
                           </div>
                         ))}
-                        <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => setShowAddRooms(rt.id)}>
+                        <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => { if (guardExpired()) return; setShowAddRooms(rt.id); }}>
                           <Plus size={14} className="mr-1" /> Tambah Kamar
                         </Button>
                       </div>

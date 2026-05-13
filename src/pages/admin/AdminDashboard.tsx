@@ -88,14 +88,14 @@ export default function AdminDashboard() {
   }, []);
 
   const activeSubs = subs.filter(s => s.status === "aktif");
+  const miniCount    = activeSubs.filter(s => s.plan === "mini").length;
   const starterCount = activeSubs.filter(s => s.plan === "starter").length;
-  const proCount = activeSubs.filter(s => s.plan === "pro").length;
-  const bisnisCount = activeSubs.filter(s => s.plan === "bisnis").length;
+  const proCount     = activeSubs.filter(s => s.plan === "pro").length;
 
-  const priceStarter = settings.starter_price_earlybird || 199000;
-  const pricePro = settings.pro_price_earlybird || 349000;
-  const priceBisnis = settings.bisnis_price_earlybird || 599000;
-  const revenue = starterCount * priceStarter + proCount * pricePro + bisnisCount * priceBisnis;
+  const priceMini    = 149000;
+  const priceStarter = 249000;
+  const pricePro     = 499000;
+  const revenue = miniCount * priceMini + starterCount * priceStarter + proCount * pricePro;
 
   const newThisMonth = users.filter(u => {
     const d = new Date(u.created_at);
