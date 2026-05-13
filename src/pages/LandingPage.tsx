@@ -10,12 +10,12 @@ import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, X, Instagram, MessageCircle, ArrowRight, Star } from "lucide-react";
+import { Check, Instagram, MessageCircle, ArrowRight, Star } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import logoIcon from "@/assets/logo-icon.png";
 import { FadeIn, PhoneMockup, Section, SectionHeading } from "./landing/LandingComponents";
 import {
-  FEATURES, HOW_IT_WORKS, PAIN_POINTS, COMPARISON, DEFAULT_FAQS, DEFAULT_TESTIMONIALS,
+  FEATURES, HOW_IT_WORKS, PAIN_POINTS, DEFAULT_FAQS, DEFAULT_TESTIMONIALS,
   SCREENSHOTS, TEXT_DEFAULTS, DEFAULTS
 } from "./landing/LandingData";
 
@@ -382,45 +382,6 @@ export default function LandingPage() {
             </Button>
           </div>
         </FadeIn>
-
-        {/* Comparison */}
-        <Section>
-          <SectionHeading
-            tag="Perbandingan"
-            title="Lebih hemat dari aplikasi kos lain"
-            subtitle="Harga flat per tahun — bukan per kamar, bukan per bulan."
-          />
-          <FadeIn>
-            <div className="max-w-3xl mx-auto rounded-xl border border-border overflow-hidden">
-              <table className="w-full text-xs md:text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="text-left p-3 md:p-4 font-medium text-muted-foreground">Fitur</th>
-                    <th className="p-3 md:p-4 font-semibold text-foreground text-center">KosPintar</th>
-                    <th className="p-3 md:p-4 font-medium text-muted-foreground text-center">Lainnya</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {COMPARISON.map((row, i) => (
-                    <tr key={i} className="border-b border-border/50 last:border-0">
-                      <td className="p-3 md:p-4 text-foreground">{row.feature}</td>
-                      <td className="p-3 md:p-4 text-center font-semibold text-foreground">
-                        {typeof row.kp === "boolean" ? (
-                          row.kp ? <Check className="w-4 h-4 mx-auto text-accent" /> : <X className="w-4 h-4 mx-auto text-muted-foreground/30" />
-                        ) : row.kp}
-                      </td>
-                      <td className="p-3 md:p-4 text-center text-muted-foreground">
-                        {typeof row.sk === "boolean" ? (
-                          row.sk ? <Check className="w-4 h-4 mx-auto text-foreground/50" /> : <X className="w-4 h-4 mx-auto text-muted-foreground/30" />
-                        ) : row.sk}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </FadeIn>
-        </Section>
 
         {/* Pricing */}
         <Section id="harga">
