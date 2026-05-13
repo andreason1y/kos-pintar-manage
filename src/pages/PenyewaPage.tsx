@@ -4,6 +4,7 @@ import PenyewaForm from "@/components/penyewa/PenyewaForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
+import { usePlan } from "@/lib/plan-context";
 import { getInitials, getAvatarColor } from "@/lib/avatar-colors";
 import { formatRupiah, addMonths } from "@/lib/helpers";
 import { useRoomTypesAndRooms, useTenants, useTransactions, useDeposits, useInvalidate } from "@/hooks/use-queries";
@@ -42,7 +43,16 @@ const tabsList = ["Semua", "Lunas", "Jatuh Tempo", "Keluar"];
 export default function PenyewaPage() {
   const { activeProperty } = useProperty();
   const demo = useDemo();
+  const { isExpired, triggerUpgrade } = usePlan();
   const invalidate = useInvalidate();
+
+  const guardExpired = () => {
+    if (isExpired && !demo.isDemo) {
+      triggerUpgrade("Langganan Anda sudah berakhir. Perbarui untuk bisa menambah atau mengubah data.", "Perbarui Sekarang →", "/#harga");
+      return true;
+    }
+    return false;
+  };
   const [activeTab, setActiveTab] = useState("Semua");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("name");
@@ -313,7 +323,7 @@ export default function PenyewaPage() {
   return (
     <AppShell>
       <PageHeader title="Penyewa" subtitle={`${tenants.filter(t => t.status === "aktif").length} penyewa aktif`} action={
-        <Button size="sm" onClick={() => setShowAdd(true)}><Plus size={16} className="mr-1" /> Tambah</Button>
+        <Button size="sm" onClick={() => { if (guardExpired()) return; setShowAdd(true); }}><Plus size={16} className="mr-1" /> Tambah</Button>
       } />
       <div className="px-4 space-y-3">
         <div className="relative">
@@ -388,7 +398,7 @@ export default function PenyewaPage() {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setShowEdit(t)}>
+                            <DropdownMenuItem onClick={() => { if (guardExpired()) return; setShowEdit(t); }}>
                               <Pencil size={14} className="mr-2" /> Edit
                             </DropdownMenuItem>
                             {t.status === "aktif" && (

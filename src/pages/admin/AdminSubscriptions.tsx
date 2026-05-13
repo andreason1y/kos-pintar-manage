@@ -29,7 +29,7 @@ export default function AdminSubscriptions() {
 
   // Activate form
   const [activateEmail, setActivateEmail] = useState("");
-  const [activatePlan, setActivatePlan] = useState("starter");
+  const [activatePlan, setActivatePlan] = useState("mini");
   const [activateMonths, setActivateMonths] = useState("12");
   const [saving, setSaving] = useState(false);
 
@@ -89,11 +89,11 @@ export default function AdminSubscriptions() {
 
     if (existingSub && existingSub.length > 0) {
       await supabase.from("subscriptions")
-        .update({ plan: activatePlan, status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] })
+        .update({ plan: activatePlan, status: "aktif", expires_at: expiresAt.toISOString().split("T")[0], duration_months: months })
         .eq("user_id", found.id);
     } else {
       await supabase.from("subscriptions")
-        .insert({ user_id: found.id, plan: activatePlan, status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
+        .insert({ user_id: found.id, plan: activatePlan, status: "aktif", expires_at: expiresAt.toISOString().split("T")[0], duration_months: months });
     }
 
     toast.success(`Subscription ${activatePlan} diaktifkan untuk ${activateEmail}`);
@@ -125,7 +125,7 @@ export default function AdminSubscriptions() {
     startDate.setMonth(startDate.getMonth() + months);
 
     await supabase.from("subscriptions")
-      .update({ status: "aktif", expires_at: startDate.toISOString().split("T")[0] })
+      .update({ status: "aktif", expires_at: startDate.toISOString().split("T")[0], duration_months: months })
       .eq("user_id", found.id);
 
     toast.success(`Subscription diperpanjang ${months} bulan`);
@@ -225,9 +225,9 @@ export default function AdminSubscriptions() {
               <Select value={activatePlan} onValueChange={setActivatePlan}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="starter">Starter (10 kamar)</SelectItem>
-                  <SelectItem value="pro">Pro (25 kamar)</SelectItem>
-                  <SelectItem value="bisnis">Bisnis (60 kamar)</SelectItem>
+                  <SelectItem value="mini">Mini (10 kamar)</SelectItem>
+                  <SelectItem value="starter">Starter (25 kamar)</SelectItem>
+                  <SelectItem value="pro">Pro (60 kamar)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

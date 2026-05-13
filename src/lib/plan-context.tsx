@@ -3,24 +3,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useDemo } from "@/lib/demo-context";
 
-export type PlanType = "starter" | "pro" | "bisnis" | "demo";
+export type PlanType = "mini" | "starter" | "pro" | "demo";
 
 export interface PlanLimits {
   maxRooms: number;
 }
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
-  starter: { maxRooms: 10 },
-  pro: { maxRooms: 25 },
-  bisnis: { maxRooms: 80 },
-  demo: { maxRooms: 80 },
+  mini:    { maxRooms: 10 },
+  starter: { maxRooms: 25 },
+  pro:     { maxRooms: 60 },
+  demo:    { maxRooms: 60 },
 };
 
 export const PLAN_LABELS: Record<PlanType, string> = {
+  mini:    "Mini",
   starter: "Starter",
-  pro: "Pro",
-  bisnis: "Bisnis",
-  demo: "Bisnis",
+  pro:     "Pro",
+  demo:    "Pro",
 };
 
 interface PlanContextType {
@@ -29,6 +29,8 @@ interface PlanContextType {
   planLabel: string;
   loading: boolean;
   expiresAt: string | null;
+  isExpired: boolean;
+  durationMonths: number | null;
   showUpgradeModal: boolean;
   upgradeMessage: string;
   upgradeCta: string;
@@ -38,11 +40,13 @@ interface PlanContextType {
 }
 
 const PlanContext = createContext<PlanContextType>({
-  plan: "starter",
-  limits: PLAN_LIMITS.starter,
-  planLabel: "Starter",
+  plan: "mini",
+  limits: PLAN_LIMITS.mini,
+  planLabel: "Mini",
   loading: true,
   expiresAt: null,
+  isExpired: false,
+  durationMonths: null,
   showUpgradeModal: false,
   upgradeMessage: "",
   upgradeCta: "Upgrade rencana Anda →",
@@ -53,25 +57,27 @@ const PlanContext = createContext<PlanContextType>({
 
 export const usePlan = () => useContext(PlanContext);
 
-// Migration: Map old plan names to new ones
+// Migration: map old plan names to current ones
 function migratePlanType(oldPlan: string): PlanType {
   const planMap: Record<string, PlanType> = {
-    mandiri: "starter",
-    juragan: "pro",
+    mandiri: "mini",    // legacy pre-2026
+    juragan: "starter", // legacy pre-2026
+    bisnis:  "pro",     // safety fallback if any bisnis remains post-migration
+    mini:    "mini",
     starter: "starter",
-    pro: "pro",
-    bisnis: "bisnis",
-    demo: "demo",
+    pro:     "pro",
+    demo:    "demo",
   };
-  return (planMap[oldPlan] || "starter") as PlanType;
+  return planMap[oldPlan] ?? "mini";
 }
 
 export function PlanProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { isDemo } = useDemo();
-  const [plan, setPlan] = useState<PlanType>("starter");
+  const [plan, setPlan] = useState<PlanType>("mini");
   const [loading, setLoading] = useState(true);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [durationMonths, setDurationMonths] = useState<number | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
   const [upgradeCta, setUpgradeCta] = useState("Upgrade rencana Anda →");
@@ -89,27 +95,29 @@ export function PlanProvider({ children }: { children: ReactNode }) {
     }
     supabase
       .from("subscriptions")
-      .select("plan, expires_at")
+      .select("plan, expires_at, duration_months")
       .eq("user_id", user.id)
       .eq("status", "aktif")
       .order("created_at", { ascending: false })
       .limit(1)
       .then(({ data, error }) => {
         if (error) {
-          // Fail gracefully — default to starter plan
           console.warn("[PlanContext] Failed to fetch subscription:", error.message);
-          setPlan("starter");
+          setPlan("mini");
           setExpiresAt(null);
+          setDurationMonths(null);
           setLoading(false);
           return;
         }
         if (data && data.length > 0) {
-          const sub = data[0] as { plan: string; expires_at: string | null };
-          setPlan(migratePlanType(sub.plan || "starter"));
+          const sub = data[0] as { plan: string; expires_at: string | null; duration_months: number | null };
+          setPlan(migratePlanType(sub.plan || "mini"));
           setExpiresAt(sub.expires_at || null);
+          setDurationMonths(sub.duration_months ?? null);
         } else {
-          setPlan("starter");
+          setPlan("mini");
           setExpiresAt(null);
+          setDurationMonths(null);
         }
         setLoading(false);
       });
@@ -129,9 +137,15 @@ export function PlanProvider({ children }: { children: ReactNode }) {
 
   const limits = PLAN_LIMITS[plan];
   const planLabel = PLAN_LABELS[plan];
+  const isExpired = expiresAt !== null && new Date(expiresAt) < new Date();
 
   return (
-    <PlanContext.Provider value={{ plan, limits, planLabel, loading, expiresAt, showUpgradeModal, upgradeMessage, upgradeCta, upgradeLink, triggerUpgrade, dismissUpgrade }}>
+    <PlanContext.Provider value={{
+      plan, limits, planLabel, loading,
+      expiresAt, isExpired, durationMonths,
+      showUpgradeModal, upgradeMessage, upgradeCta, upgradeLink,
+      triggerUpgrade, dismissUpgrade,
+    }}>
       {children}
     </PlanContext.Provider>
   );

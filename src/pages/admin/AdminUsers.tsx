@@ -51,7 +51,7 @@ export default function AdminUsers() {
   // Add user modal
   const [showAdd, setShowAdd] = useState(false);
   const [addForm, setAddForm] = useState({
-    nama: "", email: "", no_hp: "", password: "", plan: "starter",
+    nama: "", email: "", no_hp: "", password: "", plan: "mini",
     nama_kos: "", started_at: new Date().toISOString().split("T")[0],
     expires_at: "",
   });
@@ -59,7 +59,7 @@ export default function AdminUsers() {
   // Edit user modal
   const [editUser, setEditUser] = useState<UserRow | null>(null);
   const [editForm, setEditForm] = useState({
-    nama: "", no_hp: "", nama_kos: "", plan: "starter", status: "aktif", expires_at: "",
+    nama: "", no_hp: "", nama_kos: "", plan: "mini", status: "aktif", expires_at: "",
   });
 
   // Reset password modal
@@ -123,9 +123,9 @@ export default function AdminUsers() {
       u.nama?.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filterPlan === "Semua" ||
+      (filterPlan === "Mini" && u.sub_plan === "mini") ||
       (filterPlan === "Starter" && u.sub_plan === "starter") ||
       (filterPlan === "Pro" && u.sub_plan === "pro") ||
-      (filterPlan === "Bisnis" && u.sub_plan === "bisnis") ||
       (filterPlan === "Belum" && u.sub_status === "none");
     return matchSearch && matchFilter;
   });
@@ -231,7 +231,7 @@ export default function AdminUsers() {
         .eq("user_id", showExtend.id);
     } else {
       await supabase.from("subscriptions")
-        .insert({ user_id: showExtend.id, plan: "starter", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
+        .insert({ user_id: showExtend.id, plan: "mini", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
     }
     toast.success(`Subscription diperpanjang ${months} bulan`);
     setSaving(false);
@@ -252,7 +252,7 @@ export default function AdminUsers() {
     const existing = users.find(u => u.id === userId);
     if (existing?.sub_status === "none") {
       await supabase.from("subscriptions")
-        .insert({ user_id: userId, plan: "starter", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
+        .insert({ user_id: userId, plan: "mini", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
     } else {
       await supabase.from("subscriptions")
         .update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] })
@@ -264,13 +264,14 @@ export default function AdminUsers() {
 
   const handleSwitchPlan = async (userId: string, currentPlan: string) => {
     const planCycle: Record<string, string> = {
+      mini:    "starter",
       starter: "pro",
-      pro: "bisnis",
-      bisnis: "starter",
-      mandiri: "pro", // Legacy migration
-      juragan: "bisnis", // Legacy migration
+      pro:     "mini",
+      bisnis:  "pro",    // legacy fallback
+      mandiri: "starter", // legacy
+      juragan: "pro",    // legacy
     };
-    const newPlan = planCycle[currentPlan] || "starter";
+    const newPlan = planCycle[currentPlan] || "mini";
     await supabase.from("subscriptions").update({ plan: newPlan }).eq("user_id", userId);
     supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "switch_plan", detail: `${userId}: ${currentPlan} → ${newPlan}` }).then(() => {});
     toast.success(`Paket diubah ke ${newPlan}`);
@@ -311,7 +312,7 @@ export default function AdminUsers() {
     for (const id of selectedIds) {
       const u = users.find(u => u.id === id);
       if (u?.sub_status === "none") {
-        await supabase.from("subscriptions").insert({ user_id: id, plan: "starter", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
+        await supabase.from("subscriptions").insert({ user_id: id, plan: "mini", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
       } else {
         await supabase.from("subscriptions").update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] }).eq("user_id", id);
       }
@@ -394,7 +395,7 @@ export default function AdminUsers() {
             <Input value={search} onChange={e => { setSearch(e.target.value); setPage(0); }} placeholder="Cari nama atau email..." className="pl-9" />
           </div>
           <div className="flex gap-2 overflow-x-auto">
-            {["Semua", "Starter", "Pro", "Bisnis", "Belum"].map(tab => (
+            {["Semua", "Mini", "Starter", "Pro", "Belum"].map(tab => (
               <button key={tab} onClick={() => { setFilterPlan(tab); setPage(0); }}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
                   filterPlan === tab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
@@ -569,9 +570,9 @@ export default function AdminUsers() {
                 <Select value={addForm.plan} onValueChange={v => setAddForm(p => ({ ...p, plan: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="starter">Starter (10 kamar)</SelectItem>
-                    <SelectItem value="pro">Pro (25 kamar)</SelectItem>
-                    <SelectItem value="bisnis">Bisnis (60 kamar)</SelectItem>
+                    <SelectItem value="mini">Mini (10 kamar)</SelectItem>
+                    <SelectItem value="starter">Starter (25 kamar)</SelectItem>
+                    <SelectItem value="pro">Pro (60 kamar)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -625,9 +626,9 @@ export default function AdminUsers() {
                   <Select value={editForm.plan} onValueChange={v => setEditForm(p => ({ ...p, plan: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="starter">Starter (10 kamar)</SelectItem>
-                      <SelectItem value="pro">Pro (25 kamar)</SelectItem>
-                      <SelectItem value="bisnis">Bisnis (60 kamar)</SelectItem>
+                      <SelectItem value="mini">Mini (10 kamar)</SelectItem>
+                      <SelectItem value="starter">Starter (25 kamar)</SelectItem>
+                      <SelectItem value="pro">Pro (60 kamar)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

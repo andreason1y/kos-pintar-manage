@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useDemo } from "@/lib/demo-context";
+import ExpiredBanner from "./ExpiredBanner";
 import logoIcon from "@/assets/logo-icon.png";
 import { X } from "lucide-react";
 
@@ -68,6 +69,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-screen bg-background">
         {announcementBanner}
+        <ExpiredBanner />
         <div className="mx-auto max-w-app pb-20">
           <AnimatePresence mode="wait">
             <motion.div
@@ -92,6 +94,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <AppSidebar />
         <main className="flex-1 overflow-auto">
           {announcementBanner}
+          <ExpiredBanner />
           <div className="mx-auto max-w-4xl p-6">
             <AnimatePresence mode="wait">
               <motion.div

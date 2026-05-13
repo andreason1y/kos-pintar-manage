@@ -10,12 +10,12 @@ import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, X, Instagram, MessageCircle, ArrowRight, Star } from "lucide-react";
+import { Check, Instagram, MessageCircle, ArrowRight, Star } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import logoIcon from "@/assets/logo-icon.png";
 import { FadeIn, PhoneMockup, Section, SectionHeading } from "./landing/LandingComponents";
 import {
-  FEATURES, HOW_IT_WORKS, PAIN_POINTS, COMPARISON, DEFAULT_FAQS, DEFAULT_TESTIMONIALS,
+  FEATURES, HOW_IT_WORKS, PAIN_POINTS, DEFAULT_FAQS, DEFAULT_TESTIMONIALS,
   SCREENSHOTS, TEXT_DEFAULTS, DEFAULTS
 } from "./landing/LandingData";
 
@@ -27,6 +27,14 @@ function smoothScrollTo(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 }
 
+type PriceRow = { tier: string; duration_months: number; price: number };
+
+const FALLBACK_PRICES: Record<string, Record<number, number>> = {
+  mini:    { 1: 25000, 3: 65000,  6: 109000, 12: 149000 },
+  starter: { 1: 45000, 3: 119000, 6: 199000, 12: 249000 },
+  pro:     { 1: 89000, 3: 229000, 6: 379000, 12: 499000 },
+};
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -37,6 +45,8 @@ export default function LandingPage() {
   const [slotsLoaded, setSlotsLoaded] = useState(false);
   const [cfg, setCfg] = useState<Record<string, number>>({});
   const [cfgText, setCfgText] = useState<Record<string, string>>({});
+  const [selectedDuration, setSelectedDuration] = useState<1 | 3 | 6 | 12>(12);
+  const [pricingData, setPricingData] = useState<PriceRow[]>([]);
   const [faqs, setFaqs] = useState(DEFAULT_FAQS);
   const [testimonials, setTestimonials] = useState(DEFAULT_TESTIMONIALS);
   const [isMaintenance, setIsMaintenance] = useState(false);
@@ -53,7 +63,9 @@ export default function LandingPage() {
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("settings").select("key, value"),
       supabase.from("settings_text").select("key, value"),
-    ]).then(([profileRes, settingsRes, textRes]) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any).from("subscription_prices").select("tier, duration_months, price"),
+    ]).then(([profileRes, settingsRes, textRes, pricesRes]) => {
       setSlotsUsed(profileRes.count || 0);
       const numMap: Record<string, number> = {};
       (settingsRes.data || []).forEach(r => { numMap[r.key] = r.value; });
@@ -64,6 +76,8 @@ export default function LandingPage() {
       setCfgText(txtMap);
       try { const p = JSON.parse(txtMap.faq_data || ""); if (Array.isArray(p) && p.length) setFaqs(p); } catch {}
       try { const p = JSON.parse(txtMap.testimonials_data || ""); if (Array.isArray(p) && p.length) setTestimonials(p); } catch {}
+      const rows = (pricesRes.data || []) as PriceRow[];
+      if (rows.length > 0) setPricingData(rows);
       setSlotsLoaded(true);
     });
   }, []);
@@ -100,23 +114,32 @@ export default function LandingPage() {
   const slotsRemaining = Math.max(0, slotTotal - (slotsTaken + slotsUsed));
   const earlyBirdActive = ebActive && slotsRemaining > 0;
 
-  const proNormal = cfg.pro_price_normal ?? 199000;
-  const proEB = cfg.pro_price_earlybird ?? 99000;
-  const bisnisNormal = cfg.bisnis_price_normal ?? 399000;
-  const bisnisEB = cfg.bisnis_price_earlybird ?? 199000;
-
   const bannerActive = (cfg.announcement_banner_active ?? DEFAULTS.announcement_banner_active) === 1;
   const bannerText = t("announcement_banner_text").replace("{slots}", String(slotsRemaining));
   const contactWa = t("contact_wa");
 
-  const plans = [
-    { name: "Pro", rooms: "Hingga 25 kamar", normal: proNormal, eb: proEB, features: ["Maks 25 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
-    { name: "Bisnis", rooms: "Hingga 80 kamar", normal: bisnisNormal, eb: bisnisEB, popular: true, features: ["Maks 80 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
+  const DURATION_OPTIONS: { value: 1 | 3 | 6 | 12; label: string; saveBadge?: string }[] = [
+    { value: 1,  label: "1 Bln" },
+    { value: 3,  label: "3 Bln" },
+    { value: 6,  label: "6 Bln" },
+    { value: 12, label: "1 Tahun", saveBadge: "Hemat 50%+" },
   ];
 
-  const formatPerMonth = (yearly: number) => {
-    const monthly = Math.round(yearly / 12 / 1000);
-    return `Rp ${monthly}rb`;
+  const TIER_CONFIG = [
+    { tier: "mini",    name: "Mini",    rooms: "Hingga 10 kamar", popular: false, features: ["Maks 10 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
+    { tier: "starter", name: "Starter", rooms: "Hingga 25 kamar", popular: true,  features: ["Maks 25 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
+    { tier: "pro",     name: "Pro",     rooms: "Hingga 60 kamar", popular: false, features: ["Maks 60 kamar", "Semua fitur lengkap", "Update gratis selamanya"] },
+  ];
+
+  const getPriceForTier = (tier: string, duration: number): number => {
+    const fromDB = pricingData.find(p => p.tier === tier && p.duration_months === duration);
+    return fromDB?.price ?? FALLBACK_PRICES[tier]?.[duration] ?? 0;
+  };
+
+  const formatRupiahK = (n: number): string => {
+    if (n >= 1000000) return `Rp ${(n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1)}jt`;
+    if (n >= 1000) return `Rp ${Math.round(n / 1000)}rb`;
+    return `Rp ${n.toLocaleString("id-ID")}`;
   };
 
   return (
@@ -317,7 +340,7 @@ export default function LandingPage() {
         <Section>
           <SectionHeading
             tag="Testimoni"
-            title="Dipercaya pemilik kos di seluruh Indonesia"
+            title="Cerita dari pengguna KosPintar"
           />
           <div className="grid md:grid-cols-3 gap-4 md:gap-5">
             {testimonials.map((item, idx) => (
@@ -360,108 +383,92 @@ export default function LandingPage() {
           </div>
         </FadeIn>
 
-        {/* Comparison */}
-        <Section>
-          <SectionHeading
-            tag="Perbandingan"
-            title="Lebih hemat dari aplikasi kos lain"
-            subtitle="Harga flat per tahun — bukan per kamar, bukan per bulan."
-          />
-          <FadeIn>
-            <div className="max-w-3xl mx-auto rounded-xl border border-border overflow-hidden">
-              <table className="w-full text-xs md:text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="text-left p-3 md:p-4 font-medium text-muted-foreground">Fitur</th>
-                    <th className="p-3 md:p-4 font-semibold text-foreground text-center">KosPintar</th>
-                    <th className="p-3 md:p-4 font-medium text-muted-foreground text-center">Lainnya</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {COMPARISON.map((row, i) => (
-                    <tr key={i} className="border-b border-border/50 last:border-0">
-                      <td className="p-3 md:p-4 text-foreground">{row.feature}</td>
-                      <td className="p-3 md:p-4 text-center font-semibold text-foreground">
-                        {typeof row.kp === "boolean" ? (
-                          row.kp ? <Check className="w-4 h-4 mx-auto text-accent" /> : <X className="w-4 h-4 mx-auto text-muted-foreground/30" />
-                        ) : row.kp}
-                      </td>
-                      <td className="p-3 md:p-4 text-center text-muted-foreground">
-                        {typeof row.sk === "boolean" ? (
-                          row.sk ? <Check className="w-4 h-4 mx-auto text-foreground/50" /> : <X className="w-4 h-4 mx-auto text-muted-foreground/30" />
-                        ) : row.sk}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </FadeIn>
-        </Section>
-
         {/* Pricing */}
         <Section id="harga">
           <SectionHeading
             tag="Harga"
-            title="Satu harga, semua fitur"
-            subtitle="Bayar sekali per tahun. Tidak ada biaya tersembunyi. Tidak ada biaya per kamar."
+            title="Pilih paket yang sesuai"
+            subtitle="Mulai sesuai kebutuhan, upgrade kapan saja. Tidak ada biaya tersembunyi."
           />
-          <div className="grid md:grid-cols-2 gap-4 md:gap-5 max-w-2xl mx-auto">
-            {plans.map((plan, i) => (
-              <FadeIn key={plan.name} delay={i * 0.08} className="flex">
-                <Card className={`flex flex-col w-full transition-all hover:shadow-md ${plan.popular ? "border-foreground shadow-sm" : "border-border"}`}>
-                  <CardContent className="p-5 md:p-6 flex flex-col flex-1 text-center">
-                    <div className="mb-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <p className="font-semibold text-foreground">{plan.name}</p>
-                        {plan.popular && <Badge className="bg-foreground text-background text-[10px] px-1.5 py-0">Populer</Badge>}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{plan.rooms}</p>
-                    </div>
-                    <div className="mb-5">
-                      {earlyBirdActive ? (
-                        <>
-                          <p className="text-xs text-muted-foreground line-through">{formatPerMonth(plan.normal)}/bln</p>
-                          <p className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-                            {formatPerMonth(plan.eb)}
-                            <span className="text-sm font-normal text-muted-foreground">/bln</span>
-                          </p>
-                          <p className="text-[11px] text-muted-foreground mt-1">Dibayar {formatRupiahLanding(plan.eb)}/tahun</p>
-                          <p className="text-[10px] text-accent font-medium mt-0.5">Promo Spesial</p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-                            {formatPerMonth(plan.normal)}
-                            <span className="text-sm font-normal text-muted-foreground">/bln</span>
-                          </p>
-                          <p className="text-[11px] text-muted-foreground mt-1">Dibayar {formatRupiahLanding(plan.normal)}/tahun</p>
-                        </>
-                      )}
-                    </div>
-                    <div className="space-y-2.5 mb-6 flex-1">
-                      {plan.features.map((f) => (
-                        <div key={f} className="flex items-center justify-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-accent flex-shrink-0" />
-                          <span className="text-sm text-muted-foreground">{f}</span>
+
+          {/* Duration toggle */}
+          <FadeIn>
+            <div className="flex items-center justify-center gap-1.5 mb-8 flex-wrap">
+              {DURATION_OPTIONS.map(d => (
+                <button
+                  key={d.value}
+                  onClick={() => setSelectedDuration(d.value)}
+                  className={`relative px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    selectedDuration === d.value
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-muted-foreground hover:bg-muted/70"
+                  }`}
+                >
+                  {d.label}
+                  {d.saveBadge && (
+                    <span className="absolute -top-2.5 -right-2 px-1.5 py-0.5 bg-accent text-accent-foreground text-[9px] font-bold rounded-full leading-none whitespace-nowrap">
+                      {d.saveBadge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </FadeIn>
+
+          {/* Tier cards */}
+          <div className="grid md:grid-cols-3 gap-4 md:gap-5 max-w-3xl mx-auto">
+            {TIER_CONFIG.map((tier, i) => {
+              const totalPrice = getPriceForTier(tier.tier, selectedDuration);
+              const monthlyEq  = Math.round(totalPrice / selectedDuration);
+              return (
+                <FadeIn key={tier.tier} delay={i * 0.08} className="flex">
+                  <Card className={`flex flex-col w-full transition-all hover:shadow-md ${tier.popular ? "border-foreground shadow-sm" : "border-border"}`}>
+                    <CardContent className="p-5 md:p-6 flex flex-col flex-1 text-center">
+                      <div className="mb-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <p className="font-semibold text-foreground">{tier.name}</p>
+                          {tier.popular && (
+                            <Badge className="bg-foreground text-background text-[10px] px-1.5 py-0">
+                              Paling Populer
+                            </Badge>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                    <Button
-                      className={`w-full font-semibold ${plan.popular ? "" : "variant-outline"}`}
-                      variant={plan.popular ? "default" : "outline"}
-                      onClick={handleRegister}
-                    >
-                      Pilih {plan.name}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </FadeIn>
-            ))}
+                        <p className="text-xs text-muted-foreground mt-0.5">{tier.rooms}</p>
+                      </div>
+                      <div className="mb-5">
+                        <p className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+                          {formatRupiahK(monthlyEq)}
+                          <span className="text-sm font-normal text-muted-foreground">/bln</span>
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Total {formatRupiahLanding(totalPrice)} / {selectedDuration === 12 ? "tahun" : `${selectedDuration} bulan`}
+                        </p>
+                      </div>
+                      <div className="space-y-2.5 mb-6 flex-1">
+                        {tier.features.map(f => (
+                          <div key={f} className="flex items-center justify-center gap-2">
+                            <Check className="w-3.5 h-3.5 text-accent flex-shrink-0" />
+                            <span className="text-sm text-muted-foreground">{f}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        className="w-full font-semibold"
+                        variant={tier.popular ? "default" : "outline"}
+                        onClick={handleRegister}
+                      >
+                        Pilih {tier.name}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </FadeIn>
+              );
+            })}
           </div>
+
           <FadeIn delay={0.3}>
             <p className="mt-6 text-xs text-muted-foreground text-center">
-              Dibayar per tahun. Semua paket termasuk semua fitur.
+              Semua paket sudah termasuk seluruh fitur KosPintar.
             </p>
           </FadeIn>
         </Section>
