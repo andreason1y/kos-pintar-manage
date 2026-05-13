@@ -3,7 +3,7 @@ import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const HOOK_SECRET = Deno.env.get("SEND_EMAIL_HOOK_SECRET")!;
 const FROM_EMAIL = "KosPintar <noreply@kospintar.id>";
-const APP_URL = Deno.env.get("APP_URL") || "https://kos-pintar-manage111.vercel.app";
+const APP_URL = Deno.env.get("APP_URL") || "https://kospintar.id";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 
 const corsHeaders = {
