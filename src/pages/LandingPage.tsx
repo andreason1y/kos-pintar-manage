@@ -106,6 +106,14 @@ export default function LandingPage() {
 
   const handleRegister = () => { trackEvent("InitiateCheckout"); navigate("/login?tab=register"); };
   const handleLogin = () => navigate("/login");
+  const handlePlanSelect = (tier: string) => {
+    trackEvent("InitiateCheckout");
+    if (user) {
+      navigate(`/checkout?plan=${tier}&duration=${selectedDuration}`);
+    } else {
+      navigate(`/login?tab=register&plan=${tier}&duration=${selectedDuration}`);
+    }
+  };
   const t = (key: string) => cfgText[key] ?? TEXT_DEFAULTS[key] ?? "";
 
   const ebActive = (cfg.earlybird_active ?? DEFAULTS.earlybird_active) === 1;
@@ -455,7 +463,7 @@ export default function LandingPage() {
                       <Button
                         className="w-full font-semibold"
                         variant={tier.popular ? "default" : "outline"}
-                        onClick={handleRegister}
+                        onClick={() => handlePlanSelect(tier.tier)}
                       >
                         Pilih {tier.name}
                       </Button>
