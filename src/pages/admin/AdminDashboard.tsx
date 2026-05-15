@@ -121,7 +121,7 @@ export default function AdminDashboard() {
 
   const statCards = [
     { label: "Total Users", value: users.length, icon: Users, color: "text-primary" },
-    { label: "Active Subs", value: `${activeSubs.length} (S:${starterCount} P:${proCount} B:${bisnisCount})`, icon: CreditCard, color: "text-[hsl(var(--success))]" },
+    { label: "Active Subs", value: `${activeSubs.length} (M:${miniCount} S:${starterCount} P:${proCount})`, icon: CreditCard, color: "text-[hsl(var(--success))]" },
     { label: "Est. Revenue", value: formatRupiah(revenue), icon: TrendingUp, color: "text-primary" },
     { label: "New This Month", value: newThisMonth.length, icon: UserPlus, color: "text-accent" },
     { label: "Early Bird Left", value: slotsRemaining, icon: Ticket, color: "text-[hsl(var(--warning))]" },
