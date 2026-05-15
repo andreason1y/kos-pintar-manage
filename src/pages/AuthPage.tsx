@@ -10,6 +10,7 @@ import { Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
+import { useDemo } from "@/lib/demo-context";
 import logoIcon from "@/assets/logo-icon.png";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -20,6 +21,7 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { properties, loading: propLoading } = useProperty();
+  const demo = useDemo();
   const [searchParams] = useSearchParams();
 
   const [isLogin, setIsLogin] = useState(
@@ -454,14 +456,12 @@ export default function AuthPage() {
                   <Button
                     variant="outline"
                     className="w-full mt-3"
-                    onClick={() =>
-                      window.open(
-                        "https://wa.me/628184776220?text=Halo%2C%20saya%20tertarik%20ingin%20mencoba%20demo%20KosPintar%20%F0%9F%8F%A0",
-                        "_blank"
-                      )
-                    }
+                    onClick={() => {
+                      demo.setIsDemo(true);
+                      navigate("/beranda");
+                    }}
                   >
-                    Coba Demo
+                    Coba Demo Gratis
                   </Button>
                 )}
               </motion.div>

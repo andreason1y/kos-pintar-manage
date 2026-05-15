@@ -121,6 +121,7 @@ supabase/
 | `plan_limits` | plan, max_rooms, harga_per_tahun, nama_display |
 | `subscription_prices` | plan, duration_months, price — sumber harga resmi untuk checkout |
 | `tripay_orders` | id, user_id, merchant_ref, plan, duration_months, amount, status, paid_at |
+| `otp_codes` | id, user_id, code, expires_at, created_at |
 | `settings` | key, value (numeric) |
 | `settings_text` | key, value (text) |
 
