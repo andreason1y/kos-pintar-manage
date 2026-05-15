@@ -2,6 +2,7 @@ import { useEffect, useState, ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { ErrorBoundary } from "@/app/error-boundary";
 import {
   LayoutDashboard, Users, Settings, CreditCard, Megaphone,
   ArrowLeft, Loader2, Menu, X, ScrollText,
@@ -128,7 +129,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
         )}
         <div className="flex-1 p-4 md:p-6 max-w-5xl w-full mx-auto">
-          {children}
+          <ErrorBoundary>{children}</ErrorBoundary>
         </div>
       </div>
     </div>
