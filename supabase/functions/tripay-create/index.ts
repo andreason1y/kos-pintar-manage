@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     const PRIVATE_KEY    = Deno.env.get("TRIPAY_PRIVATE_KEY")!;
     const BASE_URL       = Deno.env.get("TRIPAY_BASE_URL") ?? "https://tripay.co.id/api-sandbox/";
     const CALLBACK_URL   = Deno.env.get("TRIPAY_CALLBACK_URL")!;
-    const RETURN_URL     = Deno.env.get("TRIPAY_RETURN_URL") ?? "https://kos-pintar-manage111.vercel.app/checkout/sukses";
+    const RETURN_URL     = Deno.env.get("TRIPAY_RETURN_URL") ?? "https://kospintar.id/checkout/sukses";
 
     // Require auth
     const authHeader = req.headers.get("Authorization") ?? "";
