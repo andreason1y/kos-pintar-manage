@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useDemo } from "@/lib/demo-context";
+import { toast } from "sonner";
 
 export type PlanType = "mini" | "starter" | "pro" | "demo";
 
@@ -103,6 +104,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
       .then(({ data, error }) => {
         if (error) {
           console.warn("[PlanContext] Failed to fetch subscription:", error.message);
+          toast.warning("Gagal memuat status langganan. Beberapa fitur mungkin terbatas.");
           setPlan("mini");
           setExpiresAt(null);
           setDurationMonths(null);

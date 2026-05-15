@@ -81,7 +81,7 @@ export default function ProfilPage() {
         // Force immediate refetch
         await invalidate.profile();
       }
-    } catch {
+    } catch (err) {
       console.error("Profile save exception:", err);
       toast.error("Gagal menyimpan profil");
     }
@@ -98,6 +98,7 @@ export default function ProfilPage() {
       toast.success("Properti diperbarui!");
       setShowEditProperty(false);
       refetchProperties();
+      await invalidate.rooms();
     }
     setSaving(false);
   };

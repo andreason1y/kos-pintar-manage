@@ -5,13 +5,25 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const FROM_EMAIL = "KosPintar <noreply@kospintar.id>";
 const OTP_EXPIRY_MINUTES = 10;
+const OTP_RATE_LIMIT_SECONDS = 60;
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "https://kos-pintar-manage111.vercel.app",
+  "http://localhost:8080",
+  "http://localhost:5173",
+];
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("Origin"));
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -37,12 +49,29 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Generate kode OTP 6 digit
-  const code = String(Math.floor(100000 + Math.random() * 900000));
-  const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
-
-  // Simpan ke DB via service role (bypass RLS)
   const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+  // Rate limiting: 1 OTP per 60 detik
+  const { data: recentOtp } = await supabaseAdmin
+    .from("otp_codes")
+    .select("created_at")
+    .eq("user_id", user.id)
+    .gt("created_at", new Date(Date.now() - OTP_RATE_LIMIT_SECONDS * 1000).toISOString())
+    .limit(1)
+    .maybeSingle();
+
+  if (recentOtp) {
+    return new Response(
+      JSON.stringify({ error: `Tunggu ${OTP_RATE_LIMIT_SECONDS} detik sebelum minta kode baru` }),
+      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Generate kode OTP 6 digit (cryptographically secure)
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  const code = String(100000 + (buf[0] % 900000));
+  const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
 
   // Hapus kode lama yang belum dipakai untuk user ini
   await supabaseAdmin
