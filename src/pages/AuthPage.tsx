@@ -118,12 +118,12 @@ export default function AuthPage() {
 
   // Redirect user yang sudah auth + OTP verified
   if (user && isOtpVerified(user.id)) {
-    return (
-      <Navigate
-        to={properties.length > 0 ? "/beranda" : "/onboarding"}
-        replace
-      />
-    );
+    const plan = searchParams.get("plan");
+    const duration = searchParams.get("duration");
+    const dest = plan
+      ? `/checkout?plan=${plan}&duration=${duration ?? "1"}`
+      : properties.length > 0 ? "/beranda" : "/onboarding";
+    return <Navigate to={dest} replace />;
   }
 
   // === Handlers ===
@@ -199,9 +199,12 @@ export default function AuthPage() {
 
       // Tandai OTP verified di session storage
       sessionStorage.setItem("otp_verified", session.user.id);
-      navigate(properties.length > 0 ? "/beranda" : "/onboarding", {
-        replace: true,
-      });
+      const plan = searchParams.get("plan");
+      const duration = searchParams.get("duration");
+      const dest = plan
+        ? `/checkout?plan=${plan}&duration=${duration ?? "1"}`
+        : properties.length > 0 ? "/beranda" : "/onboarding";
+      navigate(dest, { replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Kode OTP tidak valid");
     } finally {

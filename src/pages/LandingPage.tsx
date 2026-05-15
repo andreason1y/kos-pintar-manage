@@ -105,6 +105,11 @@ export default function LandingPage() {
   }
 
   const handleRegister = () => { trackEvent("InitiateCheckout"); navigate("/login?tab=register"); };
+  const handlePilihPaket = (tier: string) => {
+    trackEvent("InitiateCheckout");
+    const dest = `/checkout?plan=${tier}&duration=${selectedDuration}`;
+    navigate(dest);
+  };
   const handleLogin = () => navigate("/login");
   const t = (key: string) => cfgText[key] ?? TEXT_DEFAULTS[key] ?? "";
 
@@ -455,7 +460,7 @@ export default function LandingPage() {
                       <Button
                         className="w-full font-semibold"
                         variant={tier.popular ? "default" : "outline"}
-                        onClick={handleRegister}
+                        onClick={() => handlePilihPaket(tier.tier)}
                       >
                         Pilih {tier.name}
                       </Button>
