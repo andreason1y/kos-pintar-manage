@@ -75,7 +75,10 @@ src/
 │   ├── avatar-colors.ts
 │   ├── nota-generator.ts
 │   └── notification-service.ts
-├── pages/            # Halaman utama + admin/
+├── pages/
+│   ├── CheckoutPage.tsx      # Halaman pilih metode bayar Tripay
+│   ├── PaymentStatusPage.tsx # Polling status pembayaran Tripay
+│   └── admin/
 ├── routes/           # admin.routes, private.routes, public.routes
 ├── services/
 │   ├── api.ts        # Centralized Supabase service layer
@@ -84,8 +87,13 @@ src/
 
 supabase/
 ├── functions/
-│   ├── admin-manage-user/index.ts   # Edge Function: CRUD user via admin
-│   └── daily-billing/index.ts       # Edge Function: auto-invoice + reminder
+│   ├── admin-manage-user/index.ts   # CRUD user via admin
+│   ├── daily-billing/index.ts       # Auto-invoice + reminder (cron 07:00 WIB)
+│   ├── send-otp/index.ts            # Kirim OTP login via email
+│   ├── verify-otp/index.ts          # Verifikasi OTP login
+│   ├── send-email/index.ts          # Hook email Supabase Auth (signup/reset)
+│   ├── tripay-create/index.ts       # Buat order pembayaran Tripay
+│   └── tripay-callback/index.ts     # Webhook callback dari Tripay
 └── migrations/       # Urut timestamp — JANGAN EDIT YANG SUDAH ADA
 ```
 
@@ -98,7 +106,7 @@ supabase/
 | Table | Kolom penting |
 |-------|--------------|
 | `profiles` | id, nama, no_hp, plan, subscription_active, last_login |
-| `subscriptions` | user_id, plan, status (aktif), started_at, expires_at |
+| `subscriptions` | user_id, plan, status (aktif), started_at, expires_at, duration_months |
 | `properties` | id, user_id, nama_kos, alamat |
 | `room_types` | id, property_id, nama, harga_per_bulan |
 | `rooms` | id, room_type_id, nomor, lantai, status (kosong/terisi) |
@@ -111,8 +119,8 @@ supabase/
 | `admins` | email |
 | `admin_activity_log` | id, admin_email, action, detail |
 | `plan_limits` | plan, max_rooms, harga_per_tahun, nama_display |
-| `midtrans_orders` | id, user_id, order_id, plan, amount, status |
-| `payment_transactions` | id, user_id, order_id, plan, amount, snap_token, status |
+| `subscription_prices` | plan, duration_months, price — sumber harga resmi untuk checkout |
+| `tripay_orders` | id, user_id, merchant_ref, plan, duration_months, amount, status, paid_at |
 | `settings` | key, value (numeric) |
 | `settings_text` | key, value (text) |
 
@@ -124,7 +132,7 @@ gender_type: "L" | "P"
 payment_method: "tunai" | "transfer" | "qris"
 payment_status: "belum_bayar" | "belum_lunas" | "lunas"
 payment_transaction_status_enum: "pending" | "success" | "failed"
-plan_enum: "starter" | "pro" | "bisnis"
+plan_enum: "mini" | "starter" | "pro"
 room_status: "kosong" | "terisi"
 tenant_status: "aktif" | "keluar"
 ```
@@ -150,13 +158,17 @@ tenant_status: "aktif" | "keluar"
 
 | Plan | Max Kamar |
 |------|-----------|
-| starter | 10 |
-| pro | 25 |
-| bisnis | 60 |
+| mini | 10 |
+| starter | 25 |
+| pro | 60 |
 | demo | 60 (frontend only) |
 
-Legacy plan names: `mandiri` → `starter`, `juragan` → `pro`.
-Di-handle via `migratePlanType()` di `plan-context.tsx`. Jangan hardcode nama plan lama.
+Legacy plan names (sudah tidak dipakai, hanya untuk migrasi data lama):
+- `mandiri` → `mini`
+- `juragan` → `starter`
+- `bisnis` → `pro`
+
+Di-handle via `migratePlanType()` di `plan-context.tsx`. Jangan hardcode nama plan lama di kode baru.
 
 ### RLS Gotcha — Pakai EXISTS bukan IN
 
@@ -234,40 +246,49 @@ if (error) { toast.error(error.message); return; }
 
 ## Edge Functions
 
+### `send-otp` / `verify-otp`
+OTP 2FA saat login. Rate limit 60 detik per user. OTP di-generate dengan `crypto.getRandomValues()`.
+
 ### `admin-manage-user`
 Dipanggil dari `AdminUsers.tsx`. Actions: `create_user`, `reset_password`, `send_reset_email`, `update_user`.
 Butuh caller yang ada di tabel `admins`.
 
+### `send-email`
+Hook email Supabase Auth untuk signup verification dan password reset. Menggunakan Resend API.
+Secret: `RESEND_API_KEY`, `SEND_EMAIL_HOOK_SECRET`.
+
 ### `daily-billing`
 Auto-generate invoice bulanan + reminder H-3/H0/H+3.
-**Cron belum di-setup** — perlu Supabase Dashboard > Edge Functions > Schedule.
+**Cron aktif**: setiap hari jam 07:00 WIB via `pg_cron` (jadwal: `0 0 * * *`).
+
+### `tripay-create`
+Membuat order pembayaran Tripay. Harga diambil dari tabel `subscription_prices` (bukan dari frontend).
+Dipanggil dari `CheckoutPage.tsx`. Mengembalikan `checkout_url` untuk redirect ke halaman bayar Tripay.
+
+### `tripay-callback`
+Webhook server-to-server dari Tripay setelah pembayaran selesai.
+Validasi `X-Callback-Signature` via HMAC-SHA256. Mengaktifkan subscription dan mencatat `paid_at`.
+
+### `~~create-payment~~` / `~~activate-subscription~~` (DEPRECATED)
+Endpoint Midtrans lama — sudah dinonaktifkan, mengembalikan `410 Gone`. Jangan dipakai.
 
 ---
 
-## Status & Pekerjaan Tertunda
+## Status Pekerjaan
 
-### 🔴 P0 — Registration Bug
-**Symptom**: "Database error saving new user" saat signup.
-**Dugaan**: Trigger `handle_new_user` di live DB tidak sinkron dengan migration terbaru.
-**Langkah fix**:
-1. Jalankan di Supabase SQL Editor:
-   ```sql
-   SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname = 'handle_new_user';
-   ```
-2. Pastikan kolom `plan` dan `subscription_active` ada di tabel `profiles`
+### ✅ Selesai
+- Registration bug (`handle_new_user` trigger) — sudah fix di live DB
+- RLS semua tabel pakai `EXISTS` bukan `IN`
+- CORS semua Edge Functions dibatasi ke origin produksi
+- OTP: crypto secure + rate limiting
+- Tripay checkout flow lengkap (create → redirect → callback → aktivasi subscription)
+- Daily billing cron aktif (07:00 WIB)
+- Error handling: toast warning saat subscription gagal dimuat
+- Admin pages dibungkus `ErrorBoundary`
+- Deposits RLS duplicate fix
 
-### 🟡 P1 — Midtrans Payment Integration
-**Status**: Table `midtrans_orders` dan `payment_transactions` sudah ada di DB. Kode integrasi belum lengkap.
-
-### 🟡 P1 — Daily Billing Cron
-**Status**: Edge Function sudah ada, scheduler belum.
-**Fix**: Supabase Dashboard → Edge Functions → Schedule → setiap hari jam 01:00 WIB.
-
-### 🟢 Fixed — Deposits RLS Duplicate
-Fix di migration `20260416_fix_deposits_rls_duplicate_rows.sql`. Pakai EXISTS + deduplicate di frontend.
-
-### 🟢 Fixed — add_tenant RPC
-Fix di migration `20260414`. Tanggal keluar tidak lagi salah masuk ke tanggal masuk.
+### ⚠️ Perlu Ditest
+- **Tripay sandbox end-to-end**: pilih paket → CheckoutPage → bayar di sandbox → cek `tripay_orders` + `subscriptions` di DB
 
 ---
 
@@ -291,6 +312,8 @@ if (plan === 'mandiri') { ... }
 // ❌ Edit file di src/components/ui/ (shadcn/ui)
 
 // ❌ Commit .env file (sudah di .gitignore)
+
+// ❌ Panggil create-payment atau activate-subscription (sudah deprecated)
 ```
 
 ---
@@ -310,8 +333,14 @@ VITE_SENTRY_DSN                 # production only
 SUPABASE_URL                    # auto-available
 SUPABASE_SERVICE_ROLE_KEY       # auto-available
 SUPABASE_ANON_KEY               # auto-available
-RESEND_API_KEY                  # set manual — untuk email (belum aktif)
-MIDTRANS_SERVER_KEY             # set manual — untuk payment (belum aktif)
+RESEND_API_KEY                  # untuk email (send-email function)
+SEND_EMAIL_HOOK_SECRET          # untuk verifikasi hook email Supabase Auth
+TRIPAY_MERCHANT_CODE            # kode merchant Tripay
+TRIPAY_API_KEY                  # API key Tripay
+TRIPAY_PRIVATE_KEY              # private key untuk HMAC signature
+TRIPAY_BASE_URL                 # https://tripay.co.id/api (prod) atau /api-sandbox (sandbox)
+TRIPAY_CALLBACK_URL             # URL webhook callback dari Tripay
+TRIPAY_RETURN_URL               # URL redirect setelah bayar
 ```
 
 ---
@@ -337,3 +366,4 @@ bun run lint
 ✅ Tanya dulu sebelum refactor besar atau ubah arsitektur.
 ✅ Jangan edit migration yang sudah ada — selalu buat file baru.
 ✅ Demo mode bypass auth — jangan test auth flow di sana.
+✅ Harga checkout selalu diambil dari DB (`subscription_prices`), bukan dari frontend/URL params.
