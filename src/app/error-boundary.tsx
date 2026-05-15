@@ -46,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 Aplikasi mengalami masalah. Silakan muat ulang halaman atau coba
                 beberapa saat lagi.
               </p>
-              {process.env.NODE_ENV === "development" && (
+              {(
                 <details className="text-left bg-muted p-4 rounded-md mb-6">
                   <summary className="cursor-pointer font-mono text-xs font-semibold">
                     Error Details
