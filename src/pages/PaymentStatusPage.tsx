@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useProperty } from "@/lib/property-context";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, XCircle, Clock } from "lucide-react";
 
@@ -12,6 +13,7 @@ const POLL_INTERVAL_MS = 3000;
 export default function PaymentStatusPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { properties } = useProperty();
   const merchantRef = searchParams.get("merchant_ref");
 
   const [status, setStatus] = useState<TripayStatus | null>(null);
@@ -82,7 +84,7 @@ export default function PaymentStatusPage() {
                 Langganan Anda sudah aktif. Selamat menggunakan KosPintar.
               </p>
             </div>
-            <Button className="w-full font-semibold" onClick={() => navigate("/beranda")}>
+            <Button className="w-full font-semibold" onClick={() => navigate(properties.length > 0 ? "/beranda" : "/onboarding")}>
               Masuk ke Aplikasi
             </Button>
           </>

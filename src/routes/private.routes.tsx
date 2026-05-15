@@ -1,6 +1,7 @@
 import { lazy } from "react";
 import { RouteObject } from "react-router-dom";
 import { OnboardingGuard } from "@/guards/OnboardingGuard";
+import SubscriptionGuard from "@/guards/SubscriptionGuard";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const KamarPage = lazy(() => import("@/pages/KamarPage"));
@@ -10,61 +11,73 @@ const KeuanganPage = lazy(() => import("@/pages/KeuanganPage"));
 const ProfilPage = lazy(() => import("@/pages/ProfilPage"));
 const OnboardingPage = lazy(() => import("@/pages/OnboardingPage"));
 
-/**
- * Private routes - requires authentication and at least one property
- * Routes without OnboardingGuard are accessible even without properties
- */
 export const privateRoutes: RouteObject[] = [
   {
     path: "/onboarding",
-    element: <OnboardingPage />,
+    element: (
+      <SubscriptionGuard>
+        <OnboardingPage />
+      </SubscriptionGuard>
+    ),
   },
   {
     path: "/beranda",
     element: (
-      <OnboardingGuard>
-        <DashboardPage />
-      </OnboardingGuard>
+      <SubscriptionGuard>
+        <OnboardingGuard>
+          <DashboardPage />
+        </OnboardingGuard>
+      </SubscriptionGuard>
     ),
   },
   {
     path: "/kamar",
     element: (
-      <OnboardingGuard>
-        <KamarPage />
-      </OnboardingGuard>
+      <SubscriptionGuard>
+        <OnboardingGuard>
+          <KamarPage />
+        </OnboardingGuard>
+      </SubscriptionGuard>
     ),
   },
   {
     path: "/penyewa",
     element: (
-      <OnboardingGuard>
-        <PenyewaPage />
-      </OnboardingGuard>
+      <SubscriptionGuard>
+        <OnboardingGuard>
+          <PenyewaPage />
+        </OnboardingGuard>
+      </SubscriptionGuard>
     ),
   },
   {
     path: "/pembayaran",
     element: (
-      <OnboardingGuard>
-        <PembayaranPage />
-      </OnboardingGuard>
+      <SubscriptionGuard>
+        <OnboardingGuard>
+          <PembayaranPage />
+        </OnboardingGuard>
+      </SubscriptionGuard>
     ),
   },
   {
     path: "/keuangan",
     element: (
-      <OnboardingGuard>
-        <KeuanganPage />
-      </OnboardingGuard>
+      <SubscriptionGuard>
+        <OnboardingGuard>
+          <KeuanganPage />
+        </OnboardingGuard>
+      </SubscriptionGuard>
     ),
   },
   {
     path: "/profil",
     element: (
-      <OnboardingGuard>
-        <ProfilPage />
-      </OnboardingGuard>
+      <SubscriptionGuard>
+        <OnboardingGuard>
+          <ProfilPage />
+        </OnboardingGuard>
+      </SubscriptionGuard>
     ),
   },
 ];

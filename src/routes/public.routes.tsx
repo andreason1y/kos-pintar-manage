@@ -7,6 +7,7 @@ const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const CheckoutPage = lazy(() => import("@/pages/CheckoutPage"));
 const PaymentStatusPage = lazy(() => import("@/pages/PaymentStatusPage"));
+const PilihPaketPage = lazy(() => import("@/pages/PilihPaketPage"));
 
 export const publicRoutes: RouteObject[] = [
   { path: "/", element: <LandingPage /> },
@@ -15,4 +16,5 @@ export const publicRoutes: RouteObject[] = [
   { path: "/reset-sandi", element: <ResetPasswordPage /> },
   { path: "/checkout", element: <CheckoutPage /> },
   { path: "/payment/status", element: <PaymentStatusPage /> },
+  { path: "/pilih-paket", element: <PilihPaketPage /> },
 ];
