@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatRupiah } from "@/lib/helpers";
+import * as Sentry from "@sentry/react";
 import AdminLayout from "./AdminLayout";
 import BottomSheet from "@/components/BottomSheet";
 import { Button } from "@/components/ui/button";
@@ -73,47 +74,54 @@ export default function AdminUsers() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [usersRes, statsRes, subsRes, propsRes, profilesRes] = await Promise.all([
-      supabase.rpc("admin_get_users"),
-      supabase.rpc("admin_get_user_stats"),
-      supabase.from("subscriptions").select("*"),
-      supabase.from("properties").select("id, user_id, nama_kos"),
-      supabase.from("profiles").select("id, last_login"),
-    ]);
+    try {
+      const [usersRes, statsRes, subsRes, propsRes, profilesRes] = await Promise.all([
+        supabase.rpc("admin_get_users"),
+        supabase.rpc("admin_get_user_stats"),
+        supabase.from("subscriptions").select("*"),
+        supabase.from("properties").select("id, user_id, nama_kos"),
+        supabase.from("profiles").select("id, last_login"),
+      ]);
 
-    const allUsers = (usersRes.data || []) as UserRow[];
-    const statsMap: Record<string, { property_count: number; room_count: number }> = {};
-    (statsRes.data || []).forEach(s => {
-      const row = s as { user_id: string; property_count: number; room_count: number };
-      statsMap[row.user_id] = { property_count: Number(row.property_count), room_count: Number(row.room_count) };
-    });
-    const subMap: Record<string, { status: string; plan: string; expires_at: string; started_at: string }> = {};
-    (subsRes.data || []).forEach(s => {
-      subMap[s.user_id] = { status: s.status, plan: s.plan, expires_at: s.expires_at, started_at: s.started_at };
-    });
-    const propMap: Record<string, string> = {};
-    (propsRes.data || []).forEach(p => {
-      if (!propMap[p.user_id]) propMap[p.user_id] = p.nama_kos;
-    });
-    const loginMap: Record<string, string> = {};
-    (profilesRes.data || []).forEach(p => {
-      if (p.last_login) loginMap[p.id] = p.last_login;
-    });
+      const allUsers = (usersRes.data || []) as UserRow[];
+      const statsMap: Record<string, { property_count: number; room_count: number }> = {};
+      (statsRes.data || []).forEach(s => {
+        const row = s as { user_id: string; property_count: number; room_count: number };
+        statsMap[row.user_id] = { property_count: Number(row.property_count), room_count: Number(row.room_count) };
+      });
+      const subMap: Record<string, { status: string; plan: string; expires_at: string; started_at: string }> = {};
+      (subsRes.data || []).forEach(s => {
+        subMap[s.user_id] = { status: s.status, plan: s.plan, expires_at: s.expires_at, started_at: s.started_at };
+      });
+      const propMap: Record<string, string> = {};
+      (propsRes.data || []).forEach(p => {
+        if (!propMap[p.user_id]) propMap[p.user_id] = p.nama_kos;
+      });
+      const loginMap: Record<string, string> = {};
+      (profilesRes.data || []).forEach(p => {
+        if (p.last_login) loginMap[p.id] = p.last_login;
+      });
 
-    const merged = allUsers.map(u => ({
-      ...u,
-      property_count: statsMap[u.id]?.property_count || 0,
-      room_count: statsMap[u.id]?.room_count || 0,
-      sub_status: subMap[u.id]?.status || "none",
-      sub_plan: subMap[u.id]?.plan || "-",
-      sub_expires: subMap[u.id]?.expires_at || undefined,
-      sub_started: subMap[u.id]?.started_at || undefined,
-      property_name: propMap[u.id] || "-",
-      last_login: loginMap[u.id] || undefined,
-    }));
+      const merged = allUsers.map(u => ({
+        ...u,
+        property_count: statsMap[u.id]?.property_count || 0,
+        room_count: statsMap[u.id]?.room_count || 0,
+        sub_status: subMap[u.id]?.status || "none",
+        sub_plan: subMap[u.id]?.plan || "-",
+        sub_expires: subMap[u.id]?.expires_at || undefined,
+        sub_started: subMap[u.id]?.started_at || undefined,
+        property_name: propMap[u.id] || "-",
+        last_login: loginMap[u.id] || undefined,
+      }));
 
-    setUsers(merged);
-    setLoading(false);
+      setUsers(merged);
+    } catch (err) {
+      console.error("Error fetching admin data:", err);
+      Sentry.captureException(err, { tags: { source: "admin_users_fetch" } });
+      toast.error("Gagal memuat data user");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -215,77 +223,108 @@ export default function AdminUsers() {
   const handleExtend = async () => {
     if (!showExtend) return;
     setSaving(true);
-    const months = parseInt(extendMonths) || 1;
-    const now = new Date();
-    let startDate = now;
-    if (showExtend.sub_expires) {
-      const existing = new Date(showExtend.sub_expires);
-      if (existing > now) startDate = existing;
-    }
-    const expiresAt = new Date(startDate);
-    expiresAt.setMonth(expiresAt.getMonth() + months);
+    try {
+      const months = parseInt(extendMonths) || 1;
+      const now = new Date();
+      let startDate = now;
+      if (showExtend.sub_expires) {
+        const existing = new Date(showExtend.sub_expires);
+        if (existing > now) startDate = existing;
+      }
+      const expiresAt = new Date(startDate);
+      expiresAt.setMonth(expiresAt.getMonth() + months);
 
-    if (showExtend.sub_status !== "none") {
-      await supabase.from("subscriptions")
-        .update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] })
-        .eq("user_id", showExtend.id);
-    } else {
-      await supabase.from("subscriptions")
-        .insert({ user_id: showExtend.id, plan: "mini", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
+      if (showExtend.sub_status !== "none") {
+        await supabase.from("subscriptions")
+          .update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] })
+          .eq("user_id", showExtend.id);
+      } else {
+        await supabase.from("subscriptions")
+          .insert({ user_id: showExtend.id, plan: "mini", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
+      }
+      toast.success(`Subscription diperpanjang ${months} bulan`);
+      setShowExtend(null);
+      fetchData();
+    } catch (err) {
+      console.error("Error extending subscription:", err);
+      Sentry.captureException(err, { tags: { source: "admin_users_extend" } });
+      toast.error((err as Error).message || "Gagal perpanjang subscription");
+    } finally {
+      setSaving(false);
     }
-    toast.success(`Subscription diperpanjang ${months} bulan`);
-    setSaving(false);
-    setShowExtend(null);
-    fetchData();
   };
 
   const handleDeactivate = async (userId: string) => {
-    await supabase.from("subscriptions").update({ status: "expired" }).eq("user_id", userId);
-    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "deactivate_user", detail: userId }).then(() => {});
-    toast.success("Subscription dinonaktifkan");
-    fetchData();
+    try {
+      await supabase.from("subscriptions").update({ status: "expired" }).eq("user_id", userId);
+      supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "deactivate_user", detail: userId }).then(() => {});
+      toast.success("Subscription dinonaktifkan");
+      fetchData();
+    } catch (err) {
+      console.error("Error deactivating subscription:", err);
+      Sentry.captureException(err, { tags: { source: "admin_users_deactivate" } });
+      toast.error((err as Error).message || "Gagal nonaktifkan subscription");
+    }
   };
 
   const handleActivate = async (userId: string) => {
-    const expiresAt = new Date();
-    expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-    const existing = users.find(u => u.id === userId);
-    if (existing?.sub_status === "none") {
-      await supabase.from("subscriptions")
-        .insert({ user_id: userId, plan: "mini", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
-    } else {
-      await supabase.from("subscriptions")
-        .update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] })
-        .eq("user_id", userId);
+    try {
+      const expiresAt = new Date();
+      expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      const existing = users.find(u => u.id === userId);
+      if (existing?.sub_status === "none") {
+        await supabase.from("subscriptions")
+          .insert({ user_id: userId, plan: "mini", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
+      } else {
+        await supabase.from("subscriptions")
+          .update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] })
+          .eq("user_id", userId);
+      }
+      toast.success("Subscription diaktifkan");
+      fetchData();
+    } catch (err) {
+      console.error("Error activating subscription:", err);
+      Sentry.captureException(err, { tags: { source: "admin_users_activate" } });
+      toast.error((err as Error).message || "Gagal aktifkan subscription");
     }
-    toast.success("Subscription diaktifkan");
-    fetchData();
   };
 
   const handleSwitchPlan = async (userId: string, currentPlan: string) => {
-    const planCycle: Record<string, string> = {
-      mini:    "starter",
-      starter: "pro",
-      pro:     "mini",
-      bisnis:  "pro",    // legacy fallback
-      mandiri: "starter", // legacy
-      juragan: "pro",    // legacy
-    };
-    const newPlan = planCycle[currentPlan] || "mini";
-    await supabase.from("subscriptions").update({ plan: newPlan }).eq("user_id", userId);
-    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "switch_plan", detail: `${userId}: ${currentPlan} → ${newPlan}` }).then(() => {});
-    toast.success(`Paket diubah ke ${newPlan}`);
-    fetchData();
+    try {
+      const planCycle: Record<string, string> = {
+        mini:    "starter",
+        starter: "pro",
+        pro:     "mini",
+        bisnis:  "pro",    // legacy fallback
+        mandiri: "starter", // legacy
+        juragan: "pro",    // legacy
+      };
+      const newPlan = planCycle[currentPlan] || "mini";
+      await supabase.from("subscriptions").update({ plan: newPlan }).eq("user_id", userId);
+      supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "switch_plan", detail: `${userId}: ${currentPlan} → ${newPlan}` }).then(() => {});
+      toast.success(`Paket diubah ke ${newPlan}`);
+      fetchData();
+    } catch (err) {
+      console.error("Error switching plan:", err);
+      Sentry.captureException(err, { tags: { source: "admin_users_switch_plan" } });
+      toast.error((err as Error).message || "Gagal ubah paket");
+    }
   };
 
   const handleDeleteUser = async () => {
     if (!deleteUser) return;
-    await supabase.from("subscriptions").delete().eq("user_id", deleteUser.id);
-    await supabase.from("profiles").delete().eq("id", deleteUser.id);
-    toast.success("Data user dihapus");
-    supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "delete_user", detail: deleteUser.email }).then(() => {});
-    setDeleteUser(null);
-    fetchData();
+    try {
+      await supabase.from("subscriptions").delete().eq("user_id", deleteUser.id);
+      await supabase.from("profiles").delete().eq("id", deleteUser.id);
+      toast.success("Data user dihapus");
+      supabase.from("admin_activity_log").insert({ admin_email: "admin", action: "delete_user", detail: deleteUser.email }).then(() => {});
+      setDeleteUser(null);
+      fetchData();
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      Sentry.captureException(err, { tags: { source: "admin_users_delete" } });
+      toast.error((err as Error).message || "Gagal hapus user");
+    }
   };
 
   // ─── Bulk Actions ───
@@ -307,31 +346,45 @@ export default function AdminUsers() {
 
   const handleBulkActivate = async () => {
     setSaving(true);
-    const expiresAt = new Date();
-    expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-    for (const id of selectedIds) {
-      const u = users.find(u => u.id === id);
-      if (u?.sub_status === "none") {
-        await supabase.from("subscriptions").insert({ user_id: id, plan: "mini", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
-      } else {
-        await supabase.from("subscriptions").update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] }).eq("user_id", id);
+    try {
+      const expiresAt = new Date();
+      expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      for (const id of selectedIds) {
+        const u = users.find(u => u.id === id);
+        if (u?.sub_status === "none") {
+          await supabase.from("subscriptions").insert({ user_id: id, plan: "mini", status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] });
+        } else {
+          await supabase.from("subscriptions").update({ status: "aktif", expires_at: expiresAt.toISOString().split("T")[0] }).eq("user_id", id);
+        }
       }
+      toast.success(`${selectedIds.size} user diaktifkan`);
+      setSelectedIds(new Set());
+      fetchData();
+    } catch (err) {
+      console.error("Error bulk activating subscriptions:", err);
+      Sentry.captureException(err, { tags: { source: "admin_users_bulk_activate" } });
+      toast.error((err as Error).message || "Gagal aktifkan user secara massal");
+    } finally {
+      setSaving(false);
     }
-    toast.success(`${selectedIds.size} user diaktifkan`);
-    setSelectedIds(new Set());
-    setSaving(false);
-    fetchData();
   };
 
   const handleBulkDeactivate = async () => {
     setSaving(true);
-    for (const id of selectedIds) {
-      await supabase.from("subscriptions").update({ status: "expired" }).eq("user_id", id);
+    try {
+      for (const id of selectedIds) {
+        await supabase.from("subscriptions").update({ status: "expired" }).eq("user_id", id);
+      }
+      toast.success(`${selectedIds.size} user dinonaktifkan`);
+      setSelectedIds(new Set());
+      fetchData();
+    } catch (err) {
+      console.error("Error bulk deactivating subscriptions:", err);
+      Sentry.captureException(err, { tags: { source: "admin_users_bulk_deactivate" } });
+      toast.error((err as Error).message || "Gagal nonaktifkan user secara massal");
+    } finally {
+      setSaving(false);
     }
-    toast.success(`${selectedIds.size} user dinonaktifkan`);
-    setSelectedIds(new Set());
-    setSaving(false);
-    fetchData();
   };
 
   const handleExportCSV = () => {
