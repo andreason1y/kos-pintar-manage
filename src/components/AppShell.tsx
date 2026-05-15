@@ -46,7 +46,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }, [user?.id]);
 
   // Maintenance mode — redirect to maintenance screen (except admin)
-  if (maintenanceMode && !isDemo && user?.email !== "andreassina9a@gmail.com") {
+  const ADMIN_EMAILS = ["andreassina9a@gmail.com", "andreasmonkeybusiness@gmail.com"];
+  if (maintenanceMode && !isDemo && !ADMIN_EMAILS.includes(user?.email ?? "")) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8 text-center">
         <img src={logoIcon} alt="KosPintar" className="h-16 w-16 rounded-xl mb-6" />
