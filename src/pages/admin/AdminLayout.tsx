@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const ADMIN_EMAIL = "andreassina9a@gmail.com";
+const ADMIN_EMAILS = ["andreassina9a@gmail.com", "andreasmonkeybusiness@gmail.com"];
 
 const tabs = [
   { path: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -29,13 +29,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || user.email !== ADMIN_EMAIL) {
+    if (!user || !ADMIN_EMAILS.includes(user.email ?? "")) {
       navigate("/");
       return;
     }
   }, [user, authLoading, navigate]);
 
-  if (authLoading || !user || user.email !== ADMIN_EMAIL) {
+  if (authLoading || !user || !ADMIN_EMAILS.includes(user.email ?? "")) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
