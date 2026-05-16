@@ -6,12 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { useProperty } from "@/lib/property-context";
 import { useDemo } from "@/lib/demo-context";
 import logoIcon from "@/assets/logo-icon.png";
+
+function translateAuthError(msg: string): string {
+  if (msg.includes("User already registered")) return "Email ini sudah terdaftar. Silakan masuk atau gunakan email lain.";
+  if (msg.includes("Invalid login credentials")) return "Email atau kata sandi salah.";
+  if (msg.includes("Email not confirmed")) return "Email belum diverifikasi. Cek inbox Anda.";
+  if (msg.includes("Password should be at least")) return "Kata sandi minimal 6 karakter.";
+  if (msg.includes("Unable to validate email")) return "Format email tidak valid.";
+  if (msg.includes("Email rate limit exceeded")) return "Terlalu banyak percobaan. Tunggu beberapa menit.";
+  return msg;
+}
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
@@ -35,7 +45,7 @@ export default function AuthPage() {
   const [formLoading, setFormLoading] = useState(false);
 
   // OTP state
-  const [step, setStep] = useState<"credentials" | "otp">("credentials");
+  const [step, setStep] = useState<"credentials" | "otp" | "verify-email">("credentials");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -136,7 +146,7 @@ export default function AuthPage() {
       password,
     });
     if (error) {
-      toast.error(error.message);
+      toast.error(translateAuthError(error.message));
       return false;
     }
     return !!data.session;
@@ -147,18 +157,36 @@ export default function AuthPage() {
       toast.error("Kata sandi dan konfirmasi tidak cocok");
       return false;
     }
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { nama, no_hp: noHp } },
+      options: {
+        data: { nama, no_hp: noHp },
+        emailRedirectTo: `${window.location.origin}/login`,
+      },
     });
     if (error) {
-      toast.error(error.message);
+      toast.error(translateAuthError(error.message));
+      return false;
+    }
+    // Supabase fake-success: email sudah terdaftar (email enumeration protection)
+    if (data.user?.identities?.length === 0) {
+      toast.error("Email ini sudah terdaftar. Silakan masuk atau gunakan email lain.");
       return false;
     }
     trackEvent("CompleteRegistration");
-    toast.success("Akun berhasil dibuat! Silakan cek email untuk verifikasi.");
-    return false; // signup tidak langsung ke OTP, user perlu verifikasi email dulu
+    setStep("verify-email");
+    return true;
+  };
+
+  const handleResendVerification = async () => {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/login` },
+    });
+    if (error) toast.error(translateAuthError(error.message));
+    else toast.success("Email verifikasi dikirim ulang. Cek inbox Anda.");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -253,7 +281,45 @@ export default function AuthPage() {
 
         <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
           <AnimatePresence mode="wait">
-            {step === "otp" ? (
+            {step === "verify-email" ? (
+              <motion.div
+                key="verify-email"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="flex flex-col items-center gap-5 text-center py-2"
+              >
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MailCheck className="w-8 h-8 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-lg font-semibold text-foreground">Cek Email Anda</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Link verifikasi dikirim ke{" "}
+                    <span className="font-medium text-foreground">{email}</span>.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Cek folder <strong>spam/junk</strong> jika tidak ada di inbox. Link berlaku 24 jam.
+                  </p>
+                </div>
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setIsLogin(true);
+                    setStep("credentials");
+                  }}
+                >
+                  Sudah verifikasi? Masuk
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full text-sm"
+                  onClick={handleResendVerification}
+                >
+                  Kirim ulang email verifikasi
+                </Button>
+              </motion.div>
+            ) : step === "otp" ? (
               <motion.div
                 key="otp"
                 initial={{ opacity: 0, x: 20 }}
