@@ -125,17 +125,21 @@ function buildBaseEmail(content: string): string {
 </body></html>`;
 }
 
-function buildVerificationEmail(_email: string, verifyUrl: string): string {
+function buildVerificationEmail(email: string, verifyUrl: string): string {
   return buildBaseEmail(`
-    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">Verifikasi Email Anda</h1>
-    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;line-height:1.6;">Halo! Terima kasih telah mendaftar di KosPintar. Klik tombol di bawah untuk memverifikasi alamat email Anda.</p>
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">Aktifkan Akun Anda</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;line-height:1.6;">
+      Terima kasih telah mendaftar di KosPintar! Kami mengirimkan email ini ke
+      <strong style="color:#111827;">${email}</strong>.
+      Klik tombol di bawah untuk mengaktifkan akun Anda.
+    </p>
     <div style="margin-bottom:24px;">
-      <a href="${verifyUrl}" style="display:inline-block;background:#0d9488;color:#ffffff;font-weight:600;font-size:15px;padding:12px 32px;border-radius:8px;text-decoration:none;">Verifikasi Email</a>
+      <a href="${verifyUrl}" style="display:inline-block;background:#0d9488;color:#ffffff;font-weight:600;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">Aktifkan Akun</a>
     </div>
-    <p style="margin:0 0 8px;color:#6b7280;font-size:13px;">Atau salin link ini:</p>
-    <p style="margin:0;word-break:break-all;"><a href="${verifyUrl}" style="color:#0d9488;font-size:13px;">${verifyUrl}</a></p>
-    <hr style="margin:24px 0;border:none;border-top:1px solid #e5e7eb;" />
-    <p style="margin:0;color:#9ca3af;font-size:13px;">Link berlaku <strong>24 jam</strong>. Jika tidak mendaftar, abaikan email ini.</p>
+    <p style="margin:0 0 8px;color:#6b7280;font-size:13px;">Atau salin link berikut ke browser Anda:</p>
+    <p style="margin:0 0 24px;word-break:break-all;"><a href="${verifyUrl}" style="color:#0d9488;font-size:13px;">${verifyUrl}</a></p>
+    <hr style="margin:0 0 24px;border:none;border-top:1px solid #e5e7eb;" />
+    <p style="margin:0;color:#9ca3af;font-size:13px;">Link ini berlaku selama <strong>24 jam</strong>. Jika Anda tidak mendaftar di KosPintar, abaikan email ini — akun tidak akan aktif.</p>
   `);
 }
 

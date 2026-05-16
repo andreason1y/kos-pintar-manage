@@ -147,7 +147,7 @@ export default function AuthPage() {
       toast.error("Kata sandi dan konfirmasi tidak cocok");
       return false;
     }
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { nama, no_hp: noHp } },
@@ -157,8 +157,13 @@ export default function AuthPage() {
       return false;
     }
     trackEvent("CompleteRegistration");
-    toast.success("Akun berhasil dibuat! Silakan cek email untuk verifikasi.");
-    return false; // signup tidak langsung ke OTP, user perlu verifikasi email dulu
+    const isExistingEmail = data.user?.identities?.length === 0;
+    if (isExistingEmail) {
+      navigate(`/cek-email?email=${encodeURIComponent(email)}&existing=1`);
+    } else {
+      navigate(`/cek-email?email=${encodeURIComponent(email)}`);
+    }
+    return false;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
