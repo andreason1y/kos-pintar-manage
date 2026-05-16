@@ -1,6 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const ALLOWED_ORIGINS = [
+  "https://kospintar.id",
+  "https://www.kospintar.id",
   "https://kos-pintar-manage111.vercel.app",
   "http://localhost:8080",
   "http://localhost:5173",
@@ -11,6 +13,7 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
   return {
     "Access-Control-Allow-Origin": allowed,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 }
 

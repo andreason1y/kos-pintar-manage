@@ -4,6 +4,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const ALLOWED_ORIGINS = [
+  "https://kospintar.id",
+  "https://www.kospintar.id",
   "https://kos-pintar-manage111.vercel.app",
   "http://localhost:8080",
   "http://localhost:5173",

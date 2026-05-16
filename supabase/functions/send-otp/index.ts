@@ -8,6 +8,8 @@ const OTP_EXPIRY_MINUTES = 10;
 const OTP_RATE_LIMIT_SECONDS = 60;
 
 const ALLOWED_ORIGINS = [
+  "https://kospintar.id",
+  "https://www.kospintar.id",
   "https://kos-pintar-manage111.vercel.app",
   "http://localhost:8080",
   "http://localhost:5173",
